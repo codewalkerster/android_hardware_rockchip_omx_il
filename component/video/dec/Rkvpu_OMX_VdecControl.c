@@ -136,6 +136,13 @@ static const CodecProfileLevel kH264ProfileLevels[] = {
     { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel51},
 };
 
+//only report echo profile highest level, Reference soft avc dec
+static const CodecProfileLevel kH264ProfileLevelsMax[] = {
+    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel51 },
+    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel51},
+    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel51},
+};
+
 static const CodecProfileLevel kH265ProfileLevels[] = {
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel1  },
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel2  },
@@ -1405,12 +1412,12 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         }
         if (pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
             nProfileLevels =
-                sizeof(kH264ProfileLevels) / sizeof(kH264ProfileLevels[0]);
+                sizeof(kH264ProfileLevelsMax) / sizeof(kH264ProfileLevelsMax[0]);
             if (index >= nProfileLevels) {
                 return OMX_ErrorNoMore;
             }
-            profileLevel->eProfile = kH264ProfileLevels[index].mProfile;
-            profileLevel->eLevel = kH264ProfileLevels[index].mLevel;
+            profileLevel->eProfile = kH264ProfileLevelsMax[index].mProfile;
+            profileLevel->eLevel = kH264ProfileLevelsMax[index].mLevel;
         } else if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC) {
             nProfileLevels =
                 sizeof(kH265ProfileLevels) / sizeof(kH265ProfileLevels[0]);
