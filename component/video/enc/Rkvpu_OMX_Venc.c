@@ -517,6 +517,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             EncParameter_t EncParam;
             H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
+            pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_GETCFG, (void*)&EncParam);
             EncParam.rc_mode = 1 << 16; //set intraDeltaqp as 4 to fix encoder cts issue
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETCFG, (void*)&EncParam);
             if (Width != vplanes.stride) {
