@@ -1228,6 +1228,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         ROCKCHIP_OMX_BASEPORT               *pRockchipPort = NULL;
         OMX_PARAM_PORTDEFINITIONTYPE   *portDefinition = NULL;
         OMX_U32                         supportFormatNum = 0; /* supportFormatNum = N-1 */
+        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
 
         ret = Rockchip_OMX_Check_SizeVersion(portFormat, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
         if (ret != OMX_ErrorNone) {
@@ -1260,15 +1261,16 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             if (pRockchipPort->bStoreMetaData == OMX_FALSE) {
                 switch (index) {
                 case supportFormat_0:
-
                     portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
                     portFormat->eColorFormat       = OMX_COLOR_FormatYUV420SemiPlanar;
                     portFormat->xFramerate         = portDefinition->format.video.xFramerate;
                     break;
                 case supportFormat_1:
-                    portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
-                    portFormat->eColorFormat       = OMX_COLOR_FormatYUV420Planar;
-                    portFormat->xFramerate         = portDefinition->format.video.xFramerate;
+                    if (pVideoDec->codecId != OMX_VIDEO_CodingVP8) {
+                        portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
+                        portFormat->eColorFormat       = OMX_COLOR_FormatYUV420Planar;
+                        portFormat->xFramerate         = portDefinition->format.video.xFramerate;
+                    }
                     break;
                 default:
                     if (index > supportFormat_0) {
