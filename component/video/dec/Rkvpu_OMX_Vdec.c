@@ -643,8 +643,10 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 bufferHeader->nTimeStamp = pOutput.timeUs;
                 omx_trace("Rkvpu_OutputBufferReturn %lld", pOutput.timeUs);
             } else {
-                VPUMemLink(&pframe->vpumem);
-                VPUFreeLinear(&pframe->vpumem);
+                if (pframe->vpumem.phy_addr > 0) {
+                    VPUMemLink(&pframe->vpumem);
+                    VPUFreeLinear(&pframe->vpumem);
+                }
                 Rockchip_OSAL_Free(pframe);
                 goto EXIT;
             }
