@@ -49,20 +49,24 @@ static const omx_core_cb_type dec_core[] = {
         "video_decoder.rv"
     },
 #endif
+
+#ifdef SUPPORT_VP6
     {
         "OMX.rk.video_decoder.vp6",
         "video_decoder.vp6"
     },
+#endif
 
     {
         "OMX.rk.video_decoder.vp8",
         "video_decoder.vp8"
     },
-
+#ifdef SUPPORT_VP9
     {
         "OMX.rk.video_decoder.vp9",
         "video_decoder.vp9"
     },
+#endif
 
     {
         "OMX.rk.video_decoder.vc1",
@@ -73,12 +77,12 @@ static const omx_core_cb_type dec_core[] = {
         "OMX.rk.video_decoder.wmv3",
         "video_decoder.wmv3"
     },
-
+#ifdef SUPPORT_HEVC
     {
         "OMX.rk.video_decoder.hevc",
         "video_decoder.hevc"
     },
-
+#endif
     {
         "OMX.rk.video_decoder.mjpeg",
         "video_decoder.mjpeg"

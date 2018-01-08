@@ -70,4 +70,16 @@ ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
+ifneq ($(BOARD_SUPPORT_HEVC), false)
+LOCAL_CFLAGS += -DSUPPOR_HEVC
+endif
+
+ifneq ($(BOARD_SUPPORT_VP6), false)
+LOCAL_CFLAGS += -DSUPPOR_VP6
+endif
+
+ifneq ($(BOARD_SUPPORT_VP9), false)
+LOCAL_CFLAGS += -DSUPPOR_VP9
+endif
+
 include $(BUILD_SHARED_LIBRARY)
