@@ -660,6 +660,11 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             }
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
         }
+
+        if ((portIndex == OUTPUT_PORT_INDEX) && !pVideoDec->bIsANBEnabled) {
+            pRockchipPort->bufferProcessType = BUFFER_COPY;
+            Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
+        }
     }
     break;
 
@@ -1137,10 +1142,9 @@ OMX_ERRORTYPE  Rockchip_OSAL_Openvpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *p
         }
     } else {
         vpu_display_mem_pool   *pool = NULL;
-        OMX_U32 hor_stride = Get_Video_HorAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nStride,
-                                                pRockchipPort->portDefinition.format.video.nSliceHeight);
+        OMX_U32 hor_stride = Get_Video_HorAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameWidth,pRockchipPort->portDefinition.format.video.nFrameHeight);
 
-        OMX_U32 ver_stride = Get_Video_VerAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nSliceHeight);
+        OMX_U32 ver_stride = Get_Video_VerAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameHeight);
         omx_err("hor_stride %d ver_stride %d", hor_stride, ver_stride);
         if (0 != create_vpu_memory_pool_allocator(&pool, 8, (hor_stride * ver_stride * 2))) {
             omx_err("create_vpu_memory_pool_allocator fail");

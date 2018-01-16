@@ -546,7 +546,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             omx_trace("pVideoDec 0x%x numInOmxAl %d", pVideoDec, numInOmxAl);
         }
         if (dec_ret < 0) {
-            if (dec_ret == VPU_API_EOS_STREAM_REACHED) {
+            if (dec_ret == VPU_API_EOS_STREAM_REACHED && !pframe->ErrorInfo) {
                 outputUseBuffer->dataLen = 0;
                 outputUseBuffer->remainDataLen = 0;
                 outputUseBuffer->nFlags |= OMX_BUFFERFLAG_EOS;
@@ -711,7 +711,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             pOutput.data = (unsigned char *)&pframe;
             ret =  p_vpu_ctx->decode_getframe(p_vpu_ctx, &pOutput);
             if (ret < 0) {
-                if (ret == VPU_API_EOS_STREAM_REACHED) {
+                if (ret == VPU_API_EOS_STREAM_REACHED && !pframe.ErrorInfo) {
                     outputUseBuffer->dataLen = 0;
                     outputUseBuffer->remainDataLen = 0;
                     outputUseBuffer->nFlags |= OMX_BUFFERFLAG_EOS;
