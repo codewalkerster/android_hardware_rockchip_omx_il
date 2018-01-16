@@ -660,6 +660,11 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             }
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
         }
+
+        if ((portIndex == OUTPUT_PORT_INDEX) && !pVideoDec->bIsANBEnabled) {
+            pRockchipPort->bufferProcessType = BUFFER_COPY;
+            Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
+        }
     }
     break;
 
