@@ -87,7 +87,7 @@ static const omx_core_cb_type dec_core[] = {
         "OMX.rk.video_decoder.mjpeg",
         "video_decoder.mjpeg"
     },
-#ifndef AVS80
+#ifdef HAVE_L1_SVP_MODE
     {
         "OMX.rk.video_decoder.avc.secure",
         "video_decoder.avc"
