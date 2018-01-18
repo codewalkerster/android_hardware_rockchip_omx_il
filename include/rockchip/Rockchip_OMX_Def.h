@@ -136,6 +136,9 @@ typedef enum _ROCKCHIP_OMX_INDEXTYPE {
 #define ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS "OMX.google.android.index.describeColorAspects"
     OMX_IndexParamRkDescribeColorAspects 	= 0x7F000062,
 
+#define ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE "OMX.google.android.index.allocateNativeHandle"
+    OMX_IndexParamAllocateNativeHandle          = 0x7F00005D,
+
     /* for Android PV OpenCore*/
     OMX_COMPONENT_CAPABILITY_TYPE_INDEX     = 0xFF7A347
 } ROCKCHIP_OMX_INDEXTYPE;

@@ -778,6 +778,12 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
     break;
     case OMX_IndexParamprepareForAdaptivePlayback: {
         omx_trace("%s: OMX_IndexParamprepareForAdaptivePlayback", __func__);
+        goto EXIT;
+    }
+    case OMX_IndexParamAllocateNativeHandle: {
+        omx_trace("%s: OMX_IndexParamAllocateNativeHandle", __func__);
+        ret = OMX_ErrorNone;
+        goto EXIT;
     }
     break;
     default: {

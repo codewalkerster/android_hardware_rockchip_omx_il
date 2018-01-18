@@ -271,7 +271,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
 
     FunctionIn();
 
-    omx_err("Rkvpu_OMX_AllocateBuffer in");
+    omx_dbg("Rkvpu_OMX_AllocateBuffer in");
     if (hComponent == NULL) {
         ret = OMX_ErrorBadParameter;
         goto EXIT;
@@ -316,7 +316,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
 
 #endif
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE){
-        omx_trace("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode");
+        omx_dbg("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode");
         temp_buffer = (OMX_U8 *)Rockchip_OSAL_SharedMemory_Alloc(pVideoDec->hSharedMemory, nSizeBytes, mem_type);
         if (temp_buffer == NULL) {
             omx_err("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode error");
@@ -1660,7 +1660,8 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     case OMX_IndexParamEnableAndroidBuffers:
     case OMX_IndexParamUseAndroidNativeBuffer:
     case OMX_IndexParamStoreMetaDataBuffer:
-    case OMX_IndexParamprepareForAdaptivePlayback: {
+    case OMX_IndexParamprepareForAdaptivePlayback:
+    case OMX_IndexParamAllocateNativeHandle: {
         omx_trace("Rockchip_OSAL_SetANBParameter!!");
         ret = Rockchip_OSAL_SetANBParameter(hComponent, nIndex, ComponentParameterStructure);
     }
@@ -2058,6 +2059,16 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
         goto EXIT;
     }
 #endif
+
+#ifdef AVS80
+#ifdef HAVE_L1_SVP_MODE
+    if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE) == 0) {
+        *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamAllocateNativeHandle;
+        goto EXIT;
+    }
+#endif
+#endif
+
     ret = Rockchip_OMX_GetExtensionIndex(hComponent, cParameterName, pIndexType);
 
 EXIT:
