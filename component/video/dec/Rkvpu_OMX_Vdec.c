@@ -1636,6 +1636,11 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     Rockchip_OSAL_Free(pVideoDec);
     pRockchipComponent->hComponentHandle = pVideoDec = NULL;
 
+    if (pRockchipComponent->componentName != NULL) {
+        Rockchip_OSAL_Free(pRockchipComponent->componentName);
+        pRockchipComponent->componentName = NULL;
+    }
+
     pRockchipPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     if (pRockchipPort->processData.extInfo != NULL) {
         Rockchip_OSAL_Free(pRockchipPort->processData.extInfo);
