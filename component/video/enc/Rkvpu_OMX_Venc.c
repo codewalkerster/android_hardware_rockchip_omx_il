@@ -1830,7 +1830,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     Rockchip_OSAL_MutexTerminate(pVideoEnc->bScale_Mutex);
     Rockchip_OSAL_MutexTerminate(pVideoEnc->bRecofig_Mutex);
     if (pVideoEnc->hSharedMemory != NULL) {
-        Rockchip_OSAL_SharedMemory_Close(pVideoEnc->hSharedMemory);
+        Rockchip_OSAL_SharedMemory_Close(pVideoEnc->hSharedMemory, false);
         pVideoEnc->hSharedMemory = NULL;
     }
 

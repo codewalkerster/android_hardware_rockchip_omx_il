@@ -358,6 +358,10 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 if(pVideoDec->bDRMPlayerMode == OMX_TRUE){
                     omx_dbg("inputUseBuffer->bufferHeader->pBuffer = %p",inputUseBuffer->bufferHeader->pBuffer);
                     extraData = inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen;
+               #ifdef AVS80
+                    OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)extraData);
+                    extraData = (OMX_PTR)((__u64)trueAddress);
+               #endif
                     omx_dbg("extraData = %p",extraData);
                 }else{
                     omx_dbg("Rkvpu_SendInputData malloc");
@@ -437,6 +441,14 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         }
         Rockchip_OSAL_Memset(&pkt, 0, sizeof(VideoPacket_t));
         pkt.data =  inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen;
+        omx_trace("in sendInputData data = %p", pkt.data);
+        if(pVideoDec->bDRMPlayerMode == OMX_TRUE){
+#ifdef AVS80
+            OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)pkt.data);
+            pkt.data = (OMX_PTR)((__u64)trueAddress);
+#endif
+            omx_trace("out sendInputData data = %p", pkt.data);
+        }
         pkt.size = inputUseBuffer->dataLen;
 
         if (pVideoDec->flags & RKVPU_OMX_VDEC_USE_DTS) {
@@ -451,8 +463,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         }
         omx_trace("pkt.size:%d, pkt.dts:%lld,pkt.pts:%lld,pkt.nFlags:%d",
                           pkt.size, pkt.dts, pkt.pts, pkt.nFlags);
-
-        omx_trace("decode_sendstream");
+        omx_trace("decode_sendstream pkt.data = %p",pkt.data);
         dec_ret = p_vpu_ctx->decode_sendstream(p_vpu_ctx, &pkt);
         if (dec_ret < 0) {
             omx_err("decode_sendstream failed , ret = %x",dec_ret);
@@ -1598,7 +1609,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
 
     pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     if (pVideoDec->hSharedMemory != NULL) {
-        Rockchip_OSAL_SharedMemory_Close(pVideoDec->hSharedMemory);
+        Rockchip_OSAL_SharedMemory_Close(pVideoDec->hSharedMemory, pVideoDec->bDRMPlayerMode);
         pVideoDec->hSharedMemory = NULL;
     }
 

@@ -57,7 +57,8 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
         $(TOP)/system/core/libion/kernel-headers \
 	$(TOP)/hardware/rockchip/libgralloc \
 	$(TOP)/hardware/rockchip/librkvpu \
-	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private
+	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \
+	$(TOP)/system/core/libcutils
 
 ifeq ($(OMX_USE_DRM), true)
 	LOCAL_CFLAGS += -DUSE_DRM

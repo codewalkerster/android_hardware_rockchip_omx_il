@@ -628,7 +628,8 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
 #ifdef AVS80
             pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 14;
 #endif
-            pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
+            if(portIndex == OUTPUT_PORT_INDEX)
+                pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
             omx_trace("OMX_IndexParamEnableAndroidBuffers set buffcount %d", pRockchipPort->portDefinition.nBufferCountActual);
             /*
                 this is temp way to avoid android.media.cts.ImageReaderDecoderTest rk decoder test
@@ -663,7 +664,8 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
                     pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 21;
 #endif
                 }
-                pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
+                if(portIndex == OUTPUT_PORT_INDEX)
+                    pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
                 omx_trace("OMX_IndexParamEnableAndroidBuffers & bufferProcessType change to BUFFER_SHARE");
             }
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
@@ -672,6 +674,13 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         if ((portIndex == OUTPUT_PORT_INDEX) && !pVideoDec->bIsANBEnabled) {
             pRockchipPort->bufferProcessType = BUFFER_COPY;
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
+        }
+
+        if(portIndex == INPUT_PORT_INDEX){
+            pRockchipPort->portDefinition.nBufferCountActual = 4;
+#ifdef AVS80
+            pRockchipPort->portDefinition.nBufferCountMin = 4;
+#endif
         }
     }
     break;

@@ -45,6 +45,7 @@
 #include <linux/rockchip_ion.h>
 #include <linux/ion.h>
 #include <dlfcn.h>
+#include <cutils/native_handle.h>
 
 
 
@@ -191,9 +192,6 @@ static int drm_ioctl(int fd, int req, void *arg)
         ret = ioctl(fd, req, arg);
     } while (ret == -1 && (errno == EINTR || errno == EAGAIN));
 
-    omx_err("drm_ioctl %x with code %d: %s", req,
-            ret, strerror(errno));
-
     return ret;
 }
 
@@ -263,9 +261,6 @@ static int drm_handle_to_fd(int fd, RK_U32 handle, int *map_fd, RK_U32 flags)
     }
 
     *map_fd = dph.fd;
-
-    omx_err("get fd %d", *map_fd);
-
     if (*map_fd < 0) {
         omx_err("map ioctl returned negative fd\n");
         return -EINVAL;
@@ -290,8 +285,6 @@ static int drm_fd_to_handle(int fd, int map_fd, RK_U32 *handle, RK_U32 flags)
     }
 
     *handle = dph.handle;
-    omx_err("get handle %d", *handle);
-
     return ret;
 }
 
@@ -342,8 +335,6 @@ static int drm_alloc(int fd, size_t len, size_t align, RK_U32 *handle, int flag)
     int ret;
     struct drm_mode_create_dumb dmcb;
 
-    omx_err("len %ld aligned %ld\n", len, align);
-
     memset(&dmcb, 0, sizeof(struct drm_mode_create_dumb));
     dmcb.bpp = 8;
     dmcb.width = (len + align - 1) & (~(align - 1));
@@ -351,17 +342,17 @@ static int drm_alloc(int fd, size_t len, size_t align, RK_U32 *handle, int flag)
     dmcb.size = dmcb.width * dmcb.bpp;
     dmcb.flags = flag;
 
-    omx_err("fd %d aligned %d size %lld\n", fd, align, dmcb.size);
-
     if (handle == NULL)
         return -1;
 
     ret = drm_ioctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &dmcb);
-    if (ret < 0)
+    if (ret < 0){
+        omx_err("drm_alloc fail: ret = %d", ret);
         return ret;
+    }
     *handle = dmcb.handle;
 
-    omx_err("get handle %d size %d", *handle, dmcb.size);
+    omx_trace("drm_alloc success:  handle %d size %d", *handle, dmcb.size);
 
     return ret;
 }
@@ -376,6 +367,36 @@ static int drm_free(int fd, RK_U32 handle)
     };
     return drm_ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &data);
 }
+OMX_U32 Rockchip_OSAL_SharedMemory_HandleToAddress(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr)
+{
+    int map_fd = -1;
+    native_handle_t* pnative_handle_t = NULL;
+    RK_S32 err = 0;
+    RK_S32 mClient = 0;
+    RK_U32 mHandle;
+    struct drm_rockchip_gem_phys phys_arg;	
+    pnative_handle_t = (native_handle_t*)handle_ptr;
+    map_fd = pnative_handle_t->data[0];
+    omx_trace("Rockchip_OSAL_SharedMemory_HandleToAddress map_fd = %d", map_fd);
+
+    mClient = open("/dev/dri/card0", O_RDWR);
+    if (mClient < 0) {
+        omx_err("Rockchip_OSAL_SharedMemory_HandleToAddress open drm fail");
+        return 0;
+    }
+    drm_fd_to_handle(mClient, (int32_t)map_fd, &mHandle, 0);
+    phys_arg.handle = mHandle;
+    err = drm_ioctl(mClient, DRM_IOCTL_ROCKCHIP_GEM_GET_PHYS, &phys_arg);
+    if (err)
+        omx_err("failed to get phy address: %s\n", strerror(errno));
+
+    omx_trace("Rockchip_OSAL_SharedMemory_HandleToAddress phys_arg.phy_addr = %0x",phys_arg.phy_addr);
+    close(mClient);
+    mClient = -1;
+    return (OMX_U32)phys_arg.phy_addr;
+}
+
+
 
 OMX_HANDLETYPE Rockchip_OSAL_SharedMemory_Open()
 {
@@ -411,12 +432,13 @@ EXIT:
     return (OMX_HANDLETYPE)pHandle;
 }
 
-void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle)
+void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle, OMX_BOOL b_secure)
 {
     ROCKCHIP_SHARED_MEMORY  *pHandle = (ROCKCHIP_SHARED_MEMORY *)handle;
     ROCKCHIP_SHAREDMEM_LIST *pSMList = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pCurrentElement = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pDeleteElement = NULL;
+    void                    *pTrueAddree    = NULL;
 
     if (pHandle == NULL)
         goto EXIT;
@@ -427,10 +449,21 @@ void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle)
     while (pCurrentElement != NULL) {
         pDeleteElement = pCurrentElement;
         pCurrentElement = pCurrentElement->pNextMemory;
-
-        if (munmap(pDeleteElement->mapAddr, pDeleteElement->allocSize))
+        if(b_secure){
+#ifdef AVS80
+            native_handle_t* pnative_handle_t = NULL;
+            int map_fd = 0;
+            pnative_handle_t = (native_handle_t*)pDeleteElement->mapAddr;
+            map_fd = pnative_handle_t->data[0];
+            pTrueAddree = (void *)Rockchip_OSAL_SharedMemory_HandleToAddress(handle, pDeleteElement->mapAddr);
+            pDeleteElement->mapAddr = pTrueAddree;
+            close(map_fd);
+            map_fd = -1;
+#endif
+        }	
+        if (munmap(pDeleteElement->mapAddr, pDeleteElement->allocSize)) {
             omx_err("ion_unmap fail");
-
+        }
         pDeleteElement->mapAddr = NULL;
         pDeleteElement->allocSize = 0;
 
@@ -491,6 +524,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
     unsigned int flag;
     int err = 0;
     int map_fd = -1;
+    native_handle_t* pnative_handle_t = NULL;
 
     struct drm_rockchip_gem_phys phys_arg;
 
@@ -507,7 +541,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
         //mask = ION_HEAP(ION_CMA_HEAP_ID);
         mask = ION_HEAP(ION_SECURE_HEAP_ID);
         flag = 0;
-        omx_err("11pHandle->fd = %d,size = %d",pHandle->fd,size);
+        omx_dbg("pHandle->fd = %d,size = %d",pHandle->fd,size);
         if (mem_type == MEMORY_TYPE_DRM) {
             err = drm_alloc(pHandle->fd, size, 4096, &ion_hdl, ROCKCHIP_BO_SECURE);
         }else{
@@ -525,6 +559,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
         }
         if (err) {
             omx_err("failed to get phy address: %s\n", strerror(errno));
+            goto EXIT;
         }
 
         secure_flag = 1;
@@ -563,6 +598,23 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
             pBuffer = phys;
         #endif
         }
+
+#ifdef AVS80
+        pnative_handle_t = native_handle_create(1, 0);
+        err = drm_handle_to_fd(pHandle->fd, ion_hdl, &map_fd, 0);
+        if(err < 0){
+            omx_err("failed to trans handle to fd: %s\n", strerror(errno));
+            goto EXIT;
+        }
+        omx_dbg("pnative_handle_t = %p, map_fd = %d", pnative_handle_t, map_fd);
+        pnative_handle_t->data[0] = map_fd;
+        pBuffer = (void *)pnative_handle_t;
+        if (mem_type == MEMORY_TYPE_DRM) {
+            pElement->mapAddr = (OMX_PTR)((__u64)pnative_handle_t);
+        } else {
+            pElement->mapAddr = (OMX_PTR)((__u64)pnative_handle_t);
+        }
+#endif
         break;
     case SYSTEM_MEMORY:
         mask =  ION_HEAP(ION_VMALLOC_HEAP_ID);;
@@ -626,6 +678,7 @@ void Rockchip_OSAL_SharedMemory_Free(OMX_HANDLETYPE handle, OMX_PTR pBuffer)
     ROCKCHIP_SHAREDMEM_LIST *pSMList         = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pCurrentElement = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pDeleteElement  = NULL;
+    void                    *pTrueAddree     = NULL;
 
     if (pHandle == NULL)
         goto EXIT;
@@ -657,7 +710,6 @@ void Rockchip_OSAL_SharedMemory_Free(OMX_HANDLETYPE handle, OMX_PTR pBuffer)
         }
     }
     Rockchip_OSAL_MutexUnlock(pHandle->hSMMutex);
-
     if (munmap(pDeleteElement->mapAddr, pDeleteElement->allocSize)) {
         omx_err("ion_unmap fail");
         goto EXIT;
@@ -924,3 +976,6 @@ OMX_S32 Rockchip_OSAL_SharedMemory_getPhyAddress(OMX_HANDLETYPE handle, int shar
     }
     return 0;
 }
+
+
+
