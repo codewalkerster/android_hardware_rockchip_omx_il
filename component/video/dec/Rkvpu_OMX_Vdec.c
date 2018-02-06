@@ -246,8 +246,8 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
 
     memset(value, 0, sizeof(value));
     if (property_get("cts_gts.media.gts", value, NULL) && (!strcasecmp(value, "true"))) {
-        omx_info("This is gts test.");
-        pVideoDec->bGtsTest = OMX_TRUE;
+        omx_info("This is gts media test.");
+        pVideoDec->bGtsMediaTest = OMX_TRUE;
     }
 
     return ret;
@@ -633,7 +633,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 controlFPS(isInput);
             }
 
-            if (pframe->ErrorInfo && (pVideoDec->bGtsTest == OMX_FALSE)) {   //drop frame when this frame mark error from dec
+            if (pframe->ErrorInfo && (pVideoDec->bGtsMediaTest == OMX_FALSE)) {   //drop frame when this frame mark error from dec
                 omx_err("this frame is Error frame!,pOutput.timeUs = %lld",pOutput.timeUs);
                 if (pframe->vpumem.phy_addr > 0) {
                     VPUMemLink(&pframe->vpumem);
@@ -1319,7 +1319,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->bFastMode = OMX_FALSE;
     pVideoDec->bPrintFps = OMX_FALSE;
     pVideoDec->bPrintBufferPosition = OMX_FALSE;
-    pVideoDec->bGtsTest = OMX_FALSE;
+    pVideoDec->bGtsMediaTest = OMX_FALSE;
+    pVideoDec->bGtsExoTest = OMX_FALSE;
     pVideoDec->fp_in = NULL;
     pVideoDec->b4K_flags = OMX_FALSE;
     pVideoDec->power_fd = -1;

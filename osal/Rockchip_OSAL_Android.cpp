@@ -592,6 +592,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         EnableAndroidNativeBuffersParams *pANBParams = (EnableAndroidNativeBuffersParams *) ComponentParameterStructure;
         OMX_U32 portIndex = pANBParams->nPortIndex;
+        char  value[PROPERTY_VALUE_MAX];
         ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
 
         omx_trace("%s: OMX_IndexParamEnableAndroidNativeBuffers", __func__);
@@ -613,12 +614,19 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             goto EXIT;
         }
 
+        // for gts exo test
+        memset(value, 0, sizeof(value));
+        if (property_get("cts_gts.exo.gts", value, NULL) && (!strcasecmp(value, "true"))) {
+            omx_info("This is gts exo test.");
+            pVideoDec->bGtsExoTest = OMX_TRUE;
+        }
+
         /* ANB and DPB Buffer Sharing */
         if (pVideoDec->bStoreMetaData != OMX_TRUE) {
             pVideoDec->bIsANBEnabled = pANBParams->enable;
             pRockchipPort->portDefinition.nBufferCountActual = 16;
 #ifdef AVS80
-            pRockchipPort->portDefinition.nBufferCountMin = 14;
+            pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 14;
 #endif
             pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
             omx_trace("OMX_IndexParamEnableAndroidBuffers set buffcount %d", pRockchipPort->portDefinition.nBufferCountActual);
@@ -652,7 +660,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
                 if (pRockchipPort->portDefinition.format.video.nFrameWidth <= 1280) {
                     pRockchipPort->portDefinition.nBufferCountActual = 25;
 #ifdef AVS80
-                    pRockchipPort->portDefinition.nBufferCountMin = 21;
+                    pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 21;
 #endif
                 }
                 pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
