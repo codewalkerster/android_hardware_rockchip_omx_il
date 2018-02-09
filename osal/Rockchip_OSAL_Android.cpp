@@ -1198,7 +1198,14 @@ OMX_ERRORTYPE  Rockchip_OSAL_Closevpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *
     if (pVideoDec->power_fd == -1) {
         pVideoDec->power_fd = open("/dev/video_state", O_WRONLY);
         if (pVideoDec->power_fd == -1) {
-            omx_err("power control open fd fail");
+            omx_err("power control open /dev/video_state fail!");
+        }
+    }
+
+    if (pVideoDec->power_fd == -1) {
+        pVideoDec->power_fd = open("/sys/class/devfreq/dmc/system_status", O_WRONLY);
+        if (pVideoDec->power_fd == -1) {
+            omx_err("power control open /sys/class/devfreq/dmc/system_status fail");
         }
     }
 
