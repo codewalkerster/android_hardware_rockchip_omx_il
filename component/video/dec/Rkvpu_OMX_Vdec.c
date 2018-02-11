@@ -633,7 +633,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 controlFPS(isInput);
             }
 
-            if (pframe->ErrorInfo && (pVideoDec->bGtsMediaTest == OMX_FALSE)) {   //drop frame when this frame mark error from dec
+            if (pframe->ErrorInfo && (pVideoDec->bGtsMediaTest == OMX_FALSE) && (pVideoDec->bDRMPlayerMode == false)) {   //drop frame when this frame mark error from dec
                 omx_err("this frame is Error frame!,pOutput.timeUs = %lld",pOutput.timeUs);
                 if (pframe->vpumem.phy_addr > 0) {
                     VPUMemLink(&pframe->vpumem);
