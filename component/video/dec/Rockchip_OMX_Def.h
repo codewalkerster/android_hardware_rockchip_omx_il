@@ -36,7 +36,7 @@
 #define STEP_NUMBER                        0
 
 
-#define MAX_OMX_COMPONENT_NUM              20
+#define MAX_OMX_COMPONENT_NUM              28
 #define MAX_OMX_COMPONENT_ROLE_NUM         20
 #define MAX_OMX_COMPONENT_NAME_SIZE        OMX_MAX_STRINGNAME_SIZE
 #define MAX_OMX_COMPONENT_ROLE_SIZE        OMX_MAX_STRINGNAME_SIZE
