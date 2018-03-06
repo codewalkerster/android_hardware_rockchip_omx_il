@@ -564,7 +564,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             }
             Rkvpu_OutputBufferReturn(pOMXComponent, outputUseBuffer);
         }
-        if (outputUseBuffer->dataValid == OMX_TRUE && (pOWnBycomponetNum > 1)) {
+        if (outputUseBuffer->dataValid == OMX_TRUE && (pOWnBycomponetNum > 0)) {
             omx_trace("commit fd to vpu 0x%x\n", outputUseBuffer->bufferHeader);
             Rockchip_OSAL_Fd2VpumemPool(pRockchipComponent, outputUseBuffer->bufferHeader);
             Rockchip_ResetDataBuffer(outputUseBuffer);
