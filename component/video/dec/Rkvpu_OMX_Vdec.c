@@ -49,6 +49,8 @@
 #include <cutils/properties.h>
 #include <time.h>
 #include <sys/time.h>
+#include<sys/mman.h>
+
 
 #undef  ROCKCHIP_LOG_TAG
 #define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_DEC"
@@ -331,6 +333,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
     VpuCodecContext_t *p_vpu_ctx = pVideoDec->vpu_ctx;
     OMX_S32 i = 0;
     OMX_S32 numInOmxAl = 0;
+    OMX_S32 temp_size;
     OMX_S32 maxBufferNum = rockchipInputPort->portDefinition.nBufferCountActual;
     OMX_S32 dec_ret = 0;
     FunctionIn();
@@ -359,7 +362,10 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                     omx_dbg("inputUseBuffer->bufferHeader->pBuffer = %p",inputUseBuffer->bufferHeader->pBuffer);
                     extraData = inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen;
                #ifdef AVS80
-                    OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)extraData);
+                    OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToVirAddress(
+						pVideoDec->hSharedMemory,
+						(OMX_HANDLETYPE)extraData,
+						inputUseBuffer->dataLen);
                     extraData = (OMX_PTR)((__u64)trueAddress);
                #endif
                     omx_dbg("extraData = %p",extraData);
@@ -384,7 +390,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             }
 
             omx_trace("decode init");
-            //add by xhr
+            //add by xhr don`t delete
+            #if 0
             if (pVideoDec->bDRMPlayerMode == OMX_TRUE){
                 omx_info("set secure_mode");
                 OMX_U32 coding;
@@ -397,7 +404,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 coding = p_vpu_ctx->videoCoding | (is4kflag << 31);
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_SECURE_CONTEXT, &coding);
             }
-
+            #endif
             p_vpu_ctx->init(p_vpu_ctx, extraData, extraSize);
             // not use iep when thumbNail decode
             if (!(pVideoDec->flags & RKVPU_OMX_VDEC_THUMBNAIL)) {
@@ -425,6 +432,12 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                     extraData = NULL;
                     Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
                 } else if (extraData && pVideoDec->bDRMPlayerMode) {
+                    #ifdef AVS80
+                    int ret = munmap(extraData, extraSize);
+                    if(ret != 0){
+                        omx_err("munmap            fail!!!");
+                    }
+                    #endif
                     Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
                 } else {
                     ;
@@ -444,7 +457,10 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         omx_trace("in sendInputData data = %p", pkt.data);
         if(pVideoDec->bDRMPlayerMode == OMX_TRUE){
 #ifdef AVS80
-            OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)pkt.data);
+            OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToVirAddress(
+					pVideoDec->hSharedMemory,
+					(OMX_HANDLETYPE)pkt.data,
+					inputUseBuffer->dataLen);
             pkt.data = (OMX_PTR)((__u64)trueAddress);
 #endif
             omx_trace("out sendInputData data = %p", pkt.data);
@@ -464,6 +480,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         omx_trace("pkt.size:%d, pkt.dts:%lld,pkt.pts:%lld,pkt.nFlags:%d",
                           pkt.size, pkt.dts, pkt.pts, pkt.nFlags);
         omx_trace("decode_sendstream pkt.data = %p",pkt.data);
+	temp_size = inputUseBuffer->dataLen;
         dec_ret = p_vpu_ctx->decode_sendstream(p_vpu_ctx, &pkt);
         if (dec_ret < 0) {
             omx_err("decode_sendstream failed , ret = %x",dec_ret);
@@ -478,7 +495,23 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         }
         if (pkt.size != 0) {
             // omx_err("stream list full wait");
+            if(pVideoDec->bDRMPlayerMode == OMX_TRUE){
+                #ifdef AVS80
+                int ret = munmap(pkt.data, temp_size);
+                if(ret != 0){
+                    omx_err("munmap        fail!!!");
+                }
+                #endif
+            }
             goto EXIT;
+        }
+        if(pVideoDec->bDRMPlayerMode == OMX_TRUE){
+            #ifdef AVS80
+            int ret = munmap(pkt.data, temp_size);
+            if(ret != 0){
+                omx_err("munmap            fail!!!");
+            }
+            #endif
         }
 
         if (pVideoDec->bPrintFps == OMX_TRUE) {
