@@ -624,9 +624,9 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         /* ANB and DPB Buffer Sharing */
         if (pVideoDec->bStoreMetaData != OMX_TRUE) {
             pVideoDec->bIsANBEnabled = pANBParams->enable;
-            pRockchipPort->portDefinition.nBufferCountActual = 16;
+            pRockchipPort->portDefinition.nBufferCountActual = 20;
 #ifdef AVS80
-            pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 14;
+            pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 18;
 #endif
             if(portIndex == OUTPUT_PORT_INDEX)
                 pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
@@ -647,9 +647,9 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             ((pRockchipPort->bufferProcessType & BUFFER_ANBSHARE) == BUFFER_ANBSHARE)) {
             if (pVideoDec->bIsANBEnabled == OMX_TRUE) {
                 pRockchipPort->bufferProcessType = BUFFER_SHARE;
-                pRockchipPort->portDefinition.nBufferCountActual = 22;
+                pRockchipPort->portDefinition.nBufferCountActual = 24;
 #ifdef AVS80
-                pRockchipPort->portDefinition.nBufferCountMin = 18;
+                pRockchipPort->portDefinition.nBufferCountMin = 22;
 #endif
                 if (pRockchipPort->portDefinition.format.video.nFrameWidth 
                         * pRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
@@ -664,6 +664,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
                     pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 21;
 #endif
                 }
+                omx_info("nBufferCountMin = %d nBufferCountActual = %d", pRockchipPort->portDefinition.nBufferCountMin, pRockchipPort->portDefinition.nBufferCountActual);
                 if(portIndex == OUTPUT_PORT_INDEX)
                     pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
                 omx_trace("OMX_IndexParamEnableAndroidBuffers & bufferProcessType change to BUFFER_SHARE");
