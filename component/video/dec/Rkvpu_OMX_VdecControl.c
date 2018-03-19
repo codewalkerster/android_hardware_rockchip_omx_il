@@ -1612,6 +1612,18 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         pRockchipPort->portDefinition.format.video.nSliceHeight = strideheight;
         pRockchipPort->portDefinition.nBufferSize = (size > pRockchipPort->portDefinition.nBufferSize) ? size : pRockchipPort->portDefinition.nBufferSize;
 
+        if (portIndex == OUTPUT_PORT_INDEX) {
+            if (pRockchipPort->portDefinition.format.video.nFrameWidth 
+			    * pRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
+                pRockchipPort->portDefinition.nBufferCountActual = 14;
+#ifdef AVS80
+                pRockchipPort->portDefinition.nBufferCountMin = 10;
+#endif
+            }
+        }
+
+
+
         if (portIndex == INPUT_PORT_INDEX) {
             ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
             pRockchipOutputPort->portDefinition.format.video.nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
