@@ -134,6 +134,7 @@ static const CodecProfileLevel kH264ProfileLevels[] = {
     { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel42},
     { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel5},
     { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel51},
+    { OMX_VIDEO_AVCProfileHigh10, OMX_VIDEO_AVCLevel52},
 };
 
 //only report echo profile highest level, Reference soft avc dec
@@ -153,6 +154,7 @@ static const CodecProfileLevel kH265ProfileLevels[] = {
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel41 },
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel5  },
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel51 },
+    { OMX_VIDEO_HEVCProfileMain10, OMX_VIDEO_HEVCMainTierLevel51 },
 };
 
 
