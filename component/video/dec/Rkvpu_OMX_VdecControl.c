@@ -1612,18 +1612,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         pRockchipPort->portDefinition.format.video.nSliceHeight = strideheight;
         pRockchipPort->portDefinition.nBufferSize = (size > pRockchipPort->portDefinition.nBufferSize) ? size : pRockchipPort->portDefinition.nBufferSize;
 
-        if (portIndex == OUTPUT_PORT_INDEX) {
-            if (pRockchipPort->portDefinition.format.video.nFrameWidth 
-			    * pRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
-                pRockchipPort->portDefinition.nBufferCountActual = 14;
-#ifdef AVS80
-                pRockchipPort->portDefinition.nBufferCountMin = 10;
-#endif
-            }
-        }
-
-
-
         if (portIndex == INPUT_PORT_INDEX) {
             ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
             pRockchipOutputPort->portDefinition.format.video.nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
@@ -1636,6 +1624,11 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
             pRockchipOutputPort->cropRectangle.nWidth = pRockchipOutputPort->portDefinition.format.video.nFrameWidth;
             pRockchipOutputPort->cropRectangle.nHeight = pRockchipOutputPort->portDefinition.format.video.nFrameHeight;
             pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent,pRockchipComponent->callbackData,OMX_EventPortSettingsChanged,OUTPUT_PORT_INDEX,OMX_IndexConfigCommonOutputCrop,NULL);
+            if (pRockchipOutputPort->portDefinition.format.video.nFrameWidth
+                    * pRockchipOutputPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
+                pRockchipOutputPort->portDefinition.nBufferCountActual = 14;
+                pRockchipOutputPort->portDefinition.nBufferCountMin = 10;
+            }
 #endif
 
             switch ((OMX_U32)pRockchipOutputPort->portDefinition.format.video.eColorFormat) {
