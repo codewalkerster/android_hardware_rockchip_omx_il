@@ -520,7 +520,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_GETCFG, (void*)&EncParam);
             EncParam.rc_mode = 1 << 16; //set intraDeltaqp as 4 to fix encoder cts issue
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETCFG, (void*)&EncParam);
-            if (Width != vplanes.stride) {
+            if (Width != vplanes.stride || (Height & 0xf)) {
                 rga_nv12_copy(&vplanes, pVideoEnc->enc_vpumem, Width, Height, pVideoEnc->rga_ctx);
                 *aPhy_address = pVideoEnc->enc_vpumem->phy_addr;
                 if (pVideoEnc->fp_enc_in) {
