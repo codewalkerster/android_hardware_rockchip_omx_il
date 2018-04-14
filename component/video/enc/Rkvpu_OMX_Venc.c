@@ -566,7 +566,12 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             EncParameter_t vpug;
             if ((ROCKCHIP_OMX_COLOR_FORMATTYPE)rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
                 Rockchip_OSAL_GetInfoFromMetaData(inputUseBuffer->bufferHeader->pBuffer, &pGrallocHandle);
-                omx_format = Rockchip_OSAL_GetANBColorFormat(pGrallocHandle);
+                if(pGrallocHandle == NULL){
+                    omx_err("pGrallocHandle is NULL set omx_format default");
+                    omx_format = 0;
+                }else{
+                    omx_format = Rockchip_OSAL_GetANBColorFormat(pGrallocHandle);
+                }
                 if(Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCbCr_420_888){
                     H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
