@@ -1645,7 +1645,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             pParam->sAspects.mRange = PrimariesUnspecified;
             pParam->sAspects.mTransfer = TransferUnspecified;
             pParam->sAspects.mMatrixCoeffs = MatrixUnspecified;
-            return OMX_ErrorUnsupportedSetting;
+            return ret;//OMX_ErrorUnsupportedSetting;
         }
         if (pParam->bDataSpaceChanged == OMX_TRUE) {
             // If the dataspace says RGB, recommend 601-limited;
