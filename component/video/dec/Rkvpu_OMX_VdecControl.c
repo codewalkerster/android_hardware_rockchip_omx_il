@@ -31,6 +31,7 @@
 #include <poll.h>
 #include<sys/ioctl.h>
 #include <unistd.h>
+#include <cutils/properties.h>
 
 #include "Rockchip_OMX_Macros.h"
 #include "Rockchip_OSAL_Event.h"
@@ -50,8 +51,6 @@
 #include "vpu.h"
 #include "vpu_mem_pool.h"
 #include "vpu_mem.h"
-
-
 
 //#include <vpu_mem_pool.h>
 
@@ -1382,7 +1381,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             portDefinition->format.video.nFrameHeight = portDefinition->format.video.nSliceHeight;
         }
 #endif
-
     }
     break;
 #endif
@@ -1611,95 +1609,10 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
                 goto EXIT;
             }
         }
-        if (pPortDefinition->nBufferCountActual < pRockchipPort->portDefinition.nBufferCountMin) {
-            ret = OMX_ErrorBadParameter;
+
+        ret = Rkvpu_UpdatePortDefinition(hComponent, pPortDefinition, portIndex);
+        if (OMX_ErrorNone != ret) {
             goto EXIT;
-        }
-
-        Rockchip_OSAL_Memcpy(&pRockchipPort->portDefinition, pPortDefinition, pPortDefinition->nSize);
-
-
-        realWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
-        realHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
-
-        stride = Get_Video_HorAlign(pVideoDec->codecId, realWidth, realHeight);
-        strideheight = Get_Video_VerAlign(pVideoDec->codecId, realHeight);
-
-        size = (stride * strideheight * 3) / 2;
-
-        supWidth = VPUCheckSupportWidth();
-        if (supWidth == 0) {
-            omx_warn("VPUCheckSupportWidth is failed , force max width to 4096.");
-            supWidth = 4096;
-        }
-        omx_trace("decoder width %d support %d", stride, supWidth);
-        if (realWidth > supWidth) {
-            if (access("/dev/rkvdec", 06) == 0) {
-                if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC ||
-                    pVideoDec->codecId == OMX_VIDEO_CodingAVC ||
-                    pVideoDec->codecId == OMX_VIDEO_CodingVP9) {
-                    ;
-                } else {
-                    omx_err("decoder width %d big than support width %d return error", stride, VPUCheckSupportWidth());
-                    ret = OMX_ErrorBadParameter;
-                    goto EXIT;
-                }
-            } else {
-                omx_err("decoder width %d big than support width %d return error", stride, VPUCheckSupportWidth());
-                ret = OMX_ErrorBadParameter;
-                goto EXIT;
-            }
-        }
-        pRockchipPort->portDefinition.format.video.nStride = stride;
-        pRockchipPort->portDefinition.format.video.nSliceHeight = strideheight;
-        pRockchipPort->portDefinition.nBufferSize = (size > pRockchipPort->portDefinition.nBufferSize) ? size : pRockchipPort->portDefinition.nBufferSize;
-
-        if (portIndex == INPUT_PORT_INDEX) {
-            ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
-            pRockchipOutputPort->portDefinition.format.video.nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
-            pRockchipOutputPort->portDefinition.format.video.nFrameHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
-            pRockchipOutputPort->portDefinition.format.video.nStride = stride;
-            pRockchipOutputPort->portDefinition.format.video.nSliceHeight = strideheight;
-
-#ifdef AVS80
-            Rockchip_OSAL_Memset(&(pRockchipOutputPort->cropRectangle), 0, sizeof(OMX_CONFIG_RECTTYPE));
-            pRockchipOutputPort->cropRectangle.nWidth = pRockchipOutputPort->portDefinition.format.video.nFrameWidth;
-            pRockchipOutputPort->cropRectangle.nHeight = pRockchipOutputPort->portDefinition.format.video.nFrameHeight;
-            pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent, pRockchipComponent->callbackData, OMX_EventPortSettingsChanged, OUTPUT_PORT_INDEX, OMX_IndexConfigCommonOutputCrop, NULL);
-            if (pRockchipOutputPort->portDefinition.format.video.nFrameWidth
-                * pRockchipOutputPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
-                pRockchipOutputPort->portDefinition.nBufferCountActual = 14;
-                pRockchipOutputPort->portDefinition.nBufferCountMin = 10;
-            }
-#endif
-
-            switch ((OMX_U32)pRockchipOutputPort->portDefinition.format.video.eColorFormat) {
-
-            case OMX_COLOR_FormatYUV420Planar:
-            case OMX_COLOR_FormatYUV420SemiPlanar:
-                pRockchipOutputPort->portDefinition.nBufferSize = (stride * strideheight * 3) / 2;
-                break;
-#ifdef USE_STOREMETADATA
-            case OMX_COLOR_FormatAndroidOpaque:
-                pRockchipOutputPort->portDefinition.nBufferSize = stride * strideheight * 4;
-                if (pVideoDec->bPvr_Flag == OMX_TRUE) {
-                    pRockchipOutputPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_BGRA_8888;
-                } else {
-                    pRockchipOutputPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_RGBA_8888;
-                }
-                break;
-#endif
-            default:
-                omx_err("Color format is not support!! use default YUV size!!");
-                ret = OMX_ErrorUnsupportedSetting;
-                break;
-            }
-
-            if (pRockchipOutputPort->bufferProcessType == BUFFER_SHARE) {
-                pRockchipOutputPort->portDefinition.nBufferSize =
-                    calc_plane(pRockchipPort->portDefinition.format.video.nFrameWidth, pRockchipOutputPort->portDefinition.format.video.nFrameHeight) +
-                    calc_plane(pRockchipPort->portDefinition.format.video.nFrameWidth, pRockchipOutputPort->portDefinition.format.video.nFrameHeight >> 1);
-            }
         }
     }
     break;
@@ -2124,3 +2037,239 @@ EXIT:
     return ret;
 }
 
+OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
+    OMX_HANDLETYPE hComponent,
+    const OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition,
+    const OMX_U32 nPortIndex)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
+    OMX_COMPONENTTYPE *pOMXComponent = NULL;
+    ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
+    ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
+    OMX_U32 nFrameWidth = 0;
+    OMX_U32 nFrameHeight = 0;
+    OMX_S32 nStride = 0;
+    OMX_U32 nSliceHeight = 0;
+    OMX_U32 nBufferSize = 0;
+
+    FunctionIn();
+
+    if (hComponent == NULL) {
+        omx_err("error in");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+    pOMXComponent = (OMX_COMPONENTTYPE *)hComponent;
+    ret = Rockchip_OMX_Check_SizeVersion(pOMXComponent, sizeof(OMX_COMPONENTTYPE));
+    if (ret != OMX_ErrorNone) {
+        omx_err("error in");
+        goto EXIT;
+    }
+
+    pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
+    if (NULL == pRockchipComponent) {
+        omx_err("error in");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
+    pRockchipPort = &pRockchipComponent->pRockchipPort[nPortIndex];
+    if (NULL == pRockchipPort) {
+        omx_err("error in");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
+    pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+    if (NULL == pVideoDec) {
+        omx_err("error in");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
+    /*
+     * check set param legal
+     */
+    ret = Rkvpu_CheckPortDefinition(pPortDefinition, &pRockchipPort->portDefinition, nPortIndex);
+    if (OMX_ErrorNone != ret) {
+        omx_err("check portdefinition param failed , ret: 0x%x", ret);
+        goto EXIT;
+    }
+
+    Rockchip_OSAL_Memcpy(&pRockchipPort->portDefinition, pPortDefinition, pPortDefinition->nSize);
+
+    nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
+    nFrameHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
+
+    nStride = Get_Video_HorAlign(pVideoDec->codecId, nFrameWidth, nFrameHeight);
+    nSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, nFrameHeight);
+
+    pRockchipPort->portDefinition.format.video.nStride = nStride;
+    pRockchipPort->portDefinition.format.video.nSliceHeight = nSliceHeight;
+
+    if (INPUT_PORT_INDEX == nPortIndex) {
+        /*
+         * Determining the compression ratio by coding type.
+         */
+        OMX_U32 nCompressRatio = Rkvpu_GetCompressRatioByCodingtype(pRockchipPort->portDefinition.format.video.eCompressionFormat);
+        pRockchipPort->portDefinition.nBufferSize = 4 * 1024 * 1024;
+        {
+            /*
+             * update output port info from input port.
+             */
+            ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
+            pRockchipOutputPort->portDefinition.format.video.nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
+            pRockchipOutputPort->portDefinition.format.video.nFrameHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
+            pRockchipOutputPort->portDefinition.format.video.nStride = nStride;
+            pRockchipOutputPort->portDefinition.format.video.nSliceHeight = nSliceHeight;
+#ifdef AVS80
+            Rockchip_OSAL_Memset(&(pRockchipOutputPort->cropRectangle), 0, sizeof(OMX_CONFIG_RECTTYPE));
+            pRockchipOutputPort->cropRectangle.nWidth = pRockchipOutputPort->portDefinition.format.video.nFrameWidth;
+            pRockchipOutputPort->cropRectangle.nHeight = pRockchipOutputPort->portDefinition.format.video.nFrameHeight;
+            omx_info("cropRectangle.nWidth: %d, height: %d", pRockchipOutputPort->cropRectangle.nWidth, pRockchipOutputPort->cropRectangle.nHeight);
+            pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent,
+                                                         pRockchipComponent->callbackData,
+                                                         OMX_EventPortSettingsChanged,
+                                                         OUTPUT_PORT_INDEX,
+                                                         OMX_IndexConfigCommonOutputCrop,
+                                                         NULL);
+#endif
+            switch ((OMX_U32)pRockchipOutputPort->portDefinition.format.video.eColorFormat) {
+            case OMX_COLOR_FormatYUV420Planar:
+            case OMX_COLOR_FormatYUV420SemiPlanar:
+                pRockchipOutputPort->portDefinition.nBufferSize = (nStride * nSliceHeight * 3) / 2;
+                break;
+#ifdef USE_STOREMETADATA
+                /*
+                 * this case used RGBA buffer size
+                 */
+            case OMX_COLOR_FormatAndroidOpaque:
+                pRockchipOutputPort->portDefinition.nBufferSize = nStride * nSliceHeight * 4;
+                if (pVideoDec->bPvr_Flag == OMX_TRUE) {
+                    pRockchipOutputPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_BGRA_8888;
+                } else {
+                    pRockchipOutputPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_RGBA_8888;
+                }
+                break;
+#endif
+            default:
+                omx_err("Color format is not support!! use default YUV size!");
+                ret = OMX_ErrorUnsupportedSetting;
+                break;
+            }
+        }
+    }
+
+    if (OUTPUT_PORT_INDEX == nPortIndex) {
+        /*
+         * reverse
+         */
+    }
+
+    /*
+     * compute buffer count if need
+     */
+    ret = Rkvpu_ComputeDecBufferCount(hComponent);
+    if (OMX_ErrorNone != ret) {
+        goto EXIT;
+    }
+
+EXIT:
+    FunctionOut();
+
+    return ret;
+}
+
+OMX_U32 Rkvpu_GetCompressRatioByCodingtype(
+    OMX_VIDEO_CODINGTYPE codingType)
+{
+    OMX_U32 nCompressRatio = 1;
+    switch (codingType) {
+    case OMX_VIDEO_CodingAVC:
+        nCompressRatio = 2;
+        break;
+    case OMX_VIDEO_CodingHEVC:
+    case OMX_VIDEO_CodingVP9:
+        nCompressRatio = 4;
+        break;
+    default:
+        nCompressRatio = 2;
+        break;
+    }
+
+    return nCompressRatio;
+}
+
+OMX_ERRORTYPE Rkvpu_CheckPortDefinition(
+    const OMX_PARAM_PORTDEFINITIONTYPE *pNewPortDefinition,
+    const OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition,
+    const OMX_U32 nPortIndex)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
+    OMX_U32 nSupportWidthMax = 0;
+
+    FunctionIn();
+
+    if (pNewPortDefinition->nBufferCountActual > pPortDefinition->nBufferCountActual) {
+        omx_err("error: SET buffer count: %d, count min: %d "
+                "NOW buffer count: %d, count min: %d",
+                pNewPortDefinition->nBufferCountActual,
+                pNewPortDefinition->nBufferCountMin,
+                pPortDefinition->nBufferCountActual,
+                pPortDefinition->nBufferCountMin);
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
+    if (OUTPUT_PORT_INDEX == nPortIndex) {
+        if (pNewPortDefinition->format.video.eColorFormat == OMX_COLOR_FormatUnused) {
+            omx_err("error: output format is OMX_COLOR_FormatUnused!");
+            ret = OMX_ErrorBadParameter;
+            goto EXIT;
+        }
+    }
+
+    if (INPUT_PORT_INDEX == nPortIndex) {
+        if (pNewPortDefinition->format.video.eCompressionFormat == OMX_VIDEO_CodingUnused) {
+            omx_err("error: input conding type is OMX_VIDEO_CodingUnused!");
+            ret = OMX_ErrorBadParameter;
+            goto EXIT;
+        }
+        nSupportWidthMax = VPUCheckSupportWidth();
+        if (nSupportWidthMax == 0) {
+            omx_warn("VPUCheckSupportWidth is failed , force max width to 4096.");
+            nSupportWidthMax = 4096;
+        }
+
+        if (pNewPortDefinition->format.video.nFrameWidth > nSupportWidthMax) {
+            if (access("/dev/rkvdec", 06) == 0) {
+                if (pNewPortDefinition->format.video.eCompressionFormat == OMX_VIDEO_CodingHEVC ||
+                    pNewPortDefinition->format.video.eCompressionFormat == OMX_VIDEO_CodingAVC ||
+                    pNewPortDefinition->format.video.eCompressionFormat == OMX_VIDEO_CodingVP9) {
+                    nSupportWidthMax = 4096;
+                } else {
+                    omx_err("decoder width %d big than support width %d return error",
+                            pNewPortDefinition->format.video.nFrameWidth,
+                            nSupportWidthMax);
+                    ret = OMX_ErrorBadParameter;
+                    goto EXIT;
+                }
+            } else {
+                omx_err("decoder width %d big than support width %d return error",
+                        pNewPortDefinition->format.video.nFrameWidth,
+                        nSupportWidthMax);
+                ret = OMX_ErrorBadParameter;
+                goto EXIT;
+            }
+        }
+        omx_info("decoder width %d support %d",
+                 pNewPortDefinition->format.video.nFrameWidth,
+                 nSupportWidthMax);
+    }
+
+EXIT:
+    FunctionOut();
+
+    return ret;
+}

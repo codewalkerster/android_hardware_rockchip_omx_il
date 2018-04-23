@@ -47,6 +47,8 @@
 
 #define INPUT_PORT_SUPPORTFORMAT_NUM_MAX    1
 
+#define DEFAULT_IEP_OUTPUT_BUFFER_COUNT     2
+
 //#define WRITR_FILE
 
 typedef struct {
@@ -101,6 +103,7 @@ typedef struct _RKVPU_OMX_VIDEODEC_COMPONENT {
 
     /* For Reconfiguration DPB */
     OMX_BOOL bReconfigDPB;
+    OMX_U32 nMinUnDequeBufferCount;
 
     /* CSC handle */
     OMX_PTR csc_handle;

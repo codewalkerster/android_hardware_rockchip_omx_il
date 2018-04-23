@@ -251,6 +251,16 @@ OMX_ERRORTYPE Rockchip_OMX_DisablePort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32
         pRockchipPort->portDefinition.bPopulated = OMX_FALSE;
         Rockchip_OSAL_SemaphoreWait(pRockchipPort->unloadedResource);
     }
+
+
+    if (pRockchipComponent->codecType == HW_VIDEO_DEC_CODEC
+        && portIndex == OUTPUT_PORT_INDEX) {
+        ret = Rkvpu_ComputeDecBufferCount((OMX_HANDLETYPE)pOMXComponent);
+        if (ret != OMX_ErrorNone) {
+            omx_err("compute decoder buffer count failed!");
+            goto EXIT;
+        }
+    }
     pRockchipPort->portDefinition.bEnabled = OMX_FALSE;
     ret = OMX_ErrorNone;
 

@@ -121,6 +121,22 @@ OMX_ERRORTYPE Rkvpu_Shared_ANBBufferToData(ROCKCHIP_OMX_DATABUFFER *pUseBuffer, 
 OMX_ERRORTYPE Rkvpu_Shared_DataToANBBuffer(ROCKCHIP_OMX_DATA *pData, ROCKCHIP_OMX_DATABUFFER *pUseBuffer, ROCKCHIP_OMX_BASEPORT *pRockchipPort);
 #endif
 
+/*
+ * for port infintion
+ */
+OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
+    OMX_HANDLETYPE hComponent,
+    const OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition,
+    const OMX_U32 nPortIndex);
+
+OMX_ERRORTYPE Rkvpu_CheckPortDefinition(
+    const OMX_PARAM_PORTDEFINITIONTYPE *pNewPortDefinition,
+    const OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition,
+    const OMX_U32 nPortIndex);
+
+OMX_U32 Rkvpu_GetCompressRatioByCodingtype(
+    OMX_VIDEO_CODINGTYPE codingType);
+
 #ifdef __cplusplus
 }
 #endif

@@ -624,10 +624,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         /* ANB and DPB Buffer Sharing */
         if (pVideoDec->bStoreMetaData != OMX_TRUE) {
             pVideoDec->bIsANBEnabled = pANBParams->enable;
-            pRockchipPort->portDefinition.nBufferCountActual = 20;
-#ifdef AVS80
-            pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 18;
-#endif
             if (portIndex == OUTPUT_PORT_INDEX)
                 pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
             omx_trace("OMX_IndexParamEnableAndroidBuffers set buffcount %d", pRockchipPort->portDefinition.nBufferCountActual);
@@ -647,24 +643,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             ((pRockchipPort->bufferProcessType & BUFFER_ANBSHARE) == BUFFER_ANBSHARE)) {
             if (pVideoDec->bIsANBEnabled == OMX_TRUE) {
                 pRockchipPort->bufferProcessType = BUFFER_SHARE;
-                pRockchipPort->portDefinition.nBufferCountActual = 24;
-#ifdef AVS80
-                pRockchipPort->portDefinition.nBufferCountMin = 22;
-#endif
-                if (pRockchipPort->portDefinition.format.video.nFrameWidth
-                    * pRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
-                    pRockchipPort->portDefinition.nBufferCountActual = 14;
-#ifdef AVS80
-                    pRockchipPort->portDefinition.nBufferCountMin = 10;
-#endif
-                }
-                if (pRockchipPort->portDefinition.format.video.nFrameWidth <= 1280) {
-                    pRockchipPort->portDefinition.nBufferCountActual = 25;
-#ifdef AVS80
-                    pRockchipPort->portDefinition.nBufferCountMin = pVideoDec->bGtsExoTest ? 8 : 21;
-#endif
-                }
-                omx_info("nBufferCountMin = %d nBufferCountActual = %d", pRockchipPort->portDefinition.nBufferCountMin, pRockchipPort->portDefinition.nBufferCountActual);
                 if (portIndex == OUTPUT_PORT_INDEX)
                     pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
                 omx_trace("OMX_IndexParamEnableAndroidBuffers & bufferProcessType change to BUFFER_SHARE");
@@ -675,13 +653,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         if ((portIndex == OUTPUT_PORT_INDEX) && !pVideoDec->bIsANBEnabled) {
             pRockchipPort->bufferProcessType = BUFFER_COPY;
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
-        }
-
-        if (portIndex == INPUT_PORT_INDEX) {
-            pRockchipPort->portDefinition.nBufferCountActual = 4;
-#ifdef AVS80
-            pRockchipPort->portDefinition.nBufferCountMin = 4;
-#endif
         }
     }
     break;
@@ -772,14 +743,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
             pVideoDec->bStoreMetaData = pANBParams->bStoreMetaData;
             pRockchipPort->bufferProcessType = BUFFER_SHARE;
-            pRockchipPort->portDefinition.nBufferCountActual = 17;
-            if (pRockchipPort->portDefinition.format.video.nFrameWidth
-                * pRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
-                pRockchipPort->portDefinition.nBufferCountActual = 14;
-            }
-            if (pRockchipPort->portDefinition.format.video.nFrameWidth <= 1280) {
-                pRockchipPort->portDefinition.nBufferCountActual = 25;
-            }
             Rockchip_OSAL_Openvpumempool(pRockchipComponent, portIndex);
             pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
             omx_trace("OMX_IndexParamEnableAndroidBuffers & bufferProcessType change to BUFFER_SHARE");
@@ -1321,6 +1284,181 @@ OMX_U32 Rockchip_OSAL_GetVideoGrallocMetaSize()
     return sizeof(VideoGrallocMetadata);
 }
 #endif
+
+OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
+    OMX_HANDLETYPE hComponent)
+{
+    OMX_ERRORTYPE          ret = OMX_ErrorNone;
+    OMX_COMPONENTTYPE     *pOMXComponent = NULL;
+    ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
+    ROCKCHIP_OMX_BASEPORT      *pInputRockchipPort = NULL;
+    ROCKCHIP_OMX_BASEPORT      *pOutputRockchipPort = NULL;
+    char                        value[PROPERTY_VALUE_MAX];
+    OMX_BOOL                    nLowMemMode = OMX_FALSE;
+    OMX_U32                     nTotalMemSize = 0;
+    OMX_U32                     nMaxBufferCount = 0;
+    OMX_U32                     nMaxLowMemBufferCount = 0;
+    OMX_U32                     nBufferSize = 0;
+    OMX_U32                     nRefFrameNum = 0;
+
+    FunctionIn();
+
+    if (hComponent == NULL) {
+        omx_err("omx component is NULL");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+    pOMXComponent = (OMX_COMPONENTTYPE *)hComponent;
+    ret = Rockchip_OMX_Check_SizeVersion(pOMXComponent, sizeof(OMX_COMPONENTTYPE));
+    if (ret != OMX_ErrorNone) {
+        omx_err("omx component version check failed!");
+        goto EXIT;
+    }
+
+    if (pOMXComponent->pComponentPrivate == NULL) {
+        omx_err("omx component private is NULL!");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+    pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
+
+    pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+    if (NULL == pVideoDec) {
+        omx_err("video decode component is NULL!");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
+    if (pRockchipComponent->currentState == OMX_StateInvalid ) {
+        omx_err("current state is invalid!");
+        ret = OMX_ErrorInvalidState;
+        goto EXIT;
+    }
+
+    pInputRockchipPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
+    pOutputRockchipPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
+    nBufferSize = pOutputRockchipPort->portDefinition.nBufferSize;
+
+    memset(value, 0, sizeof(value));
+    if (property_get("sys.video.maxMemCapacity", value, "0") && (atoi(value) > 0)) {
+        omx_info("use low memory mode, set low mem : %d MB", atoi(value));
+        nTotalMemSize = atoi(value) * 1024 * 1024;
+        nLowMemMode = OMX_TRUE;
+    }
+
+    if (nLowMemMode) {
+        pInputRockchipPort->portDefinition.nBufferCountActual = 3;
+        pInputRockchipPort->portDefinition.nBufferCountMin = 3;
+#ifdef AVS80
+        pVideoDec->nMinUnDequeBufferCount = 3;
+#else
+        pVideoDec->nMinUnDequeBufferCount = 4;
+#endif
+    } else {
+        pInputRockchipPort->portDefinition.nBufferCountActual = MAX_VIDEO_INPUTBUFFER_NUM;
+        pInputRockchipPort->portDefinition.nBufferCountMin = MAX_VIDEO_INPUTBUFFER_NUM;
+        pVideoDec->nMinUnDequeBufferCount = 4;
+    }
+
+    if (BUFFER_COPY == pOutputRockchipPort->bufferProcessType) {
+        nMaxBufferCount = pInputRockchipPort->portDefinition.nBufferCountActual;
+        pVideoDec->nMinUnDequeBufferCount = 0;
+    } else {
+        nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
+                                                             pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
+                                                             pOutputRockchipPort->portDefinition.format.video.nFrameHeight);
+        if (pOutputRockchipPort->portDefinition.format.video.nFrameWidth
+            * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088) {
+            nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1;
+        } else {
+            /* if width * height < 2304 * 1088, need consider IEP */
+            nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1 + DEFAULT_IEP_OUTPUT_BUFFER_COUNT;
+        }
+
+        if (nLowMemMode) {
+            nMaxLowMemBufferCount = nTotalMemSize / nBufferSize;
+            if (nMaxLowMemBufferCount > 23) {
+                nMaxLowMemBufferCount = 23;
+            }
+            nMaxBufferCount = (nMaxLowMemBufferCount < nMaxBufferCount) ? nMaxLowMemBufferCount : nMaxBufferCount;
+        }
+    }
+
+    pOutputRockchipPort->portDefinition.nBufferCountActual = nMaxBufferCount;
+    /*
+     * in android 8.0 and higher, nBufferCountMin can be set at will.
+     * in addition, the number of other versions is limited to 4.
+     * if you what to edit it, you should modify /frameworks/av/media/
+     * libstagefright/ACodec.cpp, newBufferCount need to be update.
+     */
+    pOutputRockchipPort->portDefinition.nBufferCountMin = nMaxBufferCount - pVideoDec->nMinUnDequeBufferCount;
+
+    omx_info("input nBufferSize: %d, width: %d, height: %d, minBufferCount: %d, bufferCount: %d",
+             pInputRockchipPort->portDefinition.nBufferSize,
+             pInputRockchipPort->portDefinition.format.video.nFrameWidth,
+             pInputRockchipPort->portDefinition.format.video.nFrameHeight,
+             pInputRockchipPort->portDefinition.nBufferCountMin,
+             pInputRockchipPort->portDefinition.nBufferCountActual);
+
+    omx_info("output nBufferSize: %d, width: %d, height: %d, minBufferCount: %d, bufferCount: %d buffer type: %d",
+             pOutputRockchipPort->portDefinition.nBufferSize,
+             pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
+             pOutputRockchipPort->portDefinition.format.video.nFrameHeight,
+             pOutputRockchipPort->portDefinition.nBufferCountMin,
+             pOutputRockchipPort->portDefinition.nBufferCountActual,
+             pOutputRockchipPort->bufferProcessType);
+
+EXIT:
+    FunctionOut();
+
+    return ret;
+}
+
+OMX_U32 Rockchip_OSAL_CalculateTotalRefFrames(
+    OMX_VIDEO_CODINGTYPE codecId,
+    OMX_U32 width,
+    OMX_U32 height)
+{
+    OMX_U32 nRefFramesNum = 0;
+    switch (codecId) {
+    case OMX_VIDEO_CodingAVC: {
+        /* used level 5.1 MaxDpbMbs */
+        nRefFramesNum = 184320 / ((width / 16) * (height / 16));
+        if (nRefFramesNum > 16) {
+            /* max refs frame number is 16 */
+            nRefFramesNum = 16;
+        } else if (nRefFramesNum < 6) {
+            nRefFramesNum = 6;
+        }
+    } break;
+    case OMX_VIDEO_CodingHEVC: {
+        /* use 4K refs frame Num to computate others */
+        nRefFramesNum = 4096 * 2160 * 6 / (width * height);
+        if (nRefFramesNum > 16) {
+            /* max refs frame number is 16 */
+            nRefFramesNum = 16;
+        } else if (nRefFramesNum < 6) {
+            /* min refs frame number is 6 */
+            nRefFramesNum = 6;
+        }
+    } break;
+    case OMX_VIDEO_CodingVP9: {
+        nRefFramesNum = 4096 * 2176 * 4 / (width * height);
+        if (nRefFramesNum > 8) {
+            nRefFramesNum = 8;
+        } else if (nRefFramesNum < 4) {
+            nRefFramesNum = 4;
+        }
+    } break;
+    default: {
+        nRefFramesNum = 8;
+    } break;
+    }
+
+    return nRefFramesNum;
+}
+
 
 #ifdef __cplusplus
 }
