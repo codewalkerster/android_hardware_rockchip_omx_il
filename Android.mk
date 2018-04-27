@@ -16,7 +16,7 @@ endif
 
 include $(CLEAR_VARS)
 
-$(info $(shell ($(LOCAL_PATH)/version.sh $(LOCAL_PATH))))
+$(info $(shell ($(LOCAL_PATH)/compile_setup.sh $(LOCAL_PATH))))
 
 ROCKCHIP_OMX_TOP := $(LOCAL_PATH)
 

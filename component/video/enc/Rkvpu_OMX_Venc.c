@@ -378,11 +378,11 @@ OMX_U32 Rkvpu_N12_Process(OMX_COMPONENTTYPE *pOMXComponent, RockchipVideoPlane *
             new_width = Width_in - pVideoEnc->params_extend.ui16CropLeft - pVideoEnc->params_extend.ui16CropRight;
             new_height = Height_in - pVideoEnc->params_extend.ui16CropTop - pVideoEnc->params_extend.ui16CropBottom;
             omx_trace("CropLeft = %d CropRight = %d CropTop %d CropBottom %d",
-                              pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
-                              pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom);
+                      pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
+                      pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom);
         }
         omx_trace("new_width = %d new_height = %d orign width %d orign height %d",
-                          new_width, new_height, Width_in, Height_in);
+                  new_width, new_height, Width_in, Height_in);
         if (new_width != pVideoEnc->bCurrent_width ||
             new_height != pVideoEnc->bCurrent_height) {
             pVideoEnc->bCurrent_width  =  new_width;
@@ -426,7 +426,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             *aPhy_address = priv_hnd_wfd.share_fd;
         }
         *len = Width * Height * 4;
-        if ((pInputBuffer->nFilledLen == 24) || (pInputBuffer->nFilledLen == 8)){
+        if ((pInputBuffer->nFilledLen == 24) || (pInputBuffer->nFilledLen == 8)) {
             if (pVideoEnc->bPixel_format < 0) {
                 pVideoEnc->bPixel_format = priv_hnd_wfd.format;
                 if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_RGBA_8888) {
@@ -446,13 +446,13 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
 #ifdef AVS80
         if (pInputBuffer->nFilledLen != Rockchip_OSAL_GetVideoNativeMetaSize() && pInputBuffer->nFilledLen != Rockchip_OSAL_GetVideoGrallocMetaSize()) {
             omx_info("MetaData buffer is wrong size! "
-                              "(got %lu bytes, expected 8 or 12)", pInputBuffer->nFilledLen);
+                     "(got %lu bytes, expected 8 or 12)", pInputBuffer->nFilledLen);
             return OMX_ErrorBadParameter;
         }
 #else
         if (pInputBuffer->nFilledLen != 8) {
             omx_info("MetaData buffer is wrong size! "
-                              "(got %lu bytes, expected 8)", pInputBuffer->nFilledLen);
+                     "(got %lu bytes, expected 8)", pInputBuffer->nFilledLen);
             return OMX_ErrorBadParameter;
         }
 #endif
@@ -493,7 +493,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
                     new_height != pVideoEnc->bCurrent_height) {
                     pVideoEnc->bCurrent_width  =  new_width;
                     pVideoEnc->bCurrent_height =  new_height;
-                    Rkvpu_Enc_ReConfig(pOMXComponent, new_width, new_height);					   
+                    Rkvpu_Enc_ReConfig(pOMXComponent, new_width, new_height);
                 }
             } else {
                 new_width = Width;
@@ -566,16 +566,16 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             EncParameter_t vpug;
             if ((ROCKCHIP_OMX_COLOR_FORMATTYPE)rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
                 Rockchip_OSAL_GetInfoFromMetaData(inputUseBuffer->bufferHeader->pBuffer, &pGrallocHandle);
-                if(pGrallocHandle == NULL){
+                if (pGrallocHandle == NULL) {
                     omx_err("pGrallocHandle is NULL set omx_format default");
                     omx_format = 0;
-                }else{
+                } else {
                     omx_format = Rockchip_OSAL_GetANBColorFormat(pGrallocHandle);
                 }
-                if(Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCbCr_420_888){
+                if (Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCbCr_420_888) {
                     H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
-                }else{
+                } else {
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)&vpug);
                     vpug.rc_mode = 1;
 
@@ -631,7 +631,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 if (pVideoEnc->fp_enc_in) {
                     fwrite(aInput.buf, 1, inputUseBuffer->dataLen, pVideoEnc->fp_enc_in);
                     fflush(pVideoEnc->fp_enc_in);
-                } 
+                }
                 // while bufPhyAddr < 0 && buf != NULL
                 // assign bufPhyAddr 8000000 to match rk_vpuapi to copy data from aInput.buf
             }
@@ -677,7 +677,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, &vpug);
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETCFG, &vpug);
                     omx_trace("pVideoEnc->bFrame_num %d pVideoEnc->mLast_config_frame %d",
-                                      pVideoEnc->bFrame_num, pVideoEnc->bLast_config_frame);
+                              pVideoEnc->bFrame_num, pVideoEnc->bLast_config_frame);
                     pVideoEnc->bLast_config_frame = pVideoEnc->bFrame_num;
 
                 }
@@ -700,7 +700,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             pRockchipComponent->checkTimeStamp.nStartFlags = inputUseBuffer->nFlags;
             pRockchipComponent->checkTimeStamp.needSetStartTimeStamp = OMX_FALSE;
             omx_trace("first frame timestamp after seeking %lld us (%.2f secs)",
-                              inputUseBuffer->timeStamp, inputUseBuffer->timeStamp / 1E6);
+                      inputUseBuffer->timeStamp, inputUseBuffer->timeStamp / 1E6);
         }
         ret = OMX_TRUE;
     }
@@ -778,7 +778,7 @@ OMX_BOOL Rkvpu_Post_OutputStream(OMX_COMPONENTTYPE *pOMXComponent)
             if (pVideoEnc->codecId == OMX_VIDEO_CodingAVC) {
                 if (pVideoEnc->bPrependSpsPpsToIdr && pOutput.keyFrame) {
                     omx_info("IDR outputUseBuffer->remainDataLen  %d spslen %d size %d", outputUseBuffer->remainDataLen
-                                      , pVideoEnc->bSpsPpsLen, outputUseBuffer->allocSize);
+                             , pVideoEnc->bSpsPpsLen, outputUseBuffer->allocSize);
                     memcpy(aOut_buf, pVideoEnc->bSpsPpsbuf, pVideoEnc->bSpsPpsLen);
                     memcpy(aOut_buf + pVideoEnc->bSpsPpsLen, "\x00\x00\x00\x01", 4);
                     Rockchip_OSAL_Memcpy(aOut_buf + pVideoEnc->bSpsPpsLen + 4, pOutput.data, pOutput.size);
@@ -787,7 +787,7 @@ OMX_BOOL Rkvpu_Post_OutputStream(OMX_COMPONENTTYPE *pOMXComponent)
                     outputUseBuffer->usedDataLen += 4;
                     outputUseBuffer->usedDataLen += pOutput.size;
                     omx_info("IDR outputUseBuffer->remainDataLen 1 %d spslen %d size %d", outputUseBuffer->remainDataLen
-                                      , pVideoEnc->bSpsPpsLen, outputUseBuffer->allocSize);
+                             , pVideoEnc->bSpsPpsLen, outputUseBuffer->allocSize);
                 } else {
                     memcpy(aOut_buf, "\x00\x00\x00\x01", 4);
                     Rockchip_OSAL_Memcpy(aOut_buf + 4, pOutput.data, pOutput.size);
@@ -1154,19 +1154,19 @@ OMX_ERRORTYPE ConvertOmxHevcProfile2HalHevcProfile(
 {
     HEVCEncProfile hevcProfile = HEVC_MAIN_PROFILE;
     switch (omxHevcProfile) {
-        case OMX_VIDEO_HEVCProfileMain:
-            hevcProfile = HEVC_MAIN_PROFILE;
-            break;
-        case OMX_VIDEO_HEVCProfileMain10:
-            hevcProfile = HEVC_MAIN10_PROFILE;
-            break;
-        case OMX_VIDEO_HEVCProfileMain10HDR10:
-            hevcProfile = HEVC_MAIN10HDR10_PROFILE;
-            break;
-        default:
-            omx_err("Unknown omx profile: %d, forced to convert HEVC_MAIN_PROFILE", 
+    case OMX_VIDEO_HEVCProfileMain:
+        hevcProfile = HEVC_MAIN_PROFILE;
+        break;
+    case OMX_VIDEO_HEVCProfileMain10:
+        hevcProfile = HEVC_MAIN10_PROFILE;
+        break;
+    case OMX_VIDEO_HEVCProfileMain10HDR10:
+        hevcProfile = HEVC_MAIN10HDR10_PROFILE;
+        break;
+    default:
+        omx_err("Unknown omx profile: %d, forced to convert HEVC_MAIN_PROFILE",
                 omxHevcProfile);
-            break;
+        break;
     }
     *halHevcProfile = hevcProfile;
     return OMX_ErrorNone;
@@ -1177,13 +1177,13 @@ OMX_ERRORTYPE ConvertOmxHevcLevel2HalHevcLevel(
 {
     HEVCLevel hevcLevel = HEVC_LEVEL4_1;
     switch (omxHevcLevel) {
-        case OMX_VIDEO_HEVCMainTierLevel41:
-            hevcLevel = HEVC_LEVEL4_1;
-            break;
-        default:
-            omx_err("Unknown omx level: %d, forced to convert HEVC_LEVEL4_1",
+    case OMX_VIDEO_HEVCMainTierLevel41:
+        hevcLevel = HEVC_LEVEL4_1;
+        break;
+    default:
+        omx_err("Unknown omx level: %d, forced to convert HEVC_LEVEL4_1",
                 omxHevcLevel);
-            break;
+        break;
     }
     *halHevcLevel = hevcLevel;
     return OMX_ErrorNone;
@@ -1263,7 +1263,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         goto EXIT;
     }
     if (pRockchipComponent->rkversion != NULL) {
-        omx_err("omx decoder info : %s",pRockchipComponent->rkversion);
+        omx_err("omx decoder info : %s", pRockchipComponent->rkversion);
     }
     if (pVideoEnc->bIsNewVpu == OMX_TRUE) {
         p_vpu_ctx = (VpuCodecContext_t *)Rockchip_OSAL_Malloc(sizeof(VpuCodecContext_t));
@@ -1273,7 +1273,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         omx_err("open vpu context FALSE");
         pVideoEnc->rkvpu_open_cxt(&p_vpu_ctx);
     }
-    
+
     int32_t kNumMapEntries = sizeof(kCodeMap) / sizeof(kCodeMap[0]);
     int i = 0;
     for (i = 0; i < kNumMapEntries; i++) {
@@ -1287,7 +1287,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     }
     pVideoEnc->bCurrent_height = pRockchipInputPort->portDefinition.format.video.nFrameHeight;
     pVideoEnc->bCurrent_width = pRockchipInputPort->portDefinition.format.video.nFrameWidth;
-    if(pVideoEnc->params_extend.bEnableScaling || pVideoEnc->params_extend.bEnableCropping){
+    if (pVideoEnc->params_extend.bEnableScaling || pVideoEnc->params_extend.bEnableCropping) {
         if (pVideoEnc->params_extend.bEnableScaling) {
             new_width = pVideoEnc->params_extend.ui16ScaledWidth;
             new_height = pVideoEnc->params_extend.ui16ScaledHeight;
@@ -1295,8 +1295,8 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
             new_width =  p_vpu_ctx->width - pVideoEnc->params_extend.ui16CropLeft - pVideoEnc->params_extend.ui16CropRight;
             new_height = p_vpu_ctx->height - pVideoEnc->params_extend.ui16CropTop - pVideoEnc->params_extend.ui16CropBottom;
             omx_trace("CropLeft = %d CropRight = %d CropTop %d CropBottom %d",
-                              pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
-                              pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom);
+                      pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
+                      pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom);
         }
         if (new_width != pVideoEnc->bCurrent_width ||
             new_height != pVideoEnc->bCurrent_height) {
@@ -1329,7 +1329,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     p_vpu_ctx->private_data = malloc(sizeof(EncParameter_t));
     memset(p_vpu_ctx->private_data, 0, sizeof(EncParameter_t));
     EncParam = (EncParameter_t*)p_vpu_ctx->private_data;
-    Rkvpu_Enc_GetEncParams(pOMXComponent,&EncParam);
+    Rkvpu_Enc_GetEncParams(pOMXComponent, &EncParam);
 
 #ifdef ENCODE_RATE_STATISTIC
     lastEncodeTime = 0;
@@ -1337,7 +1337,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     lastEncodeFrameCount = 0;
     currentEncodeFrameCount = 0;
 #endif
-    
+
     if (p_vpu_ctx) {
         if (p_vpu_ctx->init(p_vpu_ctx, NULL, 0)) {
             ret = OMX_ErrorInsufficientResources;
@@ -1357,19 +1357,19 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         if (pVideoEnc->codecId == (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingHEVC) {
             pVideoEnc->bSpsPpsbuf = NULL;
             pVideoEnc->bSpsPpsLen = 0;
-        }else {
-            if(p_vpu_ctx->extradata == NULL) {
+        } else {
+            if (p_vpu_ctx->extradata == NULL) {
                 omx_err("init get extradata fail!");
                 pVideoEnc->bSpsPpsbuf = NULL;
                 pVideoEnc->bSpsPpsLen = 0;
                 goto EXIT;
-            }else {
-                if((p_vpu_ctx->extradata != NULL) && p_vpu_ctx->extradata_size > 0 && p_vpu_ctx->extradata_size <= 2048){
+            } else {
+                if ((p_vpu_ctx->extradata != NULL) && p_vpu_ctx->extradata_size > 0 && p_vpu_ctx->extradata_size <= 2048) {
                     pVideoEnc->bSpsPpsbuf = (OMX_U8 *)Rockchip_OSAL_Malloc(2048);
                     Rockchip_OSAL_Memcpy(pVideoEnc->bSpsPpsbuf, p_vpu_ctx->extradata, p_vpu_ctx->extradata_size);
                     pVideoEnc->bSpsPpsLen = p_vpu_ctx->extradata_size;
-                }else{
-                    omx_err("p_vpu_ctx->extradata = %p,p_vpu_ctx->extradata_size = %d",p_vpu_ctx->extradata,p_vpu_ctx->extradata_size);
+                } else {
+                    omx_err("p_vpu_ctx->extradata = %p,p_vpu_ctx->extradata_size = %d", p_vpu_ctx->extradata, p_vpu_ctx->extradata_size);
                 }
             }
         }
@@ -1382,7 +1382,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     if (ret) {
 
         omx_err("err  %dtemp->phy_addr %x mWidth %d mHeight %d", ret, pVideoEnc->enc_vpumem->phy_addr,
-                          EncParam->width, EncParam->height);
+                EncParam->width, EncParam->height);
         ret = OMX_ErrorInsufficientResources;
         goto EXIT;
     }
@@ -1410,7 +1410,7 @@ EXIT:
     return ret;
 }
 
-OMX_ERRORTYPE Rkvpu_Enc_GetEncParams(OMX_COMPONENTTYPE *pOMXComponent,EncParameter_t **encParams)
+OMX_ERRORTYPE Rkvpu_Enc_GetEncParams(OMX_COMPONENTTYPE *pOMXComponent, EncParameter_t **encParams)
 {
     OMX_ERRORTYPE                  ret               = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent  = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
@@ -1443,110 +1443,110 @@ OMX_ERRORTYPE Rkvpu_Enc_GetEncParams(OMX_COMPONENTTYPE *pOMXComponent,EncParamet
             break;
         }
         switch (pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]) {
-            case OMX_Video_ControlRateDisable:
-                (*encParams)->rc_mode = Video_RC_Mode_Disable;
+        case OMX_Video_ControlRateDisable:
+            (*encParams)->rc_mode = Video_RC_Mode_Disable;
             break;
-            case OMX_Video_ControlRateVariable:
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
+        case OMX_Video_ControlRateVariable:
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
             break;
-            case OMX_Video_ControlRateConstant:
-                (*encParams)->rc_mode = Video_RC_Mode_CBR;
+        case OMX_Video_ControlRateConstant:
+            (*encParams)->rc_mode = Video_RC_Mode_CBR;
             break;
-            default:
-                omx_err("unknown rate control mode = %d, forced to VBR mode",
+        default:
+            omx_err("unknown rate control mode = %d, forced to VBR mode",
                     pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]);
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
             break;
         }
         switch (pRockchipInputPort->portDefinition.format.video.eColorFormat) {
-            case OMX_COLOR_FormatAndroidOpaque: {
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
-                (*encParams)->format = VPU_H264ENC_RGB888;
-            }
-            break;
-            case OMX_COLOR_FormatYUV420Planar: {
-                (*encParams)->format = VPU_H264ENC_YUV420_PLANAR;
-            }
-            break;
-            case OMX_COLOR_FormatYUV420SemiPlanar: {
-                (*encParams)->format = VPU_H264ENC_YUV420_SEMIPLANAR;
-            }
-            break;
-            default:
-                omx_err("inputPort colorformat is not support format = %d",
+        case OMX_COLOR_FormatAndroidOpaque: {
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
+            (*encParams)->format = VPU_H264ENC_RGB888;
+        }
+        break;
+        case OMX_COLOR_FormatYUV420Planar: {
+            (*encParams)->format = VPU_H264ENC_YUV420_PLANAR;
+        }
+        break;
+        case OMX_COLOR_FormatYUV420SemiPlanar: {
+            (*encParams)->format = VPU_H264ENC_YUV420_SEMIPLANAR;
+        }
+        break;
+        default:
+            omx_err("inputPort colorformat is not support format = %d",
                     pRockchipInputPort->portDefinition.format.video.eColorFormat);
             break;
         }
-        ConvertOmxAvcLevelToAvcSpecLevel((int32_t)pVideoEnc->AVCComponent[OUTPUT_PORT_INDEX].eLevel, (AVCLevel *)&((*encParams)->levelIdc));
-    }else if (pVideoEnc->codecId == (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingHEVC) {
+        ConvertOmxAvcLevelToAvcSpecLevel((int32_t)pVideoEnc->AVCComponent[OUTPUT_PORT_INDEX].eLevel, (AVCLevel *) & ((*encParams)->levelIdc));
+    } else if (pVideoEnc->codecId == (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingHEVC) {
         (*encParams)->enableCabac   = 0;
         (*encParams)->cabacInitIdc  = 0;
         (*encParams)->intraPicRate  = pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].nKeyFrameInterval;
 
-        ConvertOmxHevcProfile2HalHevcProfile(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eProfile, 
-                                             (HEVCEncProfile *)&((*encParams)->profileIdc));
-        ConvertOmxHevcLevel2HalHevcLevel(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eLevel, 
-                                         (HEVCLevel *)&((*encParams)->levelIdc));
+        ConvertOmxHevcProfile2HalHevcProfile(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eProfile,
+                                             (HEVCEncProfile *) & ((*encParams)->profileIdc));
+        ConvertOmxHevcLevel2HalHevcLevel(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eLevel,
+                                         (HEVCLevel *) & ((*encParams)->levelIdc));
         switch (pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]) {
-            case OMX_Video_ControlRateDisable:
-                (*encParams)->rc_mode = Video_RC_Mode_Disable;
+        case OMX_Video_ControlRateDisable:
+            (*encParams)->rc_mode = Video_RC_Mode_Disable;
             break;
-            case OMX_Video_ControlRateVariable:
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
+        case OMX_Video_ControlRateVariable:
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
             break;
-            case OMX_Video_ControlRateConstant:
-                (*encParams)->rc_mode = Video_RC_Mode_CBR;
+        case OMX_Video_ControlRateConstant:
+            (*encParams)->rc_mode = Video_RC_Mode_CBR;
             break;
-            default:
-                omx_err("unknown rate control mode = %d, forced to VBR mode", 
+        default:
+            omx_err("unknown rate control mode = %d, forced to VBR mode",
                     pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]);
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
             break;
         }
         switch (pRockchipInputPort->portDefinition.format.video.eColorFormat) {
-            case OMX_COLOR_FormatAndroidOpaque: {
-                (*encParams)->rc_mode = Video_RC_Mode_VBR;
-                (*encParams)->format = VPU_H264ENC_RGB888;
-            }
-            break;
-            case OMX_COLOR_FormatYUV420Planar: {
-                (*encParams)->format = VPU_H264ENC_YUV420_PLANAR;
-            }
-            break;
-            case OMX_COLOR_FormatYUV420SemiPlanar: {
-                (*encParams)->format = VPU_H264ENC_YUV420_SEMIPLANAR;
-            }
-            break;
-            default:
-                omx_err("inputPort colorformat is not support format = %d",
+        case OMX_COLOR_FormatAndroidOpaque: {
+            (*encParams)->rc_mode = Video_RC_Mode_VBR;
+            (*encParams)->format = VPU_H264ENC_RGB888;
+        }
+        break;
+        case OMX_COLOR_FormatYUV420Planar: {
+            (*encParams)->format = VPU_H264ENC_YUV420_PLANAR;
+        }
+        break;
+        case OMX_COLOR_FormatYUV420SemiPlanar: {
+            (*encParams)->format = VPU_H264ENC_YUV420_SEMIPLANAR;
+        }
+        break;
+        default:
+            omx_err("inputPort colorformat is not support format = %d",
                     pRockchipInputPort->portDefinition.format.video.eColorFormat);
             break;
         }
     }
 
     omx_info("encode params init settings:\n"
-                                         "width = %d\n"
-                                         "height = %d\n"
-                                         "bitRate = %d\n"
-                                         "framerate = %d\n"
-                                         "format = %d\n"
-                                         "enableCabac = %d,\n"
-                                         "cabacInitIdc = %d,\n"
-                                         "intraPicRate = %d,\n"
-                                         "profileIdc = %d,\n"
-                                         "levelIdc = %d,\n"
-                                         "rc_mode = %d,\n",
-                                         (int)(*encParams)->width,
-                                         (int)(*encParams)->height,
-                                         (int)(*encParams)->bitRate,
-                                         (int)(*encParams)->framerate,
-                                         (int)(*encParams)->format,
-                                         (int)(*encParams)->enableCabac,
-                                         (int)(*encParams)->cabacInitIdc,
-                                         (int)(*encParams)->intraPicRate,
-                                         (int)(*encParams)->profileIdc,
-                                         (int)(*encParams)->levelIdc,
-                                         (int)(*encParams)->rc_mode);
+             "width = %d\n"
+             "height = %d\n"
+             "bitRate = %d\n"
+             "framerate = %d\n"
+             "format = %d\n"
+             "enableCabac = %d,\n"
+             "cabacInitIdc = %d,\n"
+             "intraPicRate = %d,\n"
+             "profileIdc = %d,\n"
+             "levelIdc = %d,\n"
+             "rc_mode = %d,\n",
+             (int)(*encParams)->width,
+             (int)(*encParams)->height,
+             (int)(*encParams)->bitRate,
+             (int)(*encParams)->framerate,
+             (int)(*encParams)->format,
+             (int)(*encParams)->enableCabac,
+             (int)(*encParams)->cabacInitIdc,
+             (int)(*encParams)->intraPicRate,
+             (int)(*encParams)->profileIdc,
+             (int)(*encParams)->levelIdc,
+             (int)(*encParams)->rc_mode);
 
     FunctionOut();
     return ret;

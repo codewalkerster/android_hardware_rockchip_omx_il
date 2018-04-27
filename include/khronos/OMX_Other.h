@@ -88,7 +88,7 @@ typedef struct OMX_TIME_CONFIG_SEEKMODETYPE {
 } OMX_TIME_CONFIG_SEEKMODETYPE;
 
 /**
- * colorspace 
+ * colorspace
  */
 typedef enum OMX_ROCKCHIP_EXT_COLORSPACE {
     OMX_RK_EXT_ColorspaceBT709 = 1,
@@ -109,7 +109,7 @@ typedef enum OMX_ROCKCHIP_EXT_DYNCRANGE {
 
 
 /* Structure Rockchip extension HDR param of the component */
- typedef struct OMX_EXTENSION_VIDEO_PARAM_HDR {
+typedef struct OMX_EXTENSION_VIDEO_PARAM_HDR {
     OMX_U32 nSize;                  /**< size of the structure in bytes */
     OMX_VERSIONTYPE nVersion;       /**< OMX specification version information */
     OMX_RK_EXT_COLORSPACE eColorSpace;    /**< Color space */

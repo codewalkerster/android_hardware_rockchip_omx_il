@@ -1404,7 +1404,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
             ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
             UpdateFrameSize(pOMXComponent);
             omx_trace("pRockchipOutputPort->portDefinition.nBufferSize: %d",
-                              pRockchipOutputPort->portDefinition.nBufferSize);
+                      pRockchipOutputPort->portDefinition.nBufferSize);
         }
         ret = OMX_ErrorNone;
     }
@@ -1423,7 +1423,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
                 pVideoEnc->intraRefresh.eRefreshMode = pIntraRefresh->eRefreshMode;
                 pVideoEnc->intraRefresh.nCirMBs = pIntraRefresh->nCirMBs;
                 omx_trace("OMX_VIDEO_IntraRefreshCyclic Enable, nCirMBs: %d",
-                                  pVideoEnc->intraRefresh.nCirMBs);
+                          pVideoEnc->intraRefresh.nCirMBs);
             } else {
                 ret = OMX_ErrorUnsupportedSetting;
                 goto EXIT;
@@ -1463,7 +1463,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
         ROCKCHIP_OMX_WFD *pRkWFD = (ROCKCHIP_OMX_WFD*)ComponentParameterStructure;
         pVideoEnc->bRkWFD = pRkWFD->bEnable;
-        omx_trace("OMX_IndexRkEncExtendedWfdState set as:%d",pRkWFD->bEnable);
+        omx_trace("OMX_IndexRkEncExtendedWfdState set as:%d", pRkWFD->bEnable);
         ret = OMX_ErrorNone;
     }
     break;
@@ -1487,7 +1487,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
             pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX].portDefinition.format.video.eCompressionFormat = OMX_VIDEO_CodingVP8;
         } else if (!Rockchip_OSAL_Strcmp((char*)pComponentRole->cRole, RK_OMX_COMPONENT_HEVC_ENC_ROLE)) {
             pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX].portDefinition.format.video.eCompressionFormat = OMX_VIDEO_CodingHEVC;
-        }else {
+        } else {
             ret = OMX_ErrorInvalidComponentName;
             goto EXIT;
         }
@@ -1540,9 +1540,9 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         Rockchip_OSAL_MutexLock(pVideoEnc->bScale_Mutex);
         Rockchip_OSAL_Memcpy(&pVideoEnc->params_extend, params_extend, sizeof(OMX_VIDEO_PARAMS_EXTENDED));
         omx_dbg("OMX_IndexParamRkEncExtendedVideo in flags %d bEableCrop %d,cl %d cr %d ct %d cb %d, bScaling %d ScaleW %d ScaleH %d",
-                          pVideoEnc->params_extend.ui32Flags, pVideoEnc->params_extend.bEnableCropping, pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
-                          pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom, pVideoEnc->params_extend.bEnableScaling,
-                          pVideoEnc->params_extend.ui16ScaledWidth, pVideoEnc->params_extend.ui16ScaledHeight);
+                pVideoEnc->params_extend.ui32Flags, pVideoEnc->params_extend.bEnableCropping, pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
+                pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom, pVideoEnc->params_extend.bEnableScaling,
+                pVideoEnc->params_extend.ui16ScaledWidth, pVideoEnc->params_extend.ui16ScaledHeight);
         Rockchip_OSAL_MutexUnlock(pVideoEnc->bScale_Mutex);
     }
     break;
@@ -1626,7 +1626,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
         OMX_CONFIG_FRAMERATETYPE *pFramerate = (OMX_CONFIG_FRAMERATETYPE *)pComponentConfigStructure;
         OMX_U32                   portIndex = pFramerate->nPortIndex;
         ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-		
+
         if ((portIndex != OUTPUT_PORT_INDEX)) {
             ret = OMX_ErrorBadPortIndex;
             goto EXIT;
@@ -1659,12 +1659,12 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             } else {
                 memcpy(pParam, &pVideoEnc->ConfigColorAspects, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
             }
-         } else {
+        } else {
             memcpy(pParam, &pVideoEnc->ConfigColorAspects, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
-         }
+        }
     }
     break;
-#endif	
+#endif
     default:
         ret = Rockchip_OMX_GetConfig(hComponent, nIndex, pComponentConfigStructure);
         break;
@@ -1860,7 +1860,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
 
     FunctionIn();
-    omx_trace("cParameterName:%s",cParameterName);
+    omx_trace("cParameterName:%s", cParameterName);
 
     if (hComponent == NULL) {
         ret = OMX_ErrorBadParameter;
@@ -1905,7 +1905,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
         ret = OMX_ErrorNone;
     }
 #ifdef AVS80
-	else if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS) == 0) {
+    else if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS) == 0) {
         *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamRkDescribeColorAspects;
         goto EXIT;
     }

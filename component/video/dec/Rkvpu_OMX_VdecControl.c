@@ -317,7 +317,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
     }
 
 #endif
-    if (pVideoDec->bDRMPlayerMode == OMX_TRUE){
+    if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
         omx_dbg("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode");
         temp_buffer = (OMX_U8 *)Rockchip_OSAL_SharedMemory_Alloc(pVideoDec->hSharedMemory, nSizeBytes, mem_type);
         if (temp_buffer == NULL) {
@@ -325,7 +325,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
             ret = OMX_ErrorInsufficientResources;
             goto EXIT;
         }
-    }else{
+    } else {
         temp_buffer = (OMX_U8 *)Rockchip_OSAL_Malloc(nSizeBytes);
         if (temp_buffer == NULL) {
             ret = OMX_ErrorInsufficientResources;
@@ -352,7 +352,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
                 ;//temp_bufferHeader->pBuffer = temp_buffer_fd;
             else
                 */
-                temp_bufferHeader->pBuffer = temp_buffer;
+            temp_bufferHeader->pBuffer = temp_buffer;
             temp_bufferHeader->nAllocLen      = nSizeBytes;
             temp_bufferHeader->pAppPrivate    = pAppPrivate;
             if (nPortIndex == INPUT_PORT_INDEX)
@@ -435,7 +435,7 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeBuffer(
         if (((pRockchipPort->bufferStateAllocate[i] | BUFFER_STATE_FREE) != 0) && (pRockchipPort->extendBufferHeader[i].OMXBufferHeader != NULL)) {
             if (pRockchipPort->extendBufferHeader[i].OMXBufferHeader->pBuffer == pBufferHdr->pBuffer) {
                 if (pRockchipPort->bufferStateAllocate[i] & BUFFER_STATE_ALLOCATED) {
-                    if(pVideoDec->bDRMPlayerMode != 1)
+                    if (pVideoDec->bDRMPlayerMode != 1)
                         Rockchip_OSAL_Free(pRockchipPort->extendBufferHeader[i].OMXBufferHeader->pBuffer);
                     pRockchipPort->extendBufferHeader[i].OMXBufferHeader->pBuffer = NULL;
                     pBufferHdr->pBuffer = NULL;
@@ -700,16 +700,16 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferFlush(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 nP
     Rockchip_ResetCodecData(&pRockchipPort->processData);
 
     Rockchip_OSAL_MutexLock(pInputPort->secureBufferMutex);
-    if (pVideoDec->bDRMPlayerMode == OMX_TRUE && pVideoDec->bInfoChange == OMX_FALSE){
+    if (pVideoDec->bDRMPlayerMode == OMX_TRUE && pVideoDec->bInfoChange == OMX_FALSE) {
         int securebufferNum = Rockchip_OSAL_GetElemNum(&pInputPort->securebufferQ);
-        omx_trace("Rkvpu_OMX_BufferFlush in securebufferNum = %d",securebufferNum);
-        while(securebufferNum != 0){
+        omx_trace("Rkvpu_OMX_BufferFlush in securebufferNum = %d", securebufferNum);
+        while (securebufferNum != 0) {
             ROCKCHIP_OMX_DATABUFFER *securebuffer = (ROCKCHIP_OMX_DATABUFFER *) Rockchip_OSAL_Dequeue(&pInputPort->securebufferQ);
             Rkvpu_InputBufferReturn(pOMXComponent, securebuffer);
             Rockchip_OSAL_Free(securebuffer);
             securebufferNum = Rockchip_OSAL_GetElemNum(&pInputPort->securebufferQ);
         }
-        omx_trace("Rkvpu_OMX_BufferFlush out securebufferNum = %d",securebufferNum);
+        omx_trace("Rkvpu_OMX_BufferFlush out securebufferNum = %d", securebufferNum);
     }
     Rockchip_OSAL_MutexUnlock(pInputPort->secureBufferMutex);
 
@@ -734,7 +734,7 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferFlush(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 nP
                                                          OMX_EventCmdComplete,
                                                          OMX_CommandFlush, nPortIndex, NULL);
     }
-    if(pVideoDec->bInfoChange == OMX_TRUE)
+    if (pVideoDec->bInfoChange == OMX_TRUE)
         pVideoDec->bInfoChange = OMX_FALSE;
     Rockchip_OSAL_MutexUnlock(flushPortBuffer[1]->bufferMutex);
     Rockchip_OSAL_MutexUnlock(flushPortBuffer[0]->bufferMutex);
@@ -990,7 +990,7 @@ OMX_ERRORTYPE Rkvpu_InputBufferGetQueue(ROCKCHIP_OMX_BASECOMPONENT *pRockchipCom
                 ret = OMX_ErrorCodecFlush;
                 goto EXIT;
             }
-            omx_trace("input buffer count = %d",pRockchipPort->bufferQ.numElem);
+            omx_trace("input buffer count = %d", pRockchipPort->bufferQ.numElem);
             inputUseBuffer->bufferHeader  = (OMX_BUFFERHEADERTYPE *)(message->pCmdData);
             inputUseBuffer->allocSize     = inputUseBuffer->bufferHeader->nAllocLen;
             inputUseBuffer->dataLen       = inputUseBuffer->bufferHeader->nFilledLen;
@@ -1453,14 +1453,14 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
     }
     break;
     case OMX_IndexParamVideoHDRRockchipExtensions: {
-         OMX_EXTENSION_VIDEO_PARAM_HDR *hdrParams =
+        OMX_EXTENSION_VIDEO_PARAM_HDR *hdrParams =
             (OMX_EXTENSION_VIDEO_PARAM_HDR *) ComponentParameterStructure;
-         RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
 
-         ret = Rockchip_OMX_Check_SizeVersion(hdrParams, sizeof(OMX_EXTENSION_VIDEO_PARAM_HDR));
-         if (ret != OMX_ErrorNone) {
-             goto EXIT;
-         }
+        ret = Rockchip_OMX_Check_SizeVersion(hdrParams, sizeof(OMX_EXTENSION_VIDEO_PARAM_HDR));
+        if (ret != OMX_ErrorNone) {
+            goto EXIT;
+        }
 
         hdrParams->eColorSpace = pVideoDec->extColorSpace;
         hdrParams->eDyncRange = pVideoDec->extDyncRange;
@@ -1622,12 +1622,12 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
             pRockchipOutputPort->portDefinition.format.video.nSliceHeight = strideheight;
 
 #ifdef AVS80
-            Rockchip_OSAL_Memset(&(pRockchipOutputPort->cropRectangle),0,sizeof(OMX_CONFIG_RECTTYPE));
+            Rockchip_OSAL_Memset(&(pRockchipOutputPort->cropRectangle), 0, sizeof(OMX_CONFIG_RECTTYPE));
             pRockchipOutputPort->cropRectangle.nWidth = pRockchipOutputPort->portDefinition.format.video.nFrameWidth;
             pRockchipOutputPort->cropRectangle.nHeight = pRockchipOutputPort->portDefinition.format.video.nFrameHeight;
-            pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent,pRockchipComponent->callbackData,OMX_EventPortSettingsChanged,OUTPUT_PORT_INDEX,OMX_IndexConfigCommonOutputCrop,NULL);
+            pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent, pRockchipComponent->callbackData, OMX_EventPortSettingsChanged, OUTPUT_PORT_INDEX, OMX_IndexConfigCommonOutputCrop, NULL);
             if (pRockchipOutputPort->portDefinition.format.video.nFrameWidth
-                    * pRockchipOutputPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
+                * pRockchipOutputPort->portDefinition.format.video.nFrameHeight > 1920 * 1088) {
                 pRockchipOutputPort->portDefinition.nBufferCountActual = 14;
                 pRockchipOutputPort->portDefinition.nBufferCountMin = 10;
             }
@@ -1845,7 +1845,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
 
     switch (nIndex) {
 #ifdef AVS80
-    case OMX_IndexConfigCommonOutputCrop:{
+    case OMX_IndexConfigCommonOutputCrop: {
         OMX_CONFIG_RECTTYPE *rectParams = (OMX_CONFIG_RECTTYPE *)pComponentConfigStructure;
         OMX_U32 portIndex = rectParams->nPortIndex;
         ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
@@ -1855,11 +1855,11 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             return OMX_ErrorUndefined;
         }
         /*Avoid rectParams->nWidth and rectParams->nHeight to be set as 0*/
-        if(pRockchipPort->cropRectangle.nHeight > 0 && pRockchipPort->cropRectangle.nWidth > 0)
-            Rockchip_OSAL_Memcpy(rectParams,&(pRockchipPort->cropRectangle),sizeof(OMX_CONFIG_RECTTYPE));
+        if (pRockchipPort->cropRectangle.nHeight > 0 && pRockchipPort->cropRectangle.nWidth > 0)
+            Rockchip_OSAL_Memcpy(rectParams, &(pRockchipPort->cropRectangle), sizeof(OMX_CONFIG_RECTTYPE));
         else
             rectParams->nWidth = rectParams->nHeight = 1;
-        omx_info("rectParams:%d %d %d %d",rectParams->nLeft,rectParams->nTop,rectParams->nWidth,rectParams->nHeight);
+        omx_info("rectParams:%d %d %d %d", rectParams->nLeft, rectParams->nTop, rectParams->nWidth, rectParams->nHeight);
     }
     break;
 #endif

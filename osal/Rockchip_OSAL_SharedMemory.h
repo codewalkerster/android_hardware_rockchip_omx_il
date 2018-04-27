@@ -38,7 +38,7 @@ extern "C" {
 typedef enum _SECURE_MEMORY_TYPE {
     MEMORY_TYPE_ION,
     MEMORY_TYPE_DRM
-}SECURE_MEMORY_TYPE;
+} SECURE_MEMORY_TYPE;
 
 OMX_HANDLETYPE Rockchip_OSAL_SharedMemory_Open();
 void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle, OMX_BOOL b_secure);

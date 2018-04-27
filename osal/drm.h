@@ -795,8 +795,8 @@ struct drm_prime_handle {
 #define DRM_COMMAND_END         0xA0
 
 
-#define DRM_IOWR_ROCKCHIP(nr,type)      	_IOWR(DRM_COMMAND_BASE,nr,type)
-#define DRM_IOCTL_ROCKCHIP_GEM_GET_PHYS 	DRM_IOWR(DRM_COMMAND_BASE+0x04, struct drm_rockchip_gem_phys)
+#define DRM_IOWR_ROCKCHIP(nr,type)          _IOWR(DRM_COMMAND_BASE,nr,type)
+#define DRM_IOCTL_ROCKCHIP_GEM_GET_PHYS     DRM_IOWR(DRM_COMMAND_BASE+0x04, struct drm_rockchip_gem_phys)
 
 
 /**

@@ -506,8 +506,8 @@ struct drm_mode_create_dumb {
 };
 
 struct drm_rockchip_gem_phys {
-	__u32 handle;
-	__u32 phy_addr;
+    __u32 handle;
+    __u32 phy_addr;
 };
 
 

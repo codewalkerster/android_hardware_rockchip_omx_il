@@ -51,7 +51,7 @@ typedef enum OMX_NALUFORMATSTYPE {
 } OMX_NALUFORMATSTYPE;
 
 /** NAL Stream Format */
-typedef struct OMX_NALSTREAMFORMATTYPE{
+typedef struct OMX_NALSTREAMFORMATTYPE {
     OMX_U32 nSize;
     OMX_VERSIONTYPE nVersion;
     OMX_U32 nPortIndex;
@@ -171,9 +171,9 @@ typedef struct OMX_VIDEO_PARAM_ANDROID_VP8ENCODERTYPE {
     OMX_VERSIONTYPE nVersion;
     OMX_U32 nPortIndex;
     OMX_U32 nKeyFrameInterval;        // distance between consecutive key_frames (including one
-                                      // of the key_frames). 0 means interval is unspecified and
-                                      // can be freely chosen by the codec. 1 means a stream of
-                                      // only key_frames.
+    // of the key_frames). 0 means interval is unspecified and
+    // can be freely chosen by the codec. 1 means a stream of
+    // only key_frames.
 
     OMX_VIDEO_ANDROID_VPXTEMPORALLAYERPATTERNTYPE eTemporalPattern;
     OMX_U32 nTemporalLayerCount;
@@ -232,9 +232,9 @@ typedef struct OMX_VIDEO_PARAM_HEVCTYPE {
     OMX_VIDEO_HEVCPROFILETYPE eProfile;
     OMX_VIDEO_HEVCLEVELTYPE eLevel;
     OMX_U32 nKeyFrameInterval;        // distance between consecutive I-frames (including one
-                                      // of the I frames). 0 means interval is unspecified and
-                                      // can be freely chosen by the codec. 1 means a stream of
-                                      // only I frames.
+    // of the I frames). 0 means interval is unspecified and
+    // can be freely chosen by the codec. 1 means a stream of
+    // only I frames.
 } OMX_VIDEO_PARAM_HEVCTYPE;
 
 /** Structure to define if dependent slice segments should be used */
@@ -252,11 +252,11 @@ typedef struct OMX_VIDEO_SLICESEGMENTSTYPE {
 typedef struct OMX_VIDEO_RENDEREVENTTYPE {
     OMX_S64 nMediaTimeUs;  // timestamp of rendered video frame
     OMX_S64 nSystemTimeNs; // system monotonic time at the time frame was rendered
-                           // Use INT64_MAX for nMediaTimeUs to signal that the EOS
-                           // has been reached. In this case, nSystemTimeNs MUST be
-                           // the system time when the last frame was rendered.
-                           // This MUST be done in addition to returning (and
-                           // following) the render information for the last frame.
+    // Use INT64_MAX for nMediaTimeUs to signal that the EOS
+    // has been reached. In this case, nSystemTimeNs MUST be
+    // the system time when the last frame was rendered.
+    // This MUST be done in addition to returning (and
+    // following) the render information for the last frame.
 } OMX_VIDEO_RENDEREVENTTYPE;
 
 /** Dolby Vision Profile enum type */

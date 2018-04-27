@@ -78,7 +78,7 @@ typedef struct _ROCKCHIP_OMX_WFD {
     OMX_U32 nSize;
     OMX_VERSIONTYPE nVersion;
     OMX_BOOL bEnable;
-}ROCKCHIP_OMX_WFD;
+} ROCKCHIP_OMX_WFD;
 
 
 typedef struct _OMX_VIDEO_PARAMS_EXTENDED {
@@ -134,7 +134,7 @@ typedef enum _ROCKCHIP_OMX_INDEXTYPE {
     OMX_IndexParamRkEncExtendedVideo        = 0x7F050003,
 
 #define ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS "OMX.google.android.index.describeColorAspects"
-    OMX_IndexParamRkDescribeColorAspects 	= 0x7F000062,
+    OMX_IndexParamRkDescribeColorAspects    = 0x7F000062,
 
 #define ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE "OMX.google.android.index.allocateNativeHandle"
     OMX_IndexParamAllocateNativeHandle          = 0x7F00005D,
@@ -237,7 +237,7 @@ typedef enum {
     Video_RC_Mode_Disable      = 0,
     Video_RC_Mode_VBR          = 1,
     Video_RC_Mode_CBR          = 2,
-}EncRCMode;
+} EncRCMode;
 
 #if 0
 typedef struct _ROCKCHIP_PARAM_ENABLE_NATIVEBUFFER {

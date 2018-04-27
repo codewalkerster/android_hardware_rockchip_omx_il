@@ -131,7 +131,7 @@ OMX_S32 rga_copy(RockchipVideoPlane *plane, VPUMemLinear_t *vpumem, uint32_t Wid
     Rga_Request.dst.y_offset = 0;
     Rga_Request.rotate_mode = 0;
     Rga_Request.render_mode = 5;
-    Rga_Request.render_mode |= RGA_BUF_GEM_TYPE_DMA; 
+    Rga_Request.render_mode |= RGA_BUF_GEM_TYPE_DMA;
     if (plane->type == ANB_PRIVATE_BUF_VIRTUAL) {
         Rga_Request.src.uv_addr = (OMX_U32)plane->addr;
         Rga_Request.mmu_info.mmu_en = 1;
@@ -404,7 +404,7 @@ void rga_nv12_crop_scale(RockchipVideoPlane *plane,
 }
 
 void rga_rgb2nv12(RockchipVideoPlane *plane, VPUMemLinear_t *vpumem,
-                  uint32_t Width, uint32_t Height,uint32_t dstWidth, uint32_t dstHeight,  void* rga_ctx)
+                  uint32_t Width, uint32_t Height, uint32_t dstWidth, uint32_t dstHeight,  void* rga_ctx)
 {
 
 #ifndef USE_DRM
@@ -418,7 +418,7 @@ void rga_rgb2nv12(RockchipVideoPlane *plane, VPUMemLinear_t *vpumem,
         return;
     }
     rga_set_info(&src, Width, Height, plane->stride, Height, plane->fd, RK_FORMAT_RGBA_8888, (void *)plane->addr, plane->type);
-    rga_set_info(&dst,dstWidth,dstHeight,dstWidth,dstHeight,vpumem->phy_addr,RK_FORMAT_YCbCr_420_SP,(void *)vpumem->vir_addr,0);
+    rga_set_info(&dst, dstWidth, dstHeight, dstWidth, dstHeight, vpumem->phy_addr, RK_FORMAT_YCbCr_420_SP, (void *)vpumem->vir_addr, 0);
     if (rga_convert(&src, &dst, ctx->rga_fd) < 0) {
         omx_err("rga_rgb2nv12 fail");
     }
