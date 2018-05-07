@@ -47,7 +47,7 @@ OSCL_EXPORT_REF int Rockchip_OMX_COMPONENT_Library_Register(RockchipRegisterComp
     for (i = 0; i < SIZE_OF_ENC_CORE; i++) {
         Rockchip_OSAL_Strcpy(rockchipComponents[i]->componentName, enc_core[i].compName);
         Rockchip_OSAL_Strcpy(rockchipComponents[i]->roles[0], enc_core[i].roles);
-        rockchipComponents[0]->totalRoleNum = MAX_COMPONENT_ROLE_NUM;
+        rockchipComponents[i]->totalRoleNum = MAX_COMPONENT_ROLE_NUM;
     }
 
 EXIT:
