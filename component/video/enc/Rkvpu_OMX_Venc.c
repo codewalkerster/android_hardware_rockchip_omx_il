@@ -426,16 +426,14 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             *aPhy_address = priv_hnd_wfd.share_fd;
         }
         *len = Width * Height * 4;
-        if ((pInputBuffer->nFilledLen == 24) || (pInputBuffer->nFilledLen == 8)) {
-            if (pVideoEnc->bPixel_format < 0) {
-                pVideoEnc->bPixel_format = priv_hnd_wfd.format;
-                if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_RGBA_8888) {
-                    H264EncPictureType encType = VPU_H264ENC_BGR888;    // add by lance 2014.01.20
-                    pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
-                } else {
-                    H264EncPictureType encType = VPU_H264ENC_RGB888;    // add by lance 2014.01.20
-                    pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
-                }
+        if (pVideoEnc->bPixel_format < 0) {
+            pVideoEnc->bPixel_format = priv_hnd_wfd.format;
+            if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_RGBA_8888) {
+                H264EncPictureType encType = VPU_H264ENC_BGR888;    // add by lance 2014.01.20
+                pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
+            } else {
+                H264EncPictureType encType = VPU_H264ENC_RGB888;    // add by lance 2014.01.20
+                pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
             }
         }
     } else {
