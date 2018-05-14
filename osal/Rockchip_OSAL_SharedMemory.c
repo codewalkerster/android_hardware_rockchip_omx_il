@@ -52,6 +52,10 @@
 #define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
 
+#ifndef ION_SECURE_HEAP_ID
+#define ION_SECURE_HEAP_ID ION_CMA_HEAP_ID
+#endif
+
 static int mem_cnt = 0;
 static int mem_type = MEMORY_TYPE_ION;
 
@@ -236,7 +240,7 @@ static void* drm_mmap(int fd, size_t len, int prot, int flags, loff_t offset)
         return NULL;
     }
 
-    return mmap64(NULL, len, prot, flags, fd, offset);
+    return fp_mmap64(NULL, len, prot, flags, fd, offset);
 }
 
 
@@ -537,7 +541,6 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
 
     switch (memoryType) {
     case SECURE_MEMORY:
-        //mask = ION_HEAP(ION_CMA_HEAP_ID);
         mask = ION_HEAP(ION_SECURE_HEAP_ID);
         flag = 0;
         omx_err("xxxxxxxxxpHandle->fd = %d,size = %d, mem_type = %d", pHandle->fd, size, mem_type);
