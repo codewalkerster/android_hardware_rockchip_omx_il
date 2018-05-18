@@ -35,6 +35,7 @@
 
 #include "Rockchip_OMX_Baseport.h"
 #include "Rockchip_OMX_Basecomponent.h"
+#include "Rockchip_OSAL_Android.h"
 
 #undef  ROCKCHIP_LOG_TAG
 #define ROCKCHIP_LOG_TAG    "ROCKCHIP_BASE_PORT"
@@ -512,21 +513,26 @@ OMX_ERRORTYPE Rockchip_OMX_FillThisBuffer(
         goto EXIT;
     }
 
-    message = Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_MESSAGE));
-    if (message == NULL) {
-        ret = OMX_ErrorInsufficientResources;
-        Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
-        goto EXIT;
-    }
-    message->messageType = ROCKCHIP_OMX_CommandFillBuffer;
-    message->messageParam = (OMX_U32) i;
-    message->pCmdData = (OMX_PTR)pBuffer;
 
-    ret = Rockchip_OSAL_Queue(&pRockchipPort->bufferQ, (void *)message);
-    if (ret != 0) {
-        ret = OMX_ErrorUndefined;
-        Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
-        goto EXIT;
+    if (pRockchipPort->bufferProcessType == BUFFER_SHARE) {
+        Rockchip_OSAL_Fd2VpumemPool(pRockchipComponent, pRockchipPort->extendBufferHeader[i].OMXBufferHeader);
+    } else {
+        message = Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_MESSAGE));
+        if (message == NULL) {
+            ret = OMX_ErrorInsufficientResources;
+            Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
+            goto EXIT;
+        }
+        message->messageType = ROCKCHIP_OMX_CommandFillBuffer;
+        message->messageParam = (OMX_U32) i;
+        message->pCmdData = (OMX_PTR)pBuffer;
+
+        ret = Rockchip_OSAL_Queue(&pRockchipPort->bufferQ, (void *)message);
+        if (ret != 0) {
+            ret = OMX_ErrorUndefined;
+            Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
+            goto EXIT;
+        }
     }
 
     ret = Rockchip_OSAL_SemaphorePost(pRockchipPort->bufferSemID);

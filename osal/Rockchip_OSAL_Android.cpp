@@ -1051,12 +1051,13 @@ unsigned int Rockchip_OSAL_OMX2HalPixelFormat(
     return hal_format;
 }
 
-OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_BUFFERHEADERTYPE* bufferHeader)
+OMX_ERRORTYPE Rockchip_OSAL_CommitBuffer(
+    ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent,
+    OMX_U32 index)
 {
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT        *pRockchipPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     struct vpu_display_mem_pool *pMem_pool = (struct vpu_display_mem_pool*)pVideoDec->vpumem_handle;
-    OMX_U32 i = 0;
     OMX_U32 width = pRockchipPort->portDefinition.format.video.nStride;
     OMX_U32 height = pRockchipPort->portDefinition.format.video.nSliceHeight;
 #if 1//LOW_VRESION
@@ -1065,14 +1066,10 @@ OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipC
     OMX_U32 nBytesize = width * height * 9 / 5;
 #endif
     OMX_S32 dupshared_fd = -1;
+    OMX_BUFFERHEADERTYPE* bufferHeader = pRockchipPort->extendBufferHeader[index].OMXBufferHeader;
 
-    for (i = 0; i < pRockchipPort->portDefinition.nBufferCountActual; i++) {
-        if (pRockchipPort->extendBufferHeader[i].OMXBufferHeader == bufferHeader) {
-            omx_trace("commit bufferHeader 0x%x", bufferHeader);
-            break;
-        }
-    }
-    if (!pRockchipPort->extendBufferHeader[i].pRegisterFlag) {
+
+    if (!pRockchipPort->extendBufferHeader[index].pRegisterFlag) {
         buffer_handle_t bufferHandle = NULL;
         if (pVideoDec->bStoreMetaData == OMX_TRUE) {
             OMX_PTR pBufferHandle;
@@ -1085,8 +1082,8 @@ OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipC
         Rockchip_OSAL_Memset(&priv_hnd, 0, sizeof(priv_hnd));
         Rockchip_get_gralloc_private((uint32_t*)bufferHandle, &priv_hnd);
         if (((!VPUMemJudgeIommu()) ? (priv_hnd.type != ANB_PRIVATE_BUF_VIRTUAL) : 1)) {
-            pRockchipPort->extendBufferHeader[i].buf_fd[0] = priv_hnd.share_fd;
-            pRockchipPort->extendBufferHeader[i].pRegisterFlag = 1;
+            pRockchipPort->extendBufferHeader[index].buf_fd[0] = priv_hnd.share_fd;
+            pRockchipPort->extendBufferHeader[index].pRegisterFlag = 1;
             omx_trace("priv_hnd.share_fd = 0x%x", priv_hnd.share_fd);
             if (priv_hnd.share_fd > 0) {
                 if (priv_hnd.size) {
@@ -1097,12 +1094,36 @@ OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipC
                 }
                 dupshared_fd = pMem_pool->commit_hdl(pMem_pool, priv_hnd.share_fd , nBytesize);
                 if (dupshared_fd > 0) {
-                    pRockchipPort->extendBufferHeader[i].buf_fd[0] = dupshared_fd;
+                    pRockchipPort->extendBufferHeader[index].buf_fd[0] = dupshared_fd;
                 }
-                omx_trace("commit bufferHeader 0x%x share_fd = 0x%x nBytesize = %d", bufferHeader, pRockchipPort->extendBufferHeader[i].buf_fd[0], nBytesize);
+                omx_trace("commit bufferHeader 0x%x share_fd = 0x%x nBytesize = %d", bufferHeader, pRockchipPort->extendBufferHeader[index].buf_fd[0], nBytesize);
             }
         } else {
-            omx_trace("cma case gpu vmalloc can't used");
+            omx_info("cma case gpu vmalloc can't used");
+        }
+    }
+
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_BUFFERHEADERTYPE* bufferHeader)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+    ROCKCHIP_OMX_BASEPORT        *pRockchipPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
+    OMX_U32 i = 0;
+
+    for (i = 0; i < pRockchipPort->portDefinition.nBufferCountActual; i++) {
+        if (pRockchipPort->extendBufferHeader[i].OMXBufferHeader == bufferHeader) {
+            omx_trace("commit bufferHeader 0x%x", bufferHeader);
+            break;
+        }
+    }
+
+    if (!pRockchipPort->extendBufferHeader[i].pRegisterFlag) {
+        ret = Rockchip_OSAL_CommitBuffer(pRockchipComponent, i);
+        if (ret != OMX_ErrorNone) {
+            omx_err("commit buffer error header: %p", bufferHeader);
         }
     } else {
         omx_trace(" free bufferHeader 0x%x", pRockchipPort->extendBufferHeader[i].OMXBufferHeader);

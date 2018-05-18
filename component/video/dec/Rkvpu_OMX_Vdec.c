@@ -606,11 +606,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             }
             Rkvpu_OutputBufferReturn(pOMXComponent, outputUseBuffer);
         }
-        if (outputUseBuffer->dataValid == OMX_TRUE && (pOWnBycomponetNum > 0)) {
-            omx_trace("commit fd to vpu 0x%x\n", outputUseBuffer->bufferHeader);
-            Rockchip_OSAL_Fd2VpumemPool(pRockchipComponent, outputUseBuffer->bufferHeader);
-            Rockchip_ResetDataBuffer(outputUseBuffer);
-        }
+
         if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
             int ret = 0;
             p_vpu_ctx->control(p_vpu_ctx, VPU_API_DEC_GET_STREAM_TOTAL, &ret);
@@ -717,6 +713,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 if ((VPU_API_ERR)pOutput.nFlags == VPU_API_EOS_STREAM_REACHED) {
                     bufferHeader->nFlags |= OMX_BUFFERFLAG_EOS;
                     pVideoDec->bDecSendEOS = OMX_TRUE;
+                    omx_info("reach eos");
                 } else {
                     bufferHeader->nFlags     = 0;
                 }
@@ -980,25 +977,30 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
                 break;
 
             Rockchip_OSAL_MutexLock(dstOutputUseBuffer->bufferMutex);
-            if ((dstOutputUseBuffer->dataValid != OMX_TRUE) &&
-                (!CHECK_PORT_BEING_FLUSHED(rockchipOutputPort))) {
-
-                omx_trace("Rkvpu_OutputBufferGetQueue");
-                ret = Rkvpu_OutputBufferGetQueue(pRockchipComponent);
-                if (ret != OMX_ErrorNone) {
-                    Rockchip_OSAL_MutexUnlock(dstOutputUseBuffer->bufferMutex);
-                    break;
-                }
-            }
-
-            if (dstOutputUseBuffer->dataValid == OMX_TRUE) {
+            if (rockchipOutputPort->bufferProcessType == BUFFER_SHARE) {
                 if (Rkvpu_Post_OutputFrame(pOMXComponent) != OMX_TRUE) {
                     Rockchip_OSAL_SleepMillisec(3);
+                }
+            } else {
+                if ((dstOutputUseBuffer->dataValid != OMX_TRUE) &&
+                    (!CHECK_PORT_BEING_FLUSHED(rockchipOutputPort))) {
+                    ret = Rkvpu_OutputBufferGetQueue(pRockchipComponent);
+                    if (ret != OMX_ErrorNone) {
+                        Rockchip_OSAL_MutexUnlock(dstOutputUseBuffer->bufferMutex);
+                        break;
+                    }
+                }
+
+                if (dstOutputUseBuffer->dataValid == OMX_TRUE) {
+                    if (Rkvpu_Post_OutputFrame(pOMXComponent) != OMX_TRUE) {
+                        Rockchip_OSAL_SleepMillisec(3);
+                    }
                 }
             }
 
             /* reset outputData */
             Rockchip_OSAL_MutexUnlock(dstOutputUseBuffer->bufferMutex);
+
         }
     }
 

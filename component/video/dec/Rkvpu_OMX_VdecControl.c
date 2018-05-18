@@ -48,6 +48,9 @@
 #include <hardware/hardware.h>
 #include "hardware/rga.h"
 #include "vpu.h"
+#include "vpu_mem_pool.h"
+#include "vpu_mem.h"
+
 
 
 //#include <vpu_mem_pool.h>
@@ -1017,12 +1020,49 @@ OMX_ERRORTYPE Rkvpu_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHI
 {
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *rockchipOMXOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     OMX_BUFFERHEADERTYPE     *bufferHeader = NULL;
+    OMX_S32 i = 0;
 
     FunctionIn();
 
     bufferHeader = dataBuffer->bufferHeader;
+
+    if (bufferHeader == NULL) {
+        if (dataBuffer->nFlags & OMX_BUFFERFLAG_EOS) {
+            omx_info("eos reach, but don't have buffer.");
+            VPUMemLinear_t *handle = NULL;
+            OMX_U32 nUnusedCount = 0;
+            struct vpu_display_mem_pool *pMem_pool = (struct vpu_display_mem_pool *)pVideoDec->vpumem_handle;
+            nUnusedCount = pMem_pool->get_unused_num(pMem_pool);
+            if (nUnusedCount > 0) {
+                handle = pMem_pool->get_free(pMem_pool);
+                if (handle) {
+                    omx_trace("handle: 0x%x fd: 0x%x", handle, VPUMemGetFD(handle));
+                    for (i = 0; i < rockchipOMXOutputPort->portDefinition.nBufferCountActual; i++) {
+                        if (rockchipOMXOutputPort->extendBufferHeader[i].buf_fd[0] == VPUMemGetFD(handle)) {
+                            bufferHeader = rockchipOMXOutputPort->extendBufferHeader[i].OMXBufferHeader;
+                            break;
+                        }
+                    }
+                    VPUMemLink(handle);
+                    VPUFreeLinear(handle);
+                }
+            }
+
+            if (bufferHeader != NULL) {
+                omx_info("found matching buffer header");
+                dataBuffer->bufferHeader = bufferHeader;
+            } else {
+                omx_err("not matching buffer header, callback error!");
+                pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent,
+                                                             pRockchipComponent->callbackData, OMX_EventError,
+                                                             OUTPUT_PORT_INDEX,
+                                                             OMX_IndexParamPortDefinition, NULL);
+            }
+        }
+    }
 
     if (bufferHeader != NULL) {
         bufferHeader->nFilledLen = dataBuffer->remainDataLen;

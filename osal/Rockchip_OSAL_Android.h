@@ -109,6 +109,9 @@ unsigned int Rockchip_OSAL_OMX2HalPixelFormat(OMX_COLOR_FORMATTYPE omx_format);
 OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent,
                                           OMX_BUFFERHEADERTYPE* bufferHeader);
 
+OMX_ERRORTYPE Rockchip_OSAL_CommitBuffer(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent,
+                                         OMX_U32 index);
+
 OMX_BUFFERHEADERTYPE *Rockchip_OSAL_Fd2OmxBufferHeader(ROCKCHIP_OMX_BASEPORT *pRockchipPort,
                                                        OMX_IN OMX_S32 fd, OMX_IN OMX_PTR pVpumem);
 OMX_ERRORTYPE  Rockchip_OSAL_FreeVpumem(OMX_IN OMX_PTR pVpumem);
