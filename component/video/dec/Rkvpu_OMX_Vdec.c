@@ -334,6 +334,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *rockchipInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
+    ROCKCHIP_OMX_BASEPORT      *rockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_DATABUFFER    *inputUseBuffer = &rockchipInputPort->way.port2WayDataBuffer.inputDataBuffer;
     VpuCodecContext_t *p_vpu_ctx = pVideoDec->vpu_ctx;
     OMX_S32 i = 0;
@@ -646,19 +647,19 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
 
         if ((pOutput.size > 0) && (!CHECK_PORT_BEING_FLUSHED(pOutputPort))) {
             OMX_COLOR_FORMATTYPE eColorFormat = Rockchip_OSAL_CheckFormat(pRockchipComponent, pframe);
-            if ((pInputPort->portDefinition.format.video.nFrameWidth != pframe->DisplayWidth) ||
-                (pInputPort->portDefinition.format.video.nFrameHeight != pframe->DisplayHeight)
+            if ((pInputPort->portDefinition.format.video.nFrameWidth != pframe->DisplayWidth)
+                || (pInputPort->portDefinition.format.video.nFrameHeight != pframe->DisplayHeight)
                 || (pInputPort->portDefinition.format.video.nSliceHeight != pframe->FrameHeight)
                 || (pInputPort->portDefinition.format.video.nStride != (OMX_S32)pframe->FrameWidth)
-                || pOutputPort->portDefinition.format.video.eColorFormat != eColorFormat) {
-                omx_trace("video.nFrameWidth %d video.nFrameHeight %d nSliceHeight %d",
-                          pInputPort->portDefinition.format.video.nFrameWidth,
-                          pInputPort->portDefinition.format.video.nFrameHeight,
-                          pInputPort->portDefinition.format.video.nSliceHeight);
+                || (pOutputPort->portDefinition.format.video.eColorFormat != eColorFormat)) {
+                omx_info("video.nFrameWidth %d video.nFrameHeight %d nSliceHeight %d",
+                         pInputPort->portDefinition.format.video.nFrameWidth,
+                         pInputPort->portDefinition.format.video.nFrameHeight,
+                         pInputPort->portDefinition.format.video.nSliceHeight);
 
-                omx_trace("video.nFrameWidth %d video.nFrameHeight %d pframe->FrameHeight %d",
-                          pframe->DisplayWidth,
-                          pframe->DisplayHeight, pframe->FrameHeight);
+                omx_info("video.DisplayWidth %d video.DisplayWidth %d pframe->FrameHeight %d",
+                         pframe->DisplayWidth,
+                         pframe->DisplayHeight, pframe->FrameHeight);
 
                 pOutputPort->newCropRectangle.nWidth = pframe->DisplayWidth;
                 pOutputPort->newCropRectangle.nHeight = pframe->DisplayHeight;
@@ -675,6 +676,18 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                                                              pRockchipComponent->callbackData, OMX_EventPortSettingsChanged,
                                                              OUTPUT_PORT_INDEX,
                                                              OMX_IndexParamPortDefinition, NULL);
+                /*
+                 * get dpb size from vpuapi
+                 */
+                OMX_U32 nDpbSize = 0;
+                if (p_vpu_ctx) {
+                    p_vpu_ctx->control(p_vpu_ctx, VPU_API_DEC_GET_DPB_SIZE, &nDpbSize);
+                    if (nDpbSize > 0) {
+                        omx_info("info change, nDpbSize: %d", nDpbSize);
+                        pVideoDec->nDpbSize = nDpbSize;
+                    }
+                }
+
                 if (pframe->vpumem.phy_addr > 0) {
                     VPUMemLink(&pframe->vpumem);
                     VPUFreeLinear(&pframe->vpumem);
@@ -1373,6 +1386,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
         goto EXIT;
     }
     Rockchip_OSAL_Memset(pRockchipComponent->componentName, 0, MAX_OMX_COMPONENT_NAME_SIZE);
+    pVideoDec->nDpbSize = 0;
     pRockchipComponent->hComponentHandle = (OMX_HANDLETYPE)pVideoDec;
 
     pRockchipComponent->bSaveFlagEOS = OMX_FALSE;

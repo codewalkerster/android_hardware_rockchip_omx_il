@@ -59,6 +59,7 @@ typedef struct _RKVPU_OMX_VIDEODEC_COMPONENT {
 
     /* For buffer count compute */
     OMX_U32 nMinUnDequeBufferCount;
+    OMX_U32 nDpbSize;
 
     OMX_HANDLETYPE hRefHandle;
 

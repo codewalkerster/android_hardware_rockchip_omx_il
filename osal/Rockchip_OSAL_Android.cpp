@@ -1347,6 +1347,9 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
                                                              pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
                                                              pOutputRockchipPort->portDefinition.format.video.nFrameHeight);
+        if (pVideoDec->nDpbSize > 0) {
+            nRefFrameNum = pVideoDec->nDpbSize;
+        }
         if (pOutputRockchipPort->portDefinition.format.video.nFrameWidth
             * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088) {
             nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1;
