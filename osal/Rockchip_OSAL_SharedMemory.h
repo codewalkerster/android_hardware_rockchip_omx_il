@@ -47,9 +47,7 @@ void Rockchip_OSAL_SharedMemory_Free(OMX_HANDLETYPE handle, OMX_PTR pBuffer);
 int Rockchip_OSAL_SharedMemory_VirtToION(OMX_HANDLETYPE handle, OMX_PTR pBuffer);
 OMX_PTR Rockchip_OSAL_SharedMemory_IONToVirt(OMX_HANDLETYPE handle, int ion_fd);
 OMX_S32 Rockchip_OSAL_SharedMemory_getPhyAddress(OMX_HANDLETYPE handle, int share_fd, OMX_U32 *phyaddress);
-OMX_U32 Rockchip_OSAL_SharedMemory_HandleToVirAddress(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr, int ion_size);
-OMX_U32 Rockchip_OSAL_SharedMemory_HandleToPhyAddress(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr);
-
+OMX_U32 Rockchip_OSAL_SharedMemory_HandleToAddress(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr);
 #ifdef __cplusplus
 }
 #endif

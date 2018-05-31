@@ -49,8 +49,6 @@
 #include <cutils/properties.h>
 #include <time.h>
 #include <sys/time.h>
-#include<sys/mman.h>
-
 
 #undef  ROCKCHIP_LOG_TAG
 #define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_DEC"
@@ -361,13 +359,12 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
                     omx_dbg("inputUseBuffer->bufferHeader->pBuffer = %p", inputUseBuffer->bufferHeader->pBuffer);
                     extraData = inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen;
+                    if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
 #ifdef AVS80
-                    OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToVirAddress(
-                                              pVideoDec->hSharedMemory,
-                                              (OMX_HANDLETYPE)extraData,
-                                              inputUseBuffer->dataLen);
-                    extraData = (OMX_PTR)((__u64)trueAddress);
+                        OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)extraData);
+                        extraData = (OMX_PTR)((__u64)trueAddress);
 #endif
+                    }
                     omx_dbg("extraData = %p", extraData);
                 } else {
                     omx_dbg("Rkvpu_SendInputData malloc");
@@ -390,8 +387,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             }
 
             omx_trace("decode init");
-            //add by xhr don`t delete
-#if 0
+            //add by xhr
             if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
                 omx_info("set secure_mode");
                 OMX_U32 coding;
@@ -404,7 +400,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 coding = p_vpu_ctx->videoCoding | (is4kflag << 31);
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_SECURE_CONTEXT, &coding);
             }
-#endif
+
             p_vpu_ctx->init(p_vpu_ctx, extraData, extraSize);
             // not use iep when thumbNail decode
             if (!(pVideoDec->flags & RKVPU_OMX_VDEC_THUMBNAIL)) {
@@ -432,13 +428,19 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                     extraData = NULL;
                     Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
                 } else if (extraData && pVideoDec->bDRMPlayerMode) {
-#ifdef AVS80
-                    int ret = munmap(extraData, extraSize);
-                    if (ret != 0) {
-                        omx_err("munmap            fail!!!");
+                    inputUseBuffer->dataValid = OMX_FALSE;
+                    ROCKCHIP_OMX_DATABUFFER * inputInValidBuffer;
+                    inputInValidBuffer = Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_DATABUFFER));
+                    if (inputInValidBuffer == NULL) {
+                        omx_err("inputInValidBuffer malloc failed!");
+                        return OMX_FALSE;
                     }
-#endif
-                    Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
+                    inputInValidBuffer->bufferHeader = inputUseBuffer->bufferHeader;
+                    inputInValidBuffer->dataLen = inputUseBuffer->dataLen;
+                    inputInValidBuffer->timeStamp = inputUseBuffer->timeStamp;
+                    Rockchip_OSAL_MutexLock(rockchipInputPort->secureBufferMutex);
+                    Rockchip_OSAL_Queue(&rockchipInputPort->securebufferQ, inputInValidBuffer);
+                    Rockchip_OSAL_MutexUnlock(rockchipInputPort->secureBufferMutex);
                 } else {
                     ;
                 }
@@ -457,10 +459,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         omx_trace("in sendInputData data = %p", pkt.data);
         if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
 #ifdef AVS80
-            OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToVirAddress(
-                                      pVideoDec->hSharedMemory,
-                                      (OMX_HANDLETYPE)pkt.data,
-                                      inputUseBuffer->dataLen);
+            OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)pkt.data);
             pkt.data = (OMX_PTR)((__u64)trueAddress);
 #endif
             omx_trace("out sendInputData data = %p", pkt.data);
@@ -480,7 +479,6 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         omx_trace("pkt.size:%d, pkt.dts:%lld,pkt.pts:%lld,pkt.nFlags:%d",
                   pkt.size, pkt.dts, pkt.pts, pkt.nFlags);
         omx_trace("decode_sendstream pkt.data = %p", pkt.data);
-        temp_size = inputUseBuffer->dataLen;
         dec_ret = p_vpu_ctx->decode_sendstream(p_vpu_ctx, &pkt);
         if (dec_ret < 0) {
             omx_err("decode_sendstream failed , ret = %x", dec_ret);
@@ -494,33 +492,33 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             goto EXIT;*/
         }
         if (pkt.size != 0) {
-            // omx_err("stream list full wait");
-            if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
-#ifdef AVS80
-                int ret = munmap(pkt.data, temp_size);
-                if (ret != 0) {
-                    omx_err("munmap        fail!!!");
-                }
-#endif
-            }
+            omx_err("stream list full wait");
             goto EXIT;
         }
-        if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
-#ifdef AVS80
-            int ret = munmap(pkt.data, temp_size);
-            if (ret != 0) {
-                omx_err("munmap            fail!!!");
-            }
-#endif
-        }
-
+        // omx_dbg("decode_sendstream pkt.data = %p",pkt.data);
         if (pVideoDec->bPrintFps == OMX_TRUE) {
             OMX_BOOL isInput = OMX_TRUE;
             controlFPS(isInput);
         }
 
-        Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
 
+        if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
+            inputUseBuffer->dataValid = OMX_FALSE;
+            ROCKCHIP_OMX_DATABUFFER * inputInValidBuffer;
+            inputInValidBuffer = Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_DATABUFFER));
+            if (inputInValidBuffer == NULL) {
+                omx_err("inputInValidBuffer malloc failed!");
+                return OMX_FALSE;
+            }
+            inputInValidBuffer->bufferHeader = inputUseBuffer->bufferHeader;
+            inputInValidBuffer->dataLen = inputUseBuffer->dataLen;
+            inputInValidBuffer->timeStamp = inputUseBuffer->timeStamp;
+            Rockchip_OSAL_MutexLock(rockchipInputPort->secureBufferMutex);
+            Rockchip_OSAL_Queue(&rockchipInputPort->securebufferQ, inputInValidBuffer);
+            Rockchip_OSAL_MutexUnlock(rockchipInputPort->secureBufferMutex);
+        } else {
+            Rkvpu_InputBufferReturn(pOMXComponent, inputUseBuffer);
+        }
         if (pRockchipComponent->checkTimeStamp.needSetStartTimeStamp == OMX_TRUE) {
             pRockchipComponent->checkTimeStamp.needCheckStartTimeStamp = OMX_TRUE;
             pRockchipComponent->checkTimeStamp.startTimeStamp = inputUseBuffer->timeStamp;
@@ -613,7 +611,27 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             Rockchip_OSAL_Fd2VpumemPool(pRockchipComponent, outputUseBuffer->bufferHeader);
             Rockchip_ResetDataBuffer(outputUseBuffer);
         }
-
+        if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
+            int ret = 0;
+            p_vpu_ctx->control(p_vpu_ctx, VPU_API_DEC_GET_STREAM_TOTAL, &ret);
+            //omx_dbg("delete packet status = %d", ret);
+            if (ret == 0) {
+                Rockchip_OSAL_MutexLock(pInputPort->secureBufferMutex);
+                ROCKCHIP_OMX_DATABUFFER *securebuffer = NULL;
+                securebuffer = (ROCKCHIP_OMX_DATABUFFER *) Rockchip_OSAL_Dequeue(&pInputPort->securebufferQ);
+                if (securebuffer != NULL) {
+#ifdef AVS80
+                    OMX_U8 *data;
+                    OMX_U32 trueAddress = Rockchip_OSAL_SharedMemory_HandleToAddress(pVideoDec->hSharedMemory, (OMX_HANDLETYPE)securebuffer->bufferHeader->pBuffer);
+                    data = (OMX_PTR)((__u64)trueAddress);
+                    omx_trace("output secure buffer:%p", data);
+#endif
+                    Rkvpu_InputBufferReturn(pOMXComponent, securebuffer);
+                    Rockchip_OSAL_Free(securebuffer);
+                }
+                Rockchip_OSAL_MutexUnlock(pInputPort->secureBufferMutex);
+            }
+        }
         /*
          *when decode frame (width > 8192 || Height > 4096), mpp not to check it
          *do not check here, ACodec will alloc large 4K size memory
@@ -669,6 +687,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 Rockchip_OSAL_Free(pframe);
                 Rockchip_OSAL_resetVpumemPool(pRockchipComponent);
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_INFO_CHANGE, NULL);
+                pVideoDec->bInfoChange = OMX_TRUE;
                 goto EXIT;
             }
 
@@ -1208,7 +1227,6 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
 
     pVideoDec->bFirstFrame = OMX_TRUE;
     pVideoDec->maxCount = 0;
-    pVideoDec->invalidCount = 0;
     pVideoDec->bInfoChange = OMX_FALSE;
 
     if (rga_dev_open(&pVideoDec->rga_ctx)  < 0) {
