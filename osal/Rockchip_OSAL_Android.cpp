@@ -23,7 +23,8 @@
  * @history
  *   2013.11.26 : Create
  */
-
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_osal_android"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,11 +51,9 @@
 #include "Rkvpu_OMX_Vdec.h"
 #include "Rkvpu_OMX_Venc.h"
 #include "Rockchip_OSAL_Android.h"
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_OSAL_Android"
-#define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
 #include "Rockchip_OSAL_Env.h"
+#include "omx_video_global.h"
 #include "vpu_mem_pool.h"
 
 enum {
@@ -1171,7 +1170,7 @@ OMX_ERRORTYPE Rockchip_OSAL_PowerControl(
 {
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_U32 nValue = 0;
-    if (!Rockchip_OSAL_GetEnvU32("sf.power.control", &nValue, 0) || nValue <= 0) {
+    if (Rockchip_OSAL_GetEnvU32("sf.power.control", &nValue, 0) || nValue <= 0) {
         omx_info("power control is not set");
         return OMX_ErrorUndefined;
     }

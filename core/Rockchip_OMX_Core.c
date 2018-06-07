@@ -24,6 +24,8 @@
  * @history
  *    2013.11.26 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_core"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,9 +40,6 @@
 #include "git_info.h"
 #include <pthread.h>
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_OMX_CORE"
-#define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
 
 

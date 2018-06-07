@@ -23,6 +23,8 @@
  * @history
  *   2013.11.28 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_vdec_ctl"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +33,6 @@
 #include <poll.h>
 #include<sys/ioctl.h>
 #include <unistd.h>
-#include <cutils/properties.h>
 
 #include "Rockchip_OMX_Macros.h"
 #include "Rockchip_OSAL_Event.h"
@@ -51,19 +52,12 @@
 #include "vpu.h"
 #include "vpu_mem_pool.h"
 #include "vpu_mem.h"
-
-//#include <vpu_mem_pool.h>
-
-//#include "csc.h"
+#include "omx_video_global.h"
 
 #ifdef USE_ANB
 #include "Rockchip_OSAL_Android.h"
 #endif
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_DECCONTROL"
-#define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
 #include "Rockchip_OSAL_Log.h"
 
 typedef struct {
@@ -107,7 +101,6 @@ static const CodecProfileLevel kH265ProfileLevels[] = {
     { OMX_VIDEO_HEVCProfileMain, OMX_VIDEO_HEVCMainTierLevel51 },
     { OMX_VIDEO_HEVCProfileMain10, OMX_VIDEO_HEVCMainTierLevel51 },
 };
-
 
 OMX_ERRORTYPE Rkvpu_OMX_UseBuffer(
     OMX_IN OMX_HANDLETYPE            hComponent,
@@ -180,13 +173,18 @@ OMX_ERRORTYPE Rkvpu_OMX_UseBuffer(
                 omx_trace("bufferHeader[%d] = 0x%x ", i, temp_bufferHeader);
                 temp_bufferHeader->nOutputPortIndex = OUTPUT_PORT_INDEX;
             }
+            VIDEO_DBG(VIDEO_DBG_LOG_BUFFER, "[%s]: Using %s buffer from OMX AL, count: %d, index: %d, buffer: %p, size: %d",
+                      pRockchipComponent->componentName,
+                      nPortIndex == INPUT_PORT_INDEX ? "input" : "output",
+                      pRockchipPort->portDefinition.nBufferCountActual,
+                      i,
+                      pBuffer,
+                      nSizeBytes);
 
             pRockchipPort->assignedBufferNum++;
             if (pRockchipPort->assignedBufferNum == pRockchipPort->portDefinition.nBufferCountActual) {
                 pRockchipPort->portDefinition.bPopulated = OMX_TRUE;
-                /* Rockchip_OSAL_MutexLock(pRockchipPort->compMutex); */
                 Rockchip_OSAL_SemaphorePost(pRockchipPort->loadedResource);
-                /* Rockchip_OSAL_MutexUnlock(pRockchipPort->compMutex); */
             }
             *ppBufferHdr = temp_bufferHeader;
             ret = OMX_ErrorNone;
@@ -199,8 +197,6 @@ OMX_ERRORTYPE Rkvpu_OMX_UseBuffer(
 
 EXIT:
     FunctionOut();
-
-    omx_trace("Rkvpu_OMX_UseBuffer in ret = 0x%x", ret);
     return ret;
 }
 
@@ -224,7 +220,6 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
 
     FunctionIn();
 
-    omx_dbg("Rkvpu_OMX_AllocateBuffer in");
     if (hComponent == NULL) {
         ret = OMX_ErrorBadParameter;
         goto EXIT;
@@ -247,12 +242,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
         ret = OMX_ErrorBadPortIndex;
         goto EXIT;
     }
-    /*
-        if (pRockchipPort->portState != OMX_StateIdle ) {
-            ret = OMX_ErrorIncorrectStateOperation;
-            goto EXIT;
-        }
-    */
+
     if (CHECK_PORT_TUNNELED(pRockchipPort) && CHECK_PORT_BUFFER_SUPPLIER(pRockchipPort)) {
         ret = OMX_ErrorBadPortIndex;
         goto EXIT;
@@ -266,10 +256,10 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
     } else {
         mem_type = SYSTEM_MEMORY;
     }
-
 #endif
+
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
-        omx_dbg("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode");
+        omx_trace("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode");
         temp_buffer = (OMX_U8 *)Rockchip_OSAL_SharedMemory_Alloc(pVideoDec->hSharedMemory, nSizeBytes, mem_type);
         if (temp_buffer == NULL) {
             omx_err("Rkvpu_OMX_AllocateBuffer bDRMPlayerMode error");
@@ -298,11 +288,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
             pRockchipPort->extendBufferHeader[i].buf_fd[0] = temp_buffer_fd;
             pRockchipPort->bufferStateAllocate[i] = (BUFFER_STATE_ALLOCATED | HEADER_STATE_ALLOCATED);
             INIT_SET_SIZE_VERSION(temp_bufferHeader, OMX_BUFFERHEADERTYPE);
-            /*
-            if (mem_type == SECURE_MEMORY)
-                ;//temp_bufferHeader->pBuffer = temp_buffer_fd;
-            else
-                */
+            omx_err("buf_fd: 0x%x, OMXBufferHeader:%p", temp_buffer_fd, temp_bufferHeader);
             temp_bufferHeader->pBuffer = temp_buffer;
             temp_bufferHeader->nAllocLen      = nSizeBytes;
             temp_bufferHeader->pAppPrivate    = pAppPrivate;
@@ -313,9 +299,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
             pRockchipPort->assignedBufferNum++;
             if (pRockchipPort->assignedBufferNum == pRockchipPort->portDefinition.nBufferCountActual) {
                 pRockchipPort->portDefinition.bPopulated = OMX_TRUE;
-                /* Rockchip_OSAL_MutexLock(pRockchipComponent->compMutex); */
                 Rockchip_OSAL_SemaphorePost(pRockchipPort->loadedResource);
-                /* Rockchip_OSAL_MutexUnlock(pRockchipComponent->compMutex); */
             }
             *ppBuffer = temp_bufferHeader;
             ret = OMX_ErrorNone;
@@ -330,8 +314,6 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateBuffer(
 
 EXIT:
     FunctionOut();
-
-    omx_err("Rkvpu_OMX_AllocateBuffer in ret = 0x%x", ret);
     return ret;
 }
 
@@ -391,6 +373,14 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeBuffer(
                 } else if (pRockchipPort->bufferStateAllocate[i] & BUFFER_STATE_ASSIGNED) {
                     ; /* None*/
                 }
+                VIDEO_DBG(VIDEO_DBG_LOG_BUFFER, "[%s]: free %s buffer, count: %d, index: %d, buffer: %p, size: %d",
+                          pRockchipComponent->componentName,
+                          nPortIndex == INPUT_PORT_INDEX ? "input" : "output",
+                          pRockchipPort->portDefinition.nBufferCountActual,
+                          i,
+                          pBufferHdr->pBuffer,
+                          pBufferHdr->nAllocLen);
+
                 pRockchipPort->assignedBufferNum--;
                 if (pRockchipPort->bufferStateAllocate[i] & HEADER_STATE_ALLOCATED) {
                     Rockchip_OSAL_Free(pRockchipPort->extendBufferHeader[i].OMXBufferHeader);
@@ -764,7 +754,7 @@ OMX_ERRORTYPE Rkvpu_InputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHIP
 
         bufferHeader->nFilledLen = 0;
         bufferHeader->nOffset = 0;
-        omx_trace("Rkvpu_OMX_InputBufferReturn in");
+
         Rkvpu_OMX_InputBufferReturn(pOMXComponent, bufferHeader);
     }
 
@@ -894,13 +884,6 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
             dst_uv += mWidth;
             src_uv += mStride;
         }
-#if 0
-
-        if (pVideoDec->fp_out != NULL) {
-            fwrite(pOutputBuffer->pBuffer, 1, (mWidth * mHeight) * 3 / 2, pVideoDec->fp_out);
-            fflush(pVideoDec->fp_out);
-        }
-#endif
     }
     VPUFreeLinear(&pframe->vpumem);
 
@@ -1925,7 +1908,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
         goto EXIT;
     }
     if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_DESCRIBE_COLORFORMAT) == 0) {
-        omx_err("OMX_IndexParamdescribeColorFormat get ");
         *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamdescribeColorFormat;
         goto EXIT;
     }

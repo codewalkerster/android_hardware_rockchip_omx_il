@@ -23,6 +23,8 @@
  * @history
  *   2013.11.28 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_venc_ctl"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,10 +51,6 @@
 #include "Rockchip_OSAL_Android.h"
 #endif
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_ENCCONTROL"
-#define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
 #include "Rockchip_OSAL_Log.h"
 
 typedef struct {
@@ -1224,7 +1222,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
     case OMX_IndexParamRkEncExtendedVideo: {   // extern for huawei param setting
         OMX_VIDEO_PARAMS_EXTENDED  *params_extend = (OMX_VIDEO_PARAMS_EXTENDED *)ComponentParameterStructure;
         RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
-        omx_dbg("get OMX_IndexParamRkEncExtendedVideo in ");
+        omx_trace("get OMX_IndexParamRkEncExtendedVideo in ");
         Rockchip_OSAL_MutexLock(pVideoEnc->bScale_Mutex);
         Rockchip_OSAL_Memcpy(params_extend, &pVideoEnc->params_extend, sizeof(OMX_VIDEO_PARAMS_EXTENDED));
         Rockchip_OSAL_MutexUnlock(pVideoEnc->bScale_Mutex);
@@ -1510,16 +1508,16 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         OMX_VIDEO_PARAMS_EXTENDED  *params_extend = (OMX_VIDEO_PARAMS_EXTENDED *)ComponentParameterStructure;
         RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
 
-        omx_dbg("OMX_IndexParamRkEncExtendedVideo in ");
+        omx_trace("OMX_IndexParamRkEncExtendedVideo in ");
         if (ret != OMX_ErrorNone) {
             goto EXIT;
         }
         Rockchip_OSAL_MutexLock(pVideoEnc->bScale_Mutex);
         Rockchip_OSAL_Memcpy(&pVideoEnc->params_extend, params_extend, sizeof(OMX_VIDEO_PARAMS_EXTENDED));
-        omx_dbg("OMX_IndexParamRkEncExtendedVideo in flags %d bEableCrop %d,cl %d cr %d ct %d cb %d, bScaling %d ScaleW %d ScaleH %d",
-                pVideoEnc->params_extend.ui32Flags, pVideoEnc->params_extend.bEnableCropping, pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
-                pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom, pVideoEnc->params_extend.bEnableScaling,
-                pVideoEnc->params_extend.ui16ScaledWidth, pVideoEnc->params_extend.ui16ScaledHeight);
+        omx_trace("OMX_IndexParamRkEncExtendedVideo in flags %d bEableCrop %d,cl %d cr %d ct %d cb %d, bScaling %d ScaleW %d ScaleH %d",
+                  pVideoEnc->params_extend.ui32Flags, pVideoEnc->params_extend.bEnableCropping, pVideoEnc->params_extend.ui16CropLeft, pVideoEnc->params_extend.ui16CropRight,
+                  pVideoEnc->params_extend.ui16CropTop, pVideoEnc->params_extend.ui16CropBottom, pVideoEnc->params_extend.bEnableScaling,
+                  pVideoEnc->params_extend.ui16ScaledWidth, pVideoEnc->params_extend.ui16ScaledHeight);
         Rockchip_OSAL_MutexUnlock(pVideoEnc->bScale_Mutex);
     }
     break;

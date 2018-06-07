@@ -28,29 +28,16 @@
 #ifndef ROCKCHIP_OSAL_LOG
 #define ROCKCHIP_OSAL_LOG
 
+#include "OMX_Core.h"
+#include "OMX_Types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef ROCKCHIP_LOG_OFF
-#define ROCKCHIP_LOG
-#endif
-
 #ifndef ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_LOG"
+#define ROCKCHIP_LOG_TAG    "omx_log"
 #endif
 
-///#define ROCKCHIP_TRACE_ON
-
-#define ROCKCHIP_DEBUG_ON
-
-#ifdef ROCKCHIP_TRACE_ON
-#define ROCKCHIP_TRACE
-#endif
-
-#ifdef ROCKCHIP_DEBUG_ON
-#define ROCKCHIP_DEBUG
-#endif
 typedef enum _LOG_LEVEL
 {
     ROCKCHIP_LOG_TRACE,
@@ -60,30 +47,41 @@ typedef enum _LOG_LEVEL
     ROCKCHIP_LOG_DEBUG
 } ROCKCHIP_LOG_LEVEL;
 
-#ifdef ROCKCHIP_LOG
-#define Rockchip_OSAL_Log(a, ...)    ((void)_Rockchip_OSAL_Log(a, ROCKCHIP_LOG_TAG, __VA_ARGS__))
-#else
-#define Rockchip_OSAL_Log(a, ...)                                                \
-    do {                                                                \
-            ((void)_Rockchip_OSAL_Log(a, ROCKCHIP_LOG_TAG, __VA_ARGS__)); \
-    } while (0)
-#endif
+/*
+ * omx_debug bit definition
+ */
+#define OMX_DBG_UNKNOWN                 0x00000000
+#define OMX_DBG_FUNCTION                0x80000000
+#define OMX_DBG_MALLOC                  0x40000000
+#define OMX_DBG_CAPACITYS               0x00000001
 
-#ifdef ROCKCHIP_TRACE
-#define FunctionIn() omx_trace("IN")
-#define FunctionOut() omx_trace("OUT")
-#else
-#define FunctionIn() ((void *)0)
-#define FunctionOut() ((void *)0)
-#endif
+void _Rockchip_OSAL_Log(ROCKCHIP_LOG_LEVEL logLevel, OMX_U32 flag, const char *tag, const char *msg, ...);
 
-#define omx_info(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_INFO, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define omx_trace(format, ...)       _Rockchip_OSAL_Log(ROCKCHIP_LOG_TRACE, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define omx_err(format, ...)         _Rockchip_OSAL_Log(ROCKCHIP_LOG_ERROR, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define omx_warn(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_WARNING, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define omx_dbg(format, ...)         _Rockchip_OSAL_Log(ROCKCHIP_LOG_DEBUG, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define omx_info(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_INFO, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, format "\n", ##__VA_ARGS__)
+#define omx_trace(format, ...)       _Rockchip_OSAL_Log(ROCKCHIP_LOG_TRACE, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, format "\n", ##__VA_ARGS__)
+#define omx_err(format, ...)         _Rockchip_OSAL_Log(ROCKCHIP_LOG_ERROR, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, format "\n", ##__VA_ARGS__)
+#define omx_warn(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_WARNING, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, format "\n", ##__VA_ARGS__)
 
-extern void _Rockchip_OSAL_Log(ROCKCHIP_LOG_LEVEL logLevel, const char *tag, const char *msg, ...);
+#define omx_info_f(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_INFO, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define omx_trace_f(format, ...)       _Rockchip_OSAL_Log(ROCKCHIP_LOG_TRACE, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define omx_err_f(format, ...)         _Rockchip_OSAL_Log(ROCKCHIP_LOG_ERROR, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define omx_warn_f(format, ...)        _Rockchip_OSAL_Log(ROCKCHIP_LOG_WARNING, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, "%s(%d): " format "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+
+#define _omx_dbg(fmt, ...)     _Rockchip_OSAL_Log(ROCKCHIP_LOG_INFO, OMX_DBG_UNKNOWN, ROCKCHIP_LOG_TAG, "%s(%d): " fmt "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+
+#define omx_dbg_f(flags, fmt, ...) _Rockchip_OSAL_Log(ROCKCHIP_LOG_DEBUG, flags, ROCKCHIP_LOG_TAG, "%s(%d): " fmt "\n",__FUNCTION__, __LINE__, ##__VA_ARGS__)
+
+#define omx_dbg(debug, flag, fmt, ...) \
+            do { \
+               if (debug & flag) \
+                   _omx_dbg(fmt, ## __VA_ARGS__); \
+            } while (0)
+
+#define FunctionIn() omx_dbg_f(OMX_DBG_FUNCTION, "IN")
+
+#define FunctionOut() omx_dbg_f(OMX_DBG_FUNCTION, "OUT")
+
+
 
 #ifdef __cplusplus
 }

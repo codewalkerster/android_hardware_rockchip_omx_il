@@ -24,6 +24,9 @@
  *    2013.11.26 : Create
  */
 
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_base_port"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,11 +40,11 @@
 #include "Rockchip_OMX_Basecomponent.h"
 #include "Rockchip_OSAL_Android.h"
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_BASE_PORT"
-#define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
 #include "Rockchip_OSAL_Log.h"
+#include "omx_video_global.h"
+
+OMX_U32 omx_vdec_debug = 0;
+OMX_U32 omx_venc_debug = 0;
 
 
 OMX_ERRORTYPE Rkvpu_OMX_InputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHEADERTYPE* bufferHeader)
@@ -58,6 +61,12 @@ OMX_ERRORTYPE Rkvpu_OMX_InputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, OMX_
             break;
         }
     }
+
+    VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: empty buffer done(%p) timeus: %lld us, flags: 0x%x",
+              pRockchipComponent->componentName,
+              bufferHeader->pBuffer,
+              bufferHeader->nTimeStamp,
+              bufferHeader->nFlags);
 
     Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
     pRockchipComponent->pCallbacks->EmptyBufferDone(pOMXComponent, pRockchipComponent->callbackData, bufferHeader);
@@ -78,6 +87,21 @@ OMX_ERRORTYPE Rockchip_OMX_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, 
             pRockchipPort->extendBufferHeader[i].bBufferInOMX = OMX_FALSE;
             break;
         }
+    }
+
+    if (bufferHeader->nFlags & OMX_BUFFERFLAG_EOS) {
+        VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: fill EOS buffer done(%p) timeus: %lld us, flags: 0x%x",
+                  pRockchipComponent->componentName,
+                  bufferHeader->pBuffer,
+                  bufferHeader->nTimeStamp,
+                  bufferHeader->nFlags);
+
+    } else {
+        VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: fill buffer done(%p) timeus: %lld us, flags: 0x%x",
+                  pRockchipComponent->componentName,
+                  bufferHeader->pBuffer,
+                  bufferHeader->nTimeStamp,
+                  bufferHeader->nFlags);
     }
 
     Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
@@ -124,6 +148,8 @@ OMX_ERRORTYPE Rockchip_OMX_BufferFlushProcess(OMX_COMPONENTTYPE *pOMXComponent, 
         pRockchipComponent->rockchip_BufferFlush(pOMXComponent, portIndex, bEvent);
     }
 
+    VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: buffer flush.", pRockchipComponent->componentName);
+
 EXIT:
     if ((ret != OMX_ErrorNone) && (pOMXComponent != NULL) && (pRockchipComponent != NULL)) {
         omx_err("ERROR");
@@ -159,6 +185,10 @@ OMX_ERRORTYPE Rockchip_OMX_EnablePort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 
     }
     pRockchipPort->exceptionFlag = GENERAL_STATE;
     pRockchipPort->portDefinition.bEnabled = OMX_TRUE;
+
+    VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: now enable %s port.",
+              pRockchipComponent->componentName,
+              portIndex == INPUT_PORT_INDEX ? "input" : "output");
 
     ret = OMX_ErrorNone;
 
@@ -259,6 +289,11 @@ OMX_ERRORTYPE Rockchip_OMX_DisablePort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32
         }
     }
     pRockchipPort->portDefinition.bEnabled = OMX_FALSE;
+
+    VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: now disable %s port.",
+              pRockchipComponent->componentName,
+              portIndex == INPUT_PORT_INDEX ? "input" : "output");
+
     ret = OMX_ErrorNone;
 
 EXIT:
@@ -412,6 +447,30 @@ OMX_ERRORTYPE Rockchip_OMX_EmptyThisBuffer(
         goto EXIT;
     }
 
+    if (pBuffer->nFlags & OMX_BUFFERFLAG_EXTRADATA) {
+        VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: empty this extradata buffer(%p) timeus: %lld us, size: %d, flags: 0x%x",
+                  pRockchipComponent->componentName,
+                  pBuffer->pBuffer,
+                  pBuffer->nTimeStamp,
+                  pBuffer->nFilledLen,
+                  pBuffer->nFlags);
+
+    } else if (pBuffer->nFlags & OMX_BUFFERFLAG_EOS) {
+        VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: empty this EOS buffer(%p) timeus: %lld us, size: %d, flags: 0x%x",
+                  pRockchipComponent->componentName,
+                  pBuffer->pBuffer,
+                  pBuffer->nTimeStamp,
+                  pBuffer->nFilledLen,
+                  pBuffer->nFlags);
+    } else {
+        VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: empty this buffer(%p) timeus: %lld us, size: %d, flags: 0x%x",
+                  pRockchipComponent->componentName,
+                  pBuffer->pBuffer,
+                  pBuffer->nTimeStamp,
+                  pBuffer->nFilledLen,
+                  pBuffer->nFlags);
+    }
+
     message = Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_MESSAGE));
     if (message == NULL) {
         ret = OMX_ErrorInsufficientResources;
@@ -518,6 +577,10 @@ OMX_ERRORTYPE Rockchip_OMX_FillThisBuffer(
         goto EXIT;
     }
 
+    VIDEO_DBG(VIDEO_DBG_LOG_PORT, "[%s]: fill this buffer(%p) flags: 0x%x",
+              pRockchipComponent->componentName,
+              pBuffer->pBuffer,
+              pBuffer->nFlags);
 
     if (pRockchipPort->bufferProcessType == BUFFER_SHARE) {
         Rockchip_OSAL_Fd2VpumemPool(pRockchipComponent, pRockchipPort->extendBufferHeader[i].OMXBufferHeader);

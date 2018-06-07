@@ -31,7 +31,6 @@
  */
 OMX_ERRORTYPE Rockchip_OSAL_GetEnvU32(const char *name, OMX_U32 *value, OMX_U32 default_value)
 {
-    FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     char prop[PROP_VALUE_MAX + 1];
     int len = __system_property_get(name, prop);
@@ -48,13 +47,11 @@ OMX_ERRORTYPE Rockchip_OSAL_GetEnvU32(const char *name, OMX_U32 *value, OMX_U32 
         *value = default_value;
     }
 
-    FunctionOut();
     return ret;
 }
 
 OMX_ERRORTYPE Rockchip_OSAL_GetEnvStr(const char *name, char *value, char *default_value)
 {
-    FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     if (value != NULL) {
         int len = __system_property_get(name, value);
@@ -68,13 +65,11 @@ OMX_ERRORTYPE Rockchip_OSAL_GetEnvStr(const char *name, char *value, char *defau
     }
 
 EXIT:
-    FunctionOut();
     return ret;
 }
 
 OMX_ERRORTYPE Rockchip_OSAL_SetEnvU32(const char *name, OMX_U32 value)
 {
-    FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     char buf[PROP_VALUE_MAX + 1];
     snprintf(buf, sizeof(buf), "%lu", value);
@@ -85,13 +80,11 @@ OMX_ERRORTYPE Rockchip_OSAL_SetEnvU32(const char *name, OMX_U32 value)
         goto EXIT;
     }
 EXIT:
-    FunctionOut();
     return ret;
 }
 
 OMX_ERRORTYPE Rockchip_OSAL_SetEnvStr(const char *name, char *value)
 {
-    FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     int len = __system_property_set(name, value);
     if (len <= 0) {
@@ -101,7 +94,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetEnvStr(const char *name, char *value)
     }
 
 EXIT:
-    FunctionOut();
     return ret;
 }
 

@@ -23,10 +23,13 @@
  * @history
  *   2013.11.28 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_vdec"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "Rockchip_OMX_Macros.h"
 #include "Rockchip_OSAL_Event.h"
 #include "Rkvpu_OMX_Vdec.h"
@@ -51,17 +54,11 @@
 #include <time.h>
 #include <sys/time.h>
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_DEC"
-#define ROCKCHIP_LOG_OFF
-
-#ifndef VPU_API_SET_IMMEDIATE_OUT
-#define VPU_API_SET_IMMEDIATE_OUT 0x1000
-#endif
+#include "omx_video_global.h"
 
 typedef struct {
     OMX_RK_VIDEO_CODINGTYPE codec_id;
-    OMX_VIDEO_CODINGTYPE     omx_id;
+    OMX_VIDEO_CODINGTYPE    omx_id;
 } CodeMap;
 
 static const CodeMap kCodeMap[] = {
@@ -69,16 +66,20 @@ static const CodeMap kCodeMap[] = {
     { OMX_RK_VIDEO_CodingH263,  OMX_VIDEO_CodingH263},
     { OMX_RK_VIDEO_CodingMPEG4, OMX_VIDEO_CodingMPEG4},
     { OMX_RK_VIDEO_CodingVC1,   (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingVC1},
-    // { OMX_RK_VIDEO_CodingRV,    OMX_VIDEO_CodingRV},
     { OMX_RK_VIDEO_CodingAVC,   OMX_VIDEO_CodingAVC},
     { OMX_RK_VIDEO_CodingMJPEG, OMX_VIDEO_CodingMJPEG},
     { OMX_RK_VIDEO_CodingFLV1,  (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingFLV1},
     { OMX_RK_VIDEO_CodingVP8,   OMX_VIDEO_CodingVP8},
-//   { OMX_RK_VIDEO_CodingVP6,   OMX_VIDEO_CodingVP6},
     { OMX_RK_VIDEO_CodingWMV,   OMX_VIDEO_CodingWMV},
-//  { OMX_RK_VIDEO_CodingDIVX3, OMX_VIDEO_CodingDIVX3 },
     { OMX_RK_VIDEO_CodingHEVC,   OMX_VIDEO_CodingHEVC},
     { OMX_RK_VIDEO_CodingVP9,   OMX_VIDEO_CodingVP9},
+    /*
+     * remove copyright coding type
+     *
+     * { OMX_RK_VIDEO_CodingRV,    OMX_VIDEO_CodingRV},
+     * { OMX_RK_VIDEO_CodingVP6,   OMX_VIDEO_CodingVP6},
+     * { OMX_RK_VIDEO_CodingDIVX3, OMX_VIDEO_CodingDIVX3 },
+     */
 };
 
 int calc_plane(int width, int height)
@@ -119,7 +120,7 @@ static void controlFPS(OMX_BOOL isInput)
             inFps = ((float)(inFrameCount - inLastFrameCount) * 1.0f) * 1000.0f * 1000.0f / (float)inDiff;
             inLastFpsTimeUs = inNowUs;
             inLastFrameCount = inFrameCount;
-            omx_err("decode input frameCount = %d frameRate = %f HZ", inFrameCount, inFps);
+            omx_info("decode input frameCount = %d frameRate = %f HZ", inFrameCount, inFps);
         }
     } else {
         outFrameCount++;
@@ -131,7 +132,7 @@ static void controlFPS(OMX_BOOL isInput)
             outFps = ((float)(outFrameCount - outLastFrameCount) * 1.0f) * 1000.0f * 1000.0f / (float)outDiff;
             outLastFpsTimeUs = outNowUs;
             outLastFrameCount = outFrameCount;
-            omx_err("decode output frameCount = %d frameRate = %f HZ", outFrameCount, outFps);
+            omx_info("decode output frameCount = %d frameRate = %f HZ", outFrameCount, outFps);
         }
     }
     return;
@@ -224,21 +225,29 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
     char pValue[128 + 1];
     OMX_U32 nValue = 0;
 
-    if (!Rockchip_OSAL_GetEnvU32("omx_record_dec_in", &nValue, 0) && nValue > 0) {
+    if (!Rockchip_OSAL_GetEnvU32("omx.vdec.debug", &omx_vdec_debug, 0)
+        && omx_vdec_debug > 0) {
+        omx_info("open video decoder debug, value: 0x%x", omx_vdec_debug);
+    }
+
+    if (omx_vdec_debug & VDEC_DBG_RECORD_IN) {
         omx_info("Start recording stream to /data/video/dec_in.bin");
-        if (pVideoDec->fp_in != NULL) {
+        if (NULL != pVideoDec->fp_in) {
             fclose(pVideoDec->fp_in);
         }
         pVideoDec->fp_in = fopen("data/video/dec_in.bin", "wb");
+        if (NULL == pVideoDec->fp_in) {
+            omx_err("record in file fopen failed, err: %s", strerror(errno));
+        }
     }
 
-    if (!Rockchip_OSAL_GetEnvU32("omx_dump_fps", &nValue, 0) && nValue > 0) {
+    if (omx_vdec_debug & VIDEO_DBG_LOG_FPS) {
         omx_info("Start print framerate when frameCount = 32");
         pVideoDec->bPrintFps = OMX_TRUE;
     }
 
-    if (!Rockchip_OSAL_GetEnvU32("omx_dump_buffer_position", &nValue, 0) && nValue > 0) {
-        omx_info("print all buf position");
+    if (omx_vdec_debug & VIDEO_DBG_LOG_BUFFER_POSITION) {
+        omx_info("print all buffer status");
         pVideoDec->bPrintBufferPosition = OMX_TRUE;
     }
 
@@ -247,6 +256,8 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
         omx_info("This is gts media test. pValue: %s", pValue);
         pVideoDec->bGtsMediaTest = OMX_TRUE;
     }
+
+
 
     return ret;
 }
@@ -352,7 +363,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             if (((inputUseBuffer->nFlags & OMX_BUFFERFLAG_EXTRADATA) == OMX_BUFFERFLAG_EXTRADATA)
                 || ((inputUseBuffer->nFlags & OMX_BUFFERFLAG_CODECCONFIG) == OMX_BUFFERFLAG_CODECCONFIG)) {
                 if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
-                    omx_dbg("inputUseBuffer->bufferHeader->pBuffer = %p", inputUseBuffer->bufferHeader->pBuffer);
+                    omx_trace("inputUseBuffer->bufferHeader->pBuffer = %p", inputUseBuffer->bufferHeader->pBuffer);
                     extraData = inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen;
                     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
 #ifdef AVS80
@@ -360,9 +371,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                         extraData = (OMX_PTR)((__u64)trueAddress);
 #endif
                     }
-                    omx_dbg("extraData = %p", extraData);
                 } else {
-                    omx_dbg("Rkvpu_SendInputData malloc");
+                    omx_trace("Rkvpu_SendInputData malloc");
                     extraData = (OMX_U8 *)Rockchip_OSAL_Malloc(inputUseBuffer->dataLen);
                     if (extraData == NULL) {
                         omx_err("malloc Extra Data fail");
@@ -373,10 +383,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                     Rockchip_OSAL_Memcpy(extraData, inputUseBuffer->bufferHeader->pBuffer + inputUseBuffer->usedDataLen,
                                          inputUseBuffer->dataLen);
                 }
-                if (pVideoDec->fp_in != NULL) {
-                    fwrite(extraData, 1, inputUseBuffer->dataLen, pVideoDec->fp_in);
-                    fflush(pVideoDec->fp_in);
-                }
+
                 extraSize = inputUseBuffer->dataLen;
                 extraFlag = 1;
             }
@@ -406,7 +413,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             }
 
             if (rockchipInputPort->portDefinition.format.video.bFlagErrorConcealment) {
-                omx_dbg("use directly output mode for media");
+                omx_trace("use directly output mode for media");
                 RK_U32 flag = 1;
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_IMMEDIATE_OUT, (void*)&flag);
             }
@@ -487,10 +494,9 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             goto EXIT;*/
         }
         if (pkt.size != 0) {
-            omx_err("stream list full wait");
             goto EXIT;
         }
-        // omx_dbg("decode_sendstream pkt.data = %p",pkt.data);
+
         if (pVideoDec->bPrintFps == OMX_TRUE) {
             OMX_BOOL isInput = OMX_TRUE;
             controlFPS(isInput);
@@ -711,7 +717,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                     bufferHeader->nFlags     = 0;
                 }
                 bufferHeader->nTimeStamp = pOutput.timeUs;
-                omx_trace("Rkvpu_OutputBufferReturn %lld", pOutput.timeUs);
             } else {
                 if (pframe->vpumem.phy_addr > 0) {
                     VPUMemLink(&pframe->vpumem);
@@ -724,7 +729,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             if ((bufferHeader->nFilledLen > 0) ||
                 ((bufferHeader->nFlags & OMX_BUFFERFLAG_EOS) == OMX_BUFFERFLAG_EOS) ||
                 (CHECK_PORT_BEING_FLUSHED(pOutputPort))) {
-                omx_trace("Rkvpu_OutputBufferReturn");
                 Rockchip_OMX_OutputBufferReturn(pOMXComponent, bufferHeader);
             }
 
@@ -1137,7 +1141,7 @@ OMX_ERRORTYPE omx_open_vpudec_context(RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec)
     if (pVideoDec->rkvpu_open_cxt == NULL) {
         dlclose(pVideoDec->rkapi_hdl);
         pVideoDec->rkapi_hdl = NULL;
-        omx_dbg("used old version lib");
+        omx_trace("used old version lib");
         pVideoDec->rkapi_hdl = dlopen("librk_vpuapi.so", RTLD_LAZY);
         if (pVideoDec->rkapi_hdl == NULL) {
             omx_err("dll open fail librk_vpuapi.so");
@@ -1199,6 +1203,25 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         p_vpu_ctx = NULL;
     }
 
+    /*
+     * switch to vpu
+     * 0: original mode
+     * 1: use mpp first
+     * 2: use vpuapi first
+     */
+    OMX_U32 use_mpp = 0;
+    Rockchip_OSAL_GetEnvU32("omx.vpu.switch", &use_mpp, 0);
+    if (use_mpp == VDEC_DBG_VPU_MPP_FIRST) {
+        omx_info("switch vpu driver to mpp");
+        /* reserved[1] = mpp_mode */
+        p_vpu_ctx->extra_cfg.reserved[1] = 1;
+    } else if (use_mpp == VDEC_DBG_VPU_VPUAPI_FIRST) {
+        /* when vpu ctx is NULL, force to vpuapi */
+        omx_info("switch vpu driver to vpuapi");
+        Rockchip_OSAL_Free(p_vpu_ctx);
+        p_vpu_ctx = NULL;
+    }
+
     if ( pVideoDec->rkvpu_open_cxt != NULL) {
         pVideoDec->rkvpu_open_cxt(&p_vpu_ctx);
     }
@@ -1231,13 +1254,7 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
             omx_err("check fast mode failed!");
         }
     }
-    /*
-     ** if current stream is Div3, tell VPU_API of on2 decoder to
-     ** config hardware as Div3.
-    */
-    /*  if (pVideoDec->flags & RKVPU_OMX_VDEC_IS_DIV3) {
-          p_vpu_ctx->videoCoding = OMX_RK_VIDEO_CodingDIVX3;
-      }*/
+
     if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC) {
         pVideoDec->bIsHevc = 1;
     }
@@ -1249,18 +1266,12 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         pVideoDec->bIsPowerControl = OMX_TRUE;
     }
 
-    Rkvpu_OMX_DebugSwitchfromPropget(pRockchipComponent);
-
     if (p_vpu_ctx->width > 1920 && p_vpu_ctx->height > 1080) {
         //add for kodi
         Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_of_sectionKD", 4);
         Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_to_skip_KD", 3);
         pVideoDec->b4K_flags = OMX_TRUE;
     }
-
-#ifdef WRITR_FILE
-    pVideoDec->fp_out = fopen("data/video/dec_out.yuv", "wb");
-#endif
 
 EXIT:
     FunctionOut();
@@ -1362,7 +1373,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
         goto EXIT;
     }
     Rockchip_OSAL_Memset(pRockchipComponent->componentName, 0, MAX_OMX_COMPONENT_NAME_SIZE);
-    pVideoDec->bReconfigDPB = OMX_FALSE;
     pRockchipComponent->hComponentHandle = (OMX_HANDLETYPE)pVideoDec;
 
     pRockchipComponent->bSaveFlagEOS = OMX_FALSE;
@@ -1371,9 +1381,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->bDecSendEOS = OMX_FALSE;
     pVideoDec->bPvr_Flag = OMX_FALSE;
     pVideoDec->bFastMode = OMX_FALSE;
-    pVideoDec->bPrintFps = OMX_FALSE;
-    pVideoDec->bPrintBufferPosition = OMX_FALSE;
-    pVideoDec->bGtsMediaTest = OMX_FALSE;
+
     pVideoDec->fp_in = NULL;
     pVideoDec->b4K_flags = OMX_FALSE;
     pVideoDec->power_fd = -1;
@@ -1382,6 +1390,12 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->bIs10bit = OMX_FALSE;
     pRockchipComponent->bMultiThreadProcess = OMX_TRUE;
     pRockchipComponent->codecType = HW_VIDEO_DEC_CODEC;
+
+    /* for debug */
+    pVideoDec->bPrintFps = OMX_FALSE;
+    pVideoDec->bPrintBufferPosition = OMX_FALSE;
+    pVideoDec->bGtsMediaTest = OMX_FALSE;
+    pVideoDec->nVdecDebug = 0;
 
     pVideoDec->bFirstFrame = OMX_TRUE;
 
@@ -1475,7 +1489,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
         Rockchip_OSAL_Strcpy(pRockchipPort->portDefinition.format.video.cMIMEType, "video/avc");
         pVideoDec->codecId = OMX_VIDEO_CodingAVC;
         pRockchipPort->portDefinition.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
-
     } else if (!strcmp(componentName, RK_OMX_COMPONENT_H264_DRM_DEC)) {
         omx_err("Rockchip_OMX_ComponentConstructor h264 secure");
         Rockchip_OSAL_Memset(pRockchipPort->portDefinition.format.video.cMIMEType, 0, MAX_OMX_MIMETYPE_SIZE);
@@ -1550,7 +1563,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
         pVideoDec->codecId = (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingVP6;
         pRockchipPort->portDefinition.format.video.eCompressionFormat = (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingVP6;
     } else if (!strcmp(componentName, RK_OMX_COMPONENT_HEVC_DRM_DEC)) {
-        Rockchip_OSAL_Log(ROCKCHIP_LOG_ERROR, "Rockchip_OMX_ComponentConstructor hevc.secure");
         Rockchip_OSAL_Memset(pRockchipPort->portDefinition.format.video.cMIMEType, 0, MAX_OMX_MIMETYPE_SIZE);
         Rockchip_OSAL_Strcpy(pRockchipPort->portDefinition.format.video.cMIMEType, "video/hevc");
         pVideoDec->codecId = OMX_VIDEO_CodingHEVC;
@@ -1613,6 +1625,11 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
             close(gpu_fd);
         }
     }
+
+    strcpy(pRockchipComponent->componentName, componentName);
+
+    Rkvpu_OMX_DebugSwitchfromPropget(pRockchipComponent);
+
     pRockchipComponent->currentState = OMX_StateLoaded;
 EXIT:
     FunctionOut();
@@ -1654,7 +1671,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
         pVideoDec->hSharedMemory = NULL;
     }
 
-//    Rockchip_OSAL_RefANB_Terminate(pVideoDec->hRefHandle);
     if (pVideoDec->fp_in != NULL) {
         fclose(pVideoDec->fp_in);
     }

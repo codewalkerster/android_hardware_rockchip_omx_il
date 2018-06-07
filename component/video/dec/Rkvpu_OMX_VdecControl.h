@@ -100,7 +100,6 @@ OMX_ERRORTYPE Rkvpu_OMX_ComponentRoleEnum(
     OMX_U8        *cRole,
     OMX_U32        nIndex);
 
-
 OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
     OMX_IN OMX_HANDLETYPE  hComponent,
     OMX_IN OMX_STRING      cParameterName,

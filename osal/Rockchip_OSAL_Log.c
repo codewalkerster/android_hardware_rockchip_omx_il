@@ -24,47 +24,39 @@
  *   2013.11.26 : Create
  */
 
-
 #include <utils/Log.h>
-
-#include "Rockchip_OSAL_Log.h"
-#include <cutils/properties.h>
 #include <string.h>
 #include <android/log.h>
+#include "Rockchip_OSAL_Env.h"
+#include "Rockchip_OSAL_Log.h"
 
-void _Rockchip_OSAL_Log(ROCKCHIP_LOG_LEVEL logLevel, const char *tag, const char *msg, ...)
+void _Rockchip_OSAL_Log(ROCKCHIP_LOG_LEVEL logLevel, OMX_U32 flag, const char *tag, const char *msg, ...)
 {
+    OMX_U32 value = 0;
+
     va_list argptr;
 
     va_start(argptr, msg);
 
     switch (logLevel) {
     case ROCKCHIP_LOG_TRACE: {
-#ifdef ROCKCHIP_TRACE
-        __android_log_vprint(ANDROID_LOG_DEBUG, tag, msg, argptr);
-#else
-        char value[PROPERTY_VALUE_MAX];
-        if (property_get("dump_omx_log", value, NULL)
-            && (!strcmp("1", value) || !strcasecmp("true", value))) {
+        Rockchip_OSAL_GetEnvU32("dump_omx_log", &value, 0);
+        if (value) {
             __android_log_vprint(ANDROID_LOG_DEBUG, tag, msg, argptr);
         }
-#endif
     }
     break;
-    case ROCKCHIP_LOG_DEBUG:
-#ifdef ROCKCHIP_DEBUG
-        __android_log_vprint(ANDROID_LOG_DEBUG, tag, msg, argptr);
-#endif
-        break;
+    case ROCKCHIP_LOG_DEBUG: {
+        Rockchip_OSAL_GetEnvU32("omx.log.debug", &value, 0);
+        if (value & flag) {
+            __android_log_vprint(ANDROID_LOG_DEBUG, tag, msg, argptr);
+        }
+    } break;
     case ROCKCHIP_LOG_INFO:
-//#ifdef ROCKCHIP_INFO
         __android_log_vprint(ANDROID_LOG_INFO, tag, msg, argptr);
-//#endif
         break;
     case ROCKCHIP_LOG_WARNING:
-#ifdef ROCKCHIP_WARN
         __android_log_vprint(ANDROID_LOG_WARN, tag, msg, argptr);
-#endif
         break;
     case ROCKCHIP_LOG_ERROR:
         __android_log_vprint(ANDROID_LOG_ERROR, tag, msg, argptr);

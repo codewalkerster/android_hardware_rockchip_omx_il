@@ -23,9 +23,8 @@
  * @history
  *   2013.11.26 : Create
  */
-
-
-
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_osal_event"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,10 +35,6 @@
 #include "Rockchip_OSAL_Memory.h"
 #include "Rockchip_OSAL_Mutex.h"
 #include "Rockchip_OSAL_Event.h"
-
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_OSAL_EVENT"
-#define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
 
 

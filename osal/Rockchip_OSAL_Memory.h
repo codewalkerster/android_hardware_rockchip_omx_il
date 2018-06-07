@@ -29,6 +29,7 @@
 #define Rockchip_OSAL_MEMORY
 
 #include "OMX_Types.h"
+#include "Rockchip_OSAL_Log.h"
 
 typedef enum _MEMORY_TYPE {
     NORMAL_MEMORY = 0x00,
@@ -36,13 +37,26 @@ typedef enum _MEMORY_TYPE {
     SYSTEM_MEMORY = 0x02
 } MEMORY_TYPE;
 
+#define Rockchip_OSAL_Malloc(size) \
+        Rockchip_OSAL_Malloc_With_Caller(size, ROCKCHIP_LOG_TAG, __FUNCTION__, __LINE__)
+
+#define Rockchip_OSAL_Free(addr) \
+            Rockchip_OSAL_Free_With_Caller(addr, ROCKCHIP_LOG_TAG, __FUNCTION__, __LINE__)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-OMX_PTR Rockchip_OSAL_Malloc(OMX_U32 size);
-void    Rockchip_OSAL_Free(OMX_PTR addr);
+OMX_PTR Rockchip_OSAL_Malloc_With_Caller(
+    OMX_U32 size,
+    const char *tag,
+    const char *caller,
+    const OMX_U32 line);
+void    Rockchip_OSAL_Free_With_Caller(
+    OMX_PTR addr,
+    const char *tag,
+    const char *caller,
+    const OMX_U32 line);
 OMX_PTR Rockchip_OSAL_Memset(OMX_PTR dest, OMX_S32 c, OMX_S32 n);
 OMX_PTR Rockchip_OSAL_Memcpy(OMX_PTR dest, OMX_PTR src, OMX_S32 n);
 OMX_PTR Rockchip_OSAL_Memmove(OMX_PTR dest, OMX_PTR src, OMX_S32 n);

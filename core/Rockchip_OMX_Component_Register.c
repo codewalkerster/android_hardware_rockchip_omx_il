@@ -23,6 +23,9 @@
  * @history
  *    2013.11.26 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_comp_regs"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,9 +44,6 @@
 #include "Rockchip_OMX_Macros.h"
 #include "git_info.h"
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_COMP_REGS"
-#define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
 static const ROCKCHIP_COMPONENT_INFO kCompInfo[] = {
     { "rk.omx_dec", "libomxvpu_dec.so" },

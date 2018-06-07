@@ -37,21 +37,31 @@
 
 static int mem_cnt = 0;
 
-OMX_PTR Rockchip_OSAL_Malloc(OMX_U32 size)
+OMX_PTR Rockchip_OSAL_Malloc_With_Caller(
+    OMX_U32 size,
+    const char *tag,
+    const char *caller,
+    const OMX_U32 line)
 {
     mem_cnt++;
-    omx_trace("alloc count: %d", mem_cnt);
+    omx_dbg_f(OMX_DBG_MALLOC, "tag: %s, caller: %s(%d), malloc count: %d",
+              tag, caller, line, mem_cnt);
 
     return (OMX_PTR)malloc(size);
 }
 
-void Rockchip_OSAL_Free(OMX_PTR addr)
+void Rockchip_OSAL_Free_With_Caller(
+    OMX_PTR addr,
+    const char *tag,
+    const char *caller,
+    const OMX_U32 line)
 {
-    mem_cnt--;
-    omx_trace("free count: %d", mem_cnt);
-
-    if (addr)
+    if (addr) {
+        mem_cnt--;
+        omx_dbg_f(OMX_DBG_MALLOC, "tag: %s, caller: %s(%d), free count: %d",
+                  tag, caller, line, mem_cnt);
         free(addr);
+    }
 
     return;
 }

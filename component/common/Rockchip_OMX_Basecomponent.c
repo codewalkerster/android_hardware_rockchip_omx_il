@@ -23,6 +23,8 @@
  * @history
  *    2013.11.26 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_base_comp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,17 +37,13 @@
 #include "Rockchip_OSAL_ETC.h"
 #include "Rockchip_OSAL_Semaphore.h"
 #include "Rockchip_OSAL_Mutex.h"
+#include "Rockchip_OSAL_Log.h"
 #include "Rockchip_OMX_Baseport.h"
 #include "Rockchip_OMX_Basecomponent.h"
 #include "Rockchip_OMX_Resourcemanager.h"
 #include "Rockchip_OMX_Macros.h"
 #include "git_info.h"
 
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_BASE_COMP"
-#define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
-#include "Rockchip_OSAL_Log.h"
 
 
 /* Change CHECK_SIZE_VERSION Macro */

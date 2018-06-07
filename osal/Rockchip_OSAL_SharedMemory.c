@@ -415,11 +415,9 @@ OMX_HANDLETYPE Rockchip_OSAL_SharedMemory_Open()
         goto EXIT;
     if (!access("/dev/ion", F_OK)) {
         IONClient = open("/dev/ion", O_RDWR);
-        omx_err("111ion_client_create Error: %d", IONClient);
         mem_type = MEMORY_TYPE_ION;
     } else {
         IONClient = open("/dev/dri/card0", O_RDWR);
-        omx_err("222ion_client_create Error: %d", IONClient);
         mem_type = MEMORY_TYPE_DRM;
     }
 
@@ -545,7 +543,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
     case SECURE_MEMORY:
         mask = ION_HEAP(ION_SECURE_HEAP_ID);
         flag = 0;
-        omx_err("xxxxxxxxxpHandle->fd = %d,size = %d, mem_type = %d", pHandle->fd, size, mem_type);
+        omx_info("pHandle->fd = %d,size = %d, mem_type = %d", pHandle->fd, size, mem_type);
         if (mem_type == MEMORY_TYPE_DRM) {
             err = drm_alloc(pHandle->fd, size, 4096, (RK_U32 *)&ion_hdl, ROCKCHIP_BO_SECURE);
         } else {
@@ -611,7 +609,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
             omx_err("failed to trans handle to fd: %s\n", strerror(errno));
             goto EXIT;
         }
-        omx_dbg("pnative_handle_t = %p, map_fd = %d", pnative_handle_t, map_fd);
+        omx_trace("pnative_handle_t = %p, map_fd = %d", pnative_handle_t, map_fd);
         pnative_handle_t->data[0] = map_fd;
         pBuffer = (void *)pnative_handle_t;
         if (mem_type == MEMORY_TYPE_DRM) {

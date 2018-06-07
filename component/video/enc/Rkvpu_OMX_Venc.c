@@ -23,6 +23,8 @@
  * @history
  *   2013.11.28 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_venc"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,20 +48,16 @@
 #include "Rockchip_OSAL_RGA_Process.h"
 #include "Rockchip_OSAL_Env.h"
 #include "OMX_IVCommon.h"
+#include "Rockchip_OSAL_Log.h"
 
 #include "hardware/rga.h"
 #include "vpu_type.h"
 #include "gralloc_priv_omx.h"
+#include "omx_video_global.h"
 
 #ifdef USE_ANB
 #include "Rockchip_OSAL_Android.h"
 #endif
-
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_ENC"
-#define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
-#include "Rockchip_OSAL_Log.h"
 
 /* Using for the encode rate statistic*/
 #ifdef ENCODE_RATE_STATISTIC
@@ -1145,7 +1143,7 @@ OMX_ERRORTYPE omx_open_vpuenc_context(RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc)
     if (pVideoEnc->rkvpu_open_cxt == NULL) {
         dlclose(pVideoEnc->rkapi_hdl);
         pVideoEnc->rkapi_hdl = NULL;
-        omx_dbg("used old version lib");
+        omx_trace("used old version lib");
         pVideoEnc->rkapi_hdl = dlopen("librk_vpuapi.so", RTLD_LAZY | RTLD_GLOBAL);
         if (pVideoEnc->rkapi_hdl == NULL) {
             omx_err("dll open fail librk_vpuapi.so");
@@ -1172,7 +1170,12 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
     RKVPU_OMX_VIDEOENC_COMPONENT  *pVideoEnc         = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_U32                        nValue = 0;
 
-    if (!Rockchip_OSAL_GetEnvU32("record_omx_enc_out", &nValue, 0) && (nValue > 0)) {
+    if (!Rockchip_OSAL_GetEnvU32("omx.venc.debug", &omx_venc_debug, 0)
+        && omx_venc_debug > 0) {
+        omx_info("open video encoder debug, value: 0x%x", omx_venc_debug);
+    }
+
+    if (omx_venc_debug & VDEC_DBG_RECORD_IN) {
         omx_info("Start recording stream to /data/video/enc_out.bin");
         if (pVideoEnc->fp_enc_out != NULL) {
             fclose(pVideoEnc->fp_enc_out);
@@ -1180,7 +1183,7 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
         pVideoEnc->fp_enc_out = fopen("data/video/enc_out.bin", "wb");
     }
 
-    if (!Rockchip_OSAL_GetEnvU32("record_omx_enc_in", &nValue, 0) && (nValue > 0)) {
+    if (omx_venc_debug & VDEC_DBG_RECORD_OUT) {
         omx_info("Start recording stream to /data/video/enc_in.bin");
         if (pVideoEnc->fp_enc_in != NULL) {
             fclose(pVideoEnc->fp_enc_in);
@@ -1288,7 +1291,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
             goto EXIT;
 
         }
-        omx_dbg("eControlRate %d ", pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]);
+        omx_trace("eControlRate %d ", pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]);
         if (pVideoEnc->eControlRate[OUTPUT_PORT_INDEX] == OMX_Video_ControlRateConstant) {
             p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)EncParam);
             EncParam->rc_mode = 1;

@@ -23,6 +23,8 @@
  * @history
  *    2013.11.26 : Create
  */
+#undef  ROCKCHIP_LOG_TAG
+#define ROCKCHIP_LOG_TAG    "omx_res"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,12 +34,8 @@
 #include "Rockchip_OMX_Basecomponent.h"
 #include "Rockchip_OSAL_Memory.h"
 #include "Rockchip_OSAL_Mutex.h"
-#include "git_info.h"
-
-#undef  ROCKCHIP_LOG_TAG
-#define ROCKCHIP_LOG_TAG    "ROCKCHIP_RM"
-#define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
+#include "git_info.h"
 
 
 #define MAX_RESOURCE_VIDEO_DEC 6 /* for Android */
@@ -283,7 +281,6 @@ OMX_ERRORTYPE Rockchip_OMX_Check_Resource(OMX_COMPONENTTYPE *pOMXComponent)
     pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     pRockchipComponent->rkversion = OMX_COMPILE_INFO;
 
-    omx_err("pRockchipComponent->codecType %d, Line:%d", pRockchipComponent->codecType, __LINE__);
     if (pRockchipComponent->codecType == HW_VIDEO_DEC_CODEC) {
         pComponentTemp = gpVideoDecRMComponentList;
         if (pComponentTemp != NULL) {
