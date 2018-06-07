@@ -39,6 +39,8 @@
 #include "Rockchip_OSAL_Android.h"
 #include "Rockchip_OSAL_RGA_Process.h"
 #include "Rockchip_OSAL_SharedMemory.h"
+#include "Rockchip_OSAL_Log.h"
+#include "Rockchip_OSAL_Env.h"
 
 #include "vpu_mem_pool.h"
 #include "vpu_api_private_cmd.h"
@@ -46,15 +48,12 @@
 #include "vpu_mem.h"
 #include <dlfcn.h>
 #include <unistd.h>
-#include <cutils/properties.h>
 #include <time.h>
 #include <sys/time.h>
 
 #undef  ROCKCHIP_LOG_TAG
 #define ROCKCHIP_LOG_TAG    "ROCKCHIP_VIDEO_DEC"
 #define ROCKCHIP_LOG_OFF
-//#define ROCKCHIP_TRACE_ON
-#include "Rockchip_OSAL_Log.h"
 
 #ifndef VPU_API_SET_IMMEDIATE_OUT
 #define VPU_API_SET_IMMEDIATE_OUT 0x1000
@@ -222,9 +221,10 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
 {
     OMX_ERRORTYPE                  ret               = OMX_ErrorNone;
     RKVPU_OMX_VIDEODEC_COMPONENT  *pVideoDec         = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    char                           value[PROPERTY_VALUE_MAX];
-    memset(value, 0, sizeof(value));
-    if (property_get("record_omx_dec_in", value, "0") && (atoi(value) > 0)) {
+    char pValue[128 + 1];
+    OMX_U32 nValue = 0;
+
+    if (!Rockchip_OSAL_GetEnvU32("omx_record_dec_in", &nValue, 0) && nValue > 0) {
         omx_info("Start recording stream to /data/video/dec_in.bin");
         if (pVideoDec->fp_in != NULL) {
             fclose(pVideoDec->fp_in);
@@ -232,21 +232,19 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
         pVideoDec->fp_in = fopen("data/video/dec_in.bin", "wb");
     }
 
-    memset(value, 0, sizeof(value));
-    if (property_get("dump_omx_fps", value, "0") && (atoi(value) > 0)) {
+    if (!Rockchip_OSAL_GetEnvU32("omx_dump_fps", &nValue, 0) && nValue > 0) {
         omx_info("Start print framerate when frameCount = 32");
         pVideoDec->bPrintFps = OMX_TRUE;
     }
 
-    memset(value, 0, sizeof(value));
-    if (property_get("dump_omx_buf_position", value, "0") && (atoi(value) > 0)) {
+    if (!Rockchip_OSAL_GetEnvU32("omx_dump_buffer_position", &nValue, 0) && nValue > 0) {
         omx_info("print all buf position");
         pVideoDec->bPrintBufferPosition = OMX_TRUE;
     }
 
-    memset(value, 0, sizeof(value));
-    if (property_get("cts_gts.media.gts", value, NULL) && (!strcasecmp(value, "true"))) {
-        omx_info("This is gts media test.");
+    memset(pValue, 0, 128 + 1);
+    if (!Rockchip_OSAL_GetEnvStr("cts_gts.media.gts", pValue, NULL) && !strcasecmp(pValue, "true")) {
+        omx_info("This is gts media test. pValue: %s", pValue);
         pVideoDec->bGtsMediaTest = OMX_TRUE;
     }
 
@@ -1180,7 +1178,7 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     }
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
         omx_info("drm player mode is true, force to mpp");
-        property_set("use_mpp_mode", "1");
+        Rockchip_OSAL_SetEnvU32("use_mpp_mode", 1);
     }
     Rockchip_OSAL_Memset((void*)p_vpu_ctx, 0, sizeof(VpuCodecContext_t));
     if (omx_open_vpudec_context(pVideoDec)) {
@@ -1262,8 +1260,8 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
 
     if (p_vpu_ctx->width > 1920 && p_vpu_ctx->height > 1080) {
         //add for kodi
-        property_set("sys.gpu.frames_num_of_sectionKD", "4");
-        property_set("sys.gpu.frames_num_to_skip_KD", "3");
+        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_of_sectionKD", 4);
+        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_to_skip_KD", 3);
         pVideoDec->b4K_flags = OMX_TRUE;
     }
 
@@ -1385,7 +1383,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->bPrintFps = OMX_FALSE;
     pVideoDec->bPrintBufferPosition = OMX_FALSE;
     pVideoDec->bGtsMediaTest = OMX_FALSE;
-    pVideoDec->bGtsExoTest = OMX_FALSE;
     pVideoDec->fp_in = NULL;
     pVideoDec->b4K_flags = OMX_FALSE;
     pVideoDec->power_fd = -1;
@@ -1673,8 +1670,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     }
     if (pVideoDec->b4K_flags == OMX_TRUE) {
         //add for kodi
-        property_set("sys.gpu.frames_num_of_sectionKD", "0");
-        property_set("sys.gpu.frames_num_to_skip_KD", "0");
+        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_of_sectionKD", 0);
+        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_to_skip_KD", 0);
         pVideoDec->b4K_flags = OMX_FALSE;
     }
     pInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
@@ -1695,7 +1692,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
 
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
         omx_info("drm player mode is true, force to mpp");
-        property_set("use_mpp_mode", "0");
+        Rockchip_OSAL_SetEnvU32("use_mpp_mode", 0);
     }
 
     Rockchip_OSAL_Free(pVideoDec);

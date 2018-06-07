@@ -43,11 +43,11 @@
 #include "Rockchip_OSAL_ETC.h"
 #include "Rockchip_OSAL_SharedMemory.h"
 #include "Rockchip_OSAL_RGA_Process.h"
+#include "Rockchip_OSAL_Env.h"
+
 #include "hardware/rga.h"
 #include "vpu_type.h"
 #include "gralloc_priv_omx.h"
-#include <cutils/properties.h>
-
 
 #ifdef USE_ANB
 #include "Rockchip_OSAL_Android.h"
@@ -1223,9 +1223,9 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
 {
     OMX_ERRORTYPE                  ret               = OMX_ErrorNone;
     RKVPU_OMX_VIDEOENC_COMPONENT  *pVideoEnc         = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    char                           value[PROPERTY_VALUE_MAX];
-    memset(value, 0, sizeof(value));
-    if (property_get("record_omx_enc_out", value, "0") && (atoi(value) > 0)) {
+    OMX_U32                        nValue = 0;
+
+    if (!Rockchip_OSAL_GetEnvU32("record_omx_enc_out", &nValue, 0) && (nValue > 0)) {
         omx_info("Start recording stream to /data/video/enc_out.bin");
         if (pVideoEnc->fp_enc_out != NULL) {
             fclose(pVideoEnc->fp_enc_out);
@@ -1233,8 +1233,7 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
         pVideoEnc->fp_enc_out = fopen("data/video/enc_out.bin", "wb");
     }
 
-    memset(value, 0, sizeof(value));
-    if (property_get("record_omx_enc_in", value, "0") && (atoi(value) > 0)) {
+    if (!Rockchip_OSAL_GetEnvU32("record_omx_enc_in", &nValue, 0) && (nValue > 0)) {
         omx_info("Start recording stream to /data/video/enc_in.bin");
         if (pVideoEnc->fp_enc_in != NULL) {
             fclose(pVideoEnc->fp_enc_in);

@@ -54,8 +54,8 @@
 #define ROCKCHIP_LOG_TAG    "ROCKCHIP_OSAL_Android"
 #define ROCKCHIP_LOG_OFF
 #include "Rockchip_OSAL_Log.h"
+#include "Rockchip_OSAL_Env.h"
 #include "vpu_mem_pool.h"
-#include <cutils/properties.h>
 
 enum {
     kFenceTimeoutMs = 1000
@@ -592,7 +592,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         EnableAndroidNativeBuffersParams *pANBParams = (EnableAndroidNativeBuffersParams *) ComponentParameterStructure;
         OMX_U32 portIndex = pANBParams->nPortIndex;
-        char  value[PROPERTY_VALUE_MAX];
         ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
 
         omx_trace("%s: OMX_IndexParamEnableAndroidNativeBuffers", __func__);
@@ -612,13 +611,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         if (CHECK_PORT_TUNNELED(pRockchipPort) && CHECK_PORT_BUFFER_SUPPLIER(pRockchipPort)) {
             ret = OMX_ErrorBadPortIndex;
             goto EXIT;
-        }
-
-        // for gts exo test
-        memset(value, 0, sizeof(value));
-        if (property_get("cts_gts.exo.gts", value, NULL) && (!strcasecmp(value, "true"))) {
-            omx_info("This is gts exo test.");
-            pVideoDec->bGtsExoTest = OMX_TRUE;
         }
 
         /* ANB and DPB Buffer Sharing */
@@ -1190,8 +1182,9 @@ OMX_ERRORTYPE Rockchip_OSAL_PowerControl(
     int bitDepth)
 {
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    char prop_value[PROPERTY_VALUE_MAX];
-    if (!property_get("sf.power.control", prop_value, NULL) || atoi(prop_value) <= 0) {
+    OMX_U32 nValue = 0;
+    if (!Rockchip_OSAL_GetEnvU32("sf.power.control", &nValue, 0) || nValue <= 0) {
+        omx_info("power control is not set");
         return OMX_ErrorUndefined;
     }
 
@@ -1294,7 +1287,7 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
     ROCKCHIP_OMX_BASEPORT      *pInputRockchipPort = NULL;
     ROCKCHIP_OMX_BASEPORT      *pOutputRockchipPort = NULL;
-    char                        value[PROPERTY_VALUE_MAX];
+    OMX_U32                     nValue = 0;
     OMX_BOOL                    nLowMemMode = OMX_FALSE;
     OMX_U32                     nTotalMemSize = 0;
     OMX_U32                     nMaxBufferCount = 0;
@@ -1340,10 +1333,9 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
     pOutputRockchipPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     nBufferSize = pOutputRockchipPort->portDefinition.nBufferSize;
 
-    memset(value, 0, sizeof(value));
-    if (property_get("sys.video.maxMemCapacity", value, "0") && (atoi(value) > 0)) {
-        omx_info("use low memory mode, set low mem : %d MB", atoi(value));
-        nTotalMemSize = atoi(value) * 1024 * 1024;
+    if (!Rockchip_OSAL_GetEnvU32("sys.video.maxMemCapacity", &nValue, 0) && (nValue > 0)) {
+        omx_info("use low memory mode, set low mem : %d MB", nValue);
+        nTotalMemSize = nValue * 1024 * 1024;
         nLowMemMode = OMX_TRUE;
     }
 

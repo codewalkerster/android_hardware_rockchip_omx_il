@@ -23,7 +23,8 @@ LOCAL_SRC_FILES := \
 	Rockchip_OSAL_Log.c\
 	Rockchip_OSAL_RGA_Process.c \
 	Rockchip_OSAL_Android.cpp \
-	Rockchip_OSAL_SharedMemory.c
+	Rockchip_OSAL_SharedMemory.c \
+	Rockchip_OSAL_Env.c
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := libRkOMX_OSAL
