@@ -26,7 +26,7 @@ static const omx_core_cb_type enc_core[] = {
 
     {
         "OMX.rk.video_encoder.hevc",
-        "video_encoder.avc"
+        "video_encoder.hevc"
     },
 
     {
