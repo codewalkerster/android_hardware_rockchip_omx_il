@@ -28,11 +28,12 @@ static const omx_core_cb_type enc_core[] = {
         "OMX.rk.video_encoder.hevc",
         "video_encoder.hevc"
     },
-
+/*
     {
         "OMX.rk.video_encoder.vp8",
         "video_encoder.vp8"
     },
+*/
 };
 
 const unsigned int SIZE_OF_ENC_CORE = sizeof(enc_core) / sizeof(enc_core[0]);
