@@ -35,7 +35,11 @@
 extern "C" {
 #endif
 
-OMX_ERRORTYPE Rockchip_OSAL_ThreadCreate(OMX_HANDLETYPE *threadHandle, OMX_PTR function_name, OMX_PTR argument);
+OMX_ERRORTYPE Rockchip_OSAL_ThreadCreate(
+    OMX_HANDLETYPE *threadHandle,
+    OMX_PTR function_name,
+    OMX_PTR argument,
+    OMX_PTR thread_name);
 OMX_ERRORTYPE Rockchip_OSAL_ThreadTerminate(OMX_HANDLETYPE threadHandle);
 OMX_ERRORTYPE Rockchip_OSAL_ThreadCancel(OMX_HANDLETYPE threadHandle);
 void          Rockchip_OSAL_ThreadExit(void *value_ptr);

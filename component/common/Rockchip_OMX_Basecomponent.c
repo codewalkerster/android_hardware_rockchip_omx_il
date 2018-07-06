@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/prctl.h>
 
 #include "Rockchip_OSAL_Event.h"
 #include "Rockchip_OSAL_Thread.h"
@@ -1557,7 +1558,10 @@ OMX_ERRORTYPE Rockchip_OMX_BaseComponent_Constructor(
 
     pRockchipComponent->bExitMessageHandlerThread = OMX_FALSE;
     Rockchip_OSAL_QueueCreate(&pRockchipComponent->messageQ, MAX_QUEUE_ELEMENTS);
-    ret = Rockchip_OSAL_ThreadCreate(&pRockchipComponent->hMessageHandler, Rockchip_OMX_MessageHandlerThread, pOMXComponent);
+    ret = Rockchip_OSAL_ThreadCreate(&pRockchipComponent->hMessageHandler,
+                                     Rockchip_OMX_MessageHandlerThread,
+                                     pOMXComponent,
+                                     "omx_msg_hdl");
     if (ret != OMX_ErrorNone) {
         ret = OMX_ErrorInsufficientResources;
         omx_err("OMX_ErrorInsufficientResources, Line:%d", __LINE__);

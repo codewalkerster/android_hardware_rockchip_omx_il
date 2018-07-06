@@ -50,7 +50,11 @@ typedef struct _ROCKCHIP_THREAD_HANDLE_TYPE {
 } ROCKCHIP_THREAD_HANDLE_TYPE;
 
 
-OMX_ERRORTYPE Rockchip_OSAL_ThreadCreate(OMX_HANDLETYPE *threadHandle, OMX_PTR function_name, OMX_PTR argument)
+OMX_ERRORTYPE Rockchip_OSAL_ThreadCreate(
+    OMX_HANDLETYPE *threadHandle,
+    OMX_PTR function_name,
+    OMX_PTR argument,
+    OMX_PTR thread_name)
 {
     FunctionIn();
 
@@ -80,6 +84,7 @@ OMX_ERRORTYPE Rockchip_OSAL_ThreadCreate(OMX_HANDLETYPE *threadHandle, OMX_PTR f
 
     result = pthread_create(&thread->pthread, &thread->attr, function_name, (void *)argument);
     /* pthread_setschedparam(thread->pthread, SCHED_RR, &thread->schedparam); */
+    pthread_setname_np(thread->pthread, thread_name);
 
     switch (result) {
     case 0:

@@ -1081,12 +1081,14 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Create(OMX_COMPONENTTYPE *pOMXComponent)
 
     ret = Rockchip_OSAL_ThreadCreate(&pVideoDec->hOutputThread,
                                      Rkvpu_OMX_OutputProcessThread,
-                                     pOMXComponent);
+                                     pOMXComponent,
+                                     "omx_dec_output");
 
     if (ret == OMX_ErrorNone)
         ret = Rockchip_OSAL_ThreadCreate(&pVideoDec->hInputThread,
                                          Rkvpu_OMX_InputProcessThread,
-                                         pOMXComponent);
+                                         pOMXComponent,
+                                         "omx_dec_input");
 
 EXIT:
     FunctionOut();
