@@ -1188,9 +1188,8 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         goto EXIT;
     }
     {
-        int32_t kNumMapEntries = sizeof(kCodeMap) / sizeof(kCodeMap[0]);
         int i = 0;
-        for (i = 0; i < kNumMapEntries; i++) {
+        for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
             if (kCodeMap[i].omx_id == pVideoDec->codecId) {
                 codecId = kCodeMap[i].codec_id;
                 break;

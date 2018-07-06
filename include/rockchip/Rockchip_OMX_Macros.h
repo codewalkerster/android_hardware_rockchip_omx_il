@@ -40,6 +40,8 @@
 #define ALIGN_TO_128B(x)  ((((x) + (1 <<  7) - 1) >>  7) <<  7)
 #define ALIGN_TO_8KB(x)   ((((x) + (1 << 13) - 1) >> 13) << 13)
 
+#define ARRAY_SIZE(a)      (sizeof(a) / sizeof((a)[0]))
+
 #define INIT_SET_SIZE_VERSION(_struct_, _structType_)               \
     do {                                                            \
         Rockchip_OSAL_Memset((_struct_), 0, sizeof(_structType_));       \

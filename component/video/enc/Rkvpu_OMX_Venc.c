@@ -319,9 +319,8 @@ OMX_ERRORTYPE Rkvpu_Enc_ReConfig(OMX_COMPONENTTYPE *pOMXComponent, OMX_U32 new_w
     p_vpu_ctx->height = new_height;
     p_vpu_ctx->codecType = CODEC_ENCODER;
     {
-        int32_t kNumMapEntries = sizeof(kCodeMap) / sizeof(kCodeMap[0]);
         int i = 0;
-        for (i = 0; i < kNumMapEntries; i++) {
+        for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
             if (kCodeMap[i].omx_id == pVideoEnc->codecId) {
                 codecId = kCodeMap[i].codec_id;
                 break;
@@ -1274,9 +1273,8 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         pVideoEnc->rkvpu_open_cxt(&p_vpu_ctx);
     }
 
-    int32_t kNumMapEntries = sizeof(kCodeMap) / sizeof(kCodeMap[0]);
     int i = 0;
-    for (i = 0; i < kNumMapEntries; i++) {
+    for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
         if (kCodeMap[i].omx_id == pVideoEnc->codecId) {
             codecId = kCodeMap[i].codec_id;
             break;

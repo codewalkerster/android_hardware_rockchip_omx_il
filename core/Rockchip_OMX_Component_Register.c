@@ -54,9 +54,8 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
 {
     OMX_ERRORTYPE  ret = OMX_ErrorNone;
     int            componentNum = 0, roleNum = 0, totalCompNum = 0;
-    int            i = 0;
+    OMX_U32        i = 0;
     const char    *errorMsg;
-    int kNumEntries = sizeof(kCompInfo) / sizeof(kCompInfo[0]);
 
     int (*Rockchip_OMX_COMPONENT_Library_Register)(RockchipRegisterComponentType **rockchipComponents);
     RockchipRegisterComponentType **rockchipComponentsTemp;
@@ -67,7 +66,7 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
     componentList = (ROCKCHIP_OMX_COMPONENT_REGLIST *)Rockchip_OSAL_Malloc(sizeof(ROCKCHIP_OMX_COMPONENT_REGLIST) * MAX_OMX_COMPONENT_NUM);
     Rockchip_OSAL_Memset(componentList, 0, sizeof(ROCKCHIP_OMX_COMPONENT_REGLIST) * MAX_OMX_COMPONENT_NUM);
 
-    for (i = 0; i < kNumEntries; i++) {
+    for (i = 0; i < ARRAY_SIZE(kCompInfo); i++) {
         ROCKCHIP_COMPONENT_INFO com_inf = kCompInfo[i];
         OMX_PTR soHandle = NULL;
         if ((soHandle = Rockchip_OSAL_dlopen(com_inf.lib_name, RTLD_NOW)) != NULL) {
