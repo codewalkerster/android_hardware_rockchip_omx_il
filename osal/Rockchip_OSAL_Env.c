@@ -59,7 +59,7 @@ OMX_ERRORTYPE Rockchip_OSAL_GetEnvStr(const char *name, char *value, char *defau
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     if (value != NULL) {
         int len = __system_property_get(name, value);
-        if (len <= 0) {
+        if (len <= 0 && default_value != NULL) {
             strcpy(value, default_value);
         }
     }
