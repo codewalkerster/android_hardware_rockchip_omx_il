@@ -2222,14 +2222,6 @@ OMX_ERRORTYPE Rkvpu_CheckPortDefinition(
         goto EXIT;
     }
 
-    if (OUTPUT_PORT_INDEX == nPortIndex) {
-        if (pNewPortDefinition->format.video.eColorFormat == OMX_COLOR_FormatUnused) {
-            omx_err("error: output format is OMX_COLOR_FormatUnused!");
-            ret = OMX_ErrorBadParameter;
-            goto EXIT;
-        }
-    }
-
     if (INPUT_PORT_INDEX == nPortIndex) {
         if (pNewPortDefinition->format.video.eCompressionFormat == OMX_VIDEO_CodingUnused) {
             omx_err("error: input conding type is OMX_VIDEO_CodingUnused!");
