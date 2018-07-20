@@ -127,7 +127,6 @@ OMX_ERRORTYPE Rockchip_OSAL_getANBHandle(
 {
     FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
-    buffer_handle_t bufferHandle = (buffer_handle_t) handle;
     gralloc_private_handle_t priv_hnd;
     Rockchip_OSAL_Memset(&priv_hnd, 0, sizeof(priv_hnd));
     Rockchip_get_gralloc_private((uint32_t*)handle, &priv_hnd);
@@ -137,7 +136,7 @@ OMX_ERRORTYPE Rockchip_OSAL_getANBHandle(
     vplanes[0].addr = NULL;
     vplanes[0].type = priv_hnd.type;
     vplanes[0].stride = priv_hnd.stride;
-EXIT:
+
     FunctionOut();
     return ret;
 }
@@ -180,7 +179,6 @@ OMX_COLOR_FORMATTYPE Rockchip_OSAL_GetANBColorFormat(OMX_IN OMX_PTR handle)
 
     omx_trace("ColorFormat: 0x%x", ret);
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -196,7 +194,6 @@ OMX_U32 Rockchip_OSAL_GetANBStride(OMX_IN OMX_PTR handle)
     Rockchip_get_gralloc_private((uint32_t*)handle, &priv_hnd);
     nStride = priv_hnd.stride;
 
-EXIT:
     FunctionOut();
 
     return nStride;
@@ -249,7 +246,6 @@ OMX_ERRORTYPE Rockchip_OSAL_LockANB(
 
     ret = Rockchip_OSAL_LockANBHandle(pBuffer, width, height, format, planes);
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -262,7 +258,6 @@ OMX_ERRORTYPE Rockchip_OSAL_UnlockANB(OMX_IN OMX_PTR pBuffer)
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     ret = Rockchip_OSAL_UnlockANBHandle(pBuffer);
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -285,7 +280,6 @@ OMX_ERRORTYPE Rockchip_OSAL_LockMetaData(
         ret = Rockchip_OSAL_LockANBHandle(pBuf, width, height, format, planes);
     }
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -302,7 +296,6 @@ OMX_ERRORTYPE Rockchip_OSAL_UnlockMetaData(OMX_IN OMX_PTR pBuffer)
     if (ret == OMX_ErrorNone)
         ret = Rockchip_OSAL_UnlockANBHandle(pBuf);
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -320,7 +313,6 @@ OMX_ERRORTYPE useAndroidNativeBuffer(
     OMX_BUFFERHEADERTYPE *temp_bufferHeader = NULL;
     unsigned int          i = 0;
     OMX_U32               width, height;
-    OMX_U32               stride;
     RockchipVideoPlane      planes[MAX_BUFFER_PLANE];
 
     FunctionIn();
@@ -429,7 +421,7 @@ OMX_ERRORTYPE Rockchip_OSAL_GetANBParameter(
         goto EXIT;
     }
 
-    switch ((ROCKCHIP_OMX_INDEXTYPE)nIndex) {
+    switch (nIndex) {
     case OMX_IndexParamGetAndroidNativeBufferUsage: {
         GetAndroidNativeBufferUsageParams *pANBParams = (GetAndroidNativeBufferUsageParams *) ComponentParameterStructure;
         OMX_U32 portIndex = pANBParams->nPortIndex;
@@ -455,7 +447,6 @@ OMX_ERRORTYPE Rockchip_OSAL_GetANBParameter(
     break;
     case OMX_IndexParamdescribeColorFormat: {
 #ifndef LOW_VRESION
-        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         DescribeColorFormatParams *pDescribeParams = (DescribeColorFormatParams *) ComponentParameterStructure;
         MediaImage *img = &pDescribeParams->sMediaImage;
         ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
@@ -587,7 +578,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         goto EXIT;
     }
 
-    switch ((ROCKCHIP_OMX_INDEXTYPE)nIndex) {
+    switch (nIndex) {
     case OMX_IndexParamEnableAndroidBuffers: {
         RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         EnableAndroidNativeBuffersParams *pANBParams = (EnableAndroidNativeBuffersParams *) ComponentParameterStructure;
@@ -650,7 +641,6 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
     break;
 
     case OMX_IndexParamUseAndroidNativeBuffer: {
-        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         UseAndroidNativeBufferParams *pANBParams = (UseAndroidNativeBufferParams *) ComponentParameterStructure;
         OMX_U32 portIndex = pANBParams->nPortIndex;
         ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
@@ -850,7 +840,6 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoFromMetaData(OMX_IN OMX_BYTE pBuffer,
     }
 #endif
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -891,11 +880,12 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoRkWfdMetaData(OMX_IN OMX_BOOL bRkWFD,
         VideoGrallocMetadata *metadata = (VideoGrallocMetadata *)pBuffer;
         omx_trace("###type=0x%x, bufftype=%d bRkWFD:%d", type, metadata->eType, bRkWFD);
         if (type != 0x1234 && !bRkWFD) {
-            return OMX_ErrorBadParameter;
+            ret = OMX_ErrorBadParameter;
+            goto EXIT;
         }
         pBufHandle = metadata->pHandle;
         ppBuf[0] = (OMX_PTR)pBufHandle;
-        return ret;
+        goto EXIT;
     }
 #else
     if (type != 0x1234) {
@@ -1064,7 +1054,6 @@ OMX_ERRORTYPE Rockchip_OSAL_CommitBuffer(
 OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_BUFFERHEADERTYPE* bufferHeader)
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
-    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT        *pRockchipPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     OMX_U32 i = 0;
 
@@ -1093,7 +1082,6 @@ OMX_ERRORTYPE Rockchip_OSAL_Fd2VpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipC
 OMX_ERRORTYPE Rockchip_OSAL_resetVpumemPool(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent)
 {
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    ROCKCHIP_OMX_BASEPORT        *pRockchipPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     struct vpu_display_mem_pool *pMem_pool = (struct vpu_display_mem_pool*)pVideoDec->vpumem_handle;
     pMem_pool->reset(pMem_pool);
     return OMX_ErrorNone;
@@ -1133,7 +1121,6 @@ OMX_BUFFERHEADERTYPE *Rockchip_OSAL_Fd2OmxBufferHeader(ROCKCHIP_OMX_BASEPORT *pR
 OMX_ERRORTYPE  Rockchip_OSAL_Openvpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_U32 portIndex)
 {
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    VpuCodecContext_t           *p_vpu_ctx = pVideoDec->vpu_ctx;
     ROCKCHIP_OMX_BASEPORT *pRockchipPort = &pRockchipComponent->pRockchipPort[portIndex];
     if (pRockchipPort->bufferProcessType == BUFFER_SHARE) {
         pVideoDec->vpumem_handle = (void*)open_vpu_memory_pool();
@@ -1229,7 +1216,7 @@ OMX_COLOR_FORMATTYPE Rockchip_OSAL_CheckFormat(
     ROCKCHIP_OMX_BASEPORT           *pInputPort         = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     OMX_COLOR_FORMATTYPE             eColorFormat       = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12;
     VPU_FRAME *pframe = (VPU_FRAME *)pVpuframe;
-    VpuCodecContext_t *p_vpu_ctx = pVideoDec->vpu_ctx;
+
     if ((pVideoDec->codecId == OMX_VIDEO_CodingHEVC && (pframe->OutputWidth != 0x20))
         || (pframe->ColorType & VPU_OUTPUT_FORMAT_BIT_MASK) == VPU_OUTPUT_FORMAT_BIT_10) { // 10bit
         eColorFormat = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YCrCb_NV12_10;

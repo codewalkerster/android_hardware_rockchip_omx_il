@@ -135,8 +135,11 @@ int searchLowPriority(ROCKCHIP_OMX_RM_COMPONENT_LIST *RMComp_list, OMX_U32 inCom
     ROCKCHIP_OMX_RM_COMPONENT_LIST *pTempComp = NULL;
     ROCKCHIP_OMX_RM_COMPONENT_LIST *pCandidateComp = NULL;
 
-    if (RMComp_list == NULL)
+    if (RMComp_list == NULL) {
         ret = -1;
+        omx_err("component list is NULL!");
+        goto EXIT;
+    }
 
     pTempComp = RMComp_list;
     *outLowComp = 0;
@@ -258,6 +261,7 @@ OMX_ERRORTYPE Rockchip_OMX_ResourceManager_Deinit()
     ghVideoRMComponentListMutex = NULL;
 
     ret = OMX_ErrorNone;
+    goto EXIT;
 EXIT:
     FunctionOut();
 

@@ -223,8 +223,6 @@ OMX_ERRORTYPE Rkvpu_ResetAllPortConfig(OMX_COMPONENTTYPE *pOMXComponent)
 
 void Rkvpu_Wait_ProcessPause(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_U32 nPortIndex)
 {
-    ROCKCHIP_OMX_BASEPORT *rockchipOMXInputPort  = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-    ROCKCHIP_OMX_BASEPORT *rockchipOMXOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT *rockchipOMXPort = NULL;
 
     FunctionIn();
@@ -244,52 +242,6 @@ void Rkvpu_Wait_ProcessPause(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX
     FunctionOut();
 
     return;
-}
-
-static void mpeg_rgb2yuv(unsigned char *src, unsigned char *dstY, unsigned char *dstUV, int width, int height, int src_format, int need_32align)
-{
-#define MIN(X, Y)           ((X)<(Y)?(X):(Y))
-#define MAX(X, Y)           ((X)>(Y)?(X):(Y))
-
-    int R, G, B;
-    int Y, U, V;
-    int i, j;
-    int stride = (width + 31) & (~31);
-
-    width = ((width + 15) & (~15));
-
-    for (j = 0; j < height; j++) {
-        for (i = 0; i < width; i++) {
-            if (src_format == HAL_PIXEL_FORMAT_RGBA_8888) {
-                R = *src++;
-                G = *src++;
-                B = *src++;
-                src++;
-            } else {
-                B = *src++;
-                G = *src++;
-                R = *src++;
-                src++;
-            }
-
-            Y = (( 66 * R + 129 * G +  25 * B + 128) >> 8) +  16;
-
-            *dstY++ = (unsigned char)(MIN(MAX(0, Y), 0xff));
-            if ((i & 1) == 0 && (j & 1) == 0) {
-                U = ( ( -38 * R -  74 * G + 112 * B + 128) >> 8) + 128;
-                V = ( ( 112 * R -  94 * G -  18 * B + 128) >> 8) + 128;
-                *dstUV++ = (unsigned char)(MIN(MAX(0, U), 0xff));
-                *dstUV++ = (unsigned char)(MIN(MAX(0, V), 0xff));
-            }
-        }
-
-        if (need_32align) {
-            if (stride != width) {
-                src += (stride - width) * 4;
-            }
-        }
-
-    }
 }
 
 OMX_ERRORTYPE Rkvpu_Enc_ReConfig(OMX_COMPONENTTYPE *pOMXComponent, OMX_U32 new_width, OMX_U32 new_height)
@@ -319,7 +271,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ReConfig(OMX_COMPONENTTYPE *pOMXComponent, OMX_U32 new_w
     p_vpu_ctx->height = new_height;
     p_vpu_ctx->codecType = CODEC_ENCODER;
     {
-        int i = 0;
+        OMX_U32 i = 0;
         for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
             if (kCodeMap[i].omx_id == pVideoEnc->codecId) {
                 codecId = kCodeMap[i].codec_id;
@@ -361,7 +313,6 @@ OMX_U32 Rkvpu_N12_Process(OMX_COMPONENTTYPE *pOMXComponent, RockchipVideoPlane *
 
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    ROCKCHIP_OMX_BASEPORT *pInPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT *pOutPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     RK_U32 new_width = 0, new_height = 0, len = 0;
     OMX_U32 Width_in = pOutPort->portDefinition.format.video.nFrameWidth;
@@ -481,8 +432,8 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
 
         if (pVideoEnc->bRgb2yuvFlag == OMX_TRUE) {
             VPUMemLinear_t tmp_vpumem;
-            int new_width = 0;
-            int new_height = 0;
+            OMX_U32 new_width = 0;
+            OMX_U32 new_height = 0;
             if (pVideoEnc->params_extend.bEnableScaling) {
                 new_width = pVideoEnc->params_extend.ui16ScaledWidth;
                 new_height = pVideoEnc->params_extend.ui16ScaledHeight;
@@ -496,8 +447,6 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
                 new_width = Width;
                 new_height = Height;
             }
-            uint8_t *Y = (uint8_t*)pVideoEnc->enc_vpumem->vir_addr;
-            uint8_t *UV = Y + ((Width + 15) & (~15)) * Height;
             memset(&tmp_vpumem, 0, sizeof(VPUMemLinear_t));
             rga_rgb2nv12(&vplanes, pVideoEnc->enc_vpumem, Width, Height, new_width, new_height, pVideoEnc->rga_ctx);
             VPUMemClean(pVideoEnc->enc_vpumem);
@@ -723,8 +672,6 @@ OMX_BOOL Rkvpu_Post_OutputStream(OMX_COMPONENTTYPE *pOMXComponent)
         goto EXIT;
     }
     if (outputUseBuffer->dataValid == OMX_TRUE) {
-        OMX_U32 width = 0, height = 0;
-        int imageSize = 0;
         EncoderOut_t pOutput;
         OMX_U8 *aOut_buf = outputUseBuffer->bufferHeader->pBuffer;
         Rockchip_OSAL_Memset(&pOutput, 0, sizeof(EncoderOut_t));
@@ -853,8 +800,6 @@ OMX_ERRORTYPE Rkvpu_OMX_InputBufferProcess(OMX_HANDLETYPE hComponent)
     ROCKCHIP_OMX_BASEPORT      *rockchipInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT      *rockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_DATABUFFER    *srcInputUseBuffer = &rockchipInputPort->way.port2WayDataBuffer.inputDataBuffer;
-    OMX_BOOL               bCheckInputData = OMX_FALSE;
-    OMX_BOOL               bValidCodecData = OMX_FALSE;
 
     FunctionIn();
 
@@ -901,6 +846,7 @@ OMX_ERRORTYPE Rkvpu_OMX_InputBufferProcess(OMX_HANDLETYPE hComponent)
         }
     }
 
+    goto EXIT;
 EXIT:
 
     FunctionOut();
@@ -917,7 +863,6 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *rockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_DATABUFFER    *dstOutputUseBuffer = &rockchipOutputPort->way.port2WayDataBuffer.outputDataBuffer;
-    VpuCodecContext_t           *p_vpu_ctx = pVideoEnc->vpu_ctx;
 
     FunctionIn();
 
@@ -956,6 +901,7 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
         }
     }
 
+    goto EXIT;
 EXIT:
 
     FunctionOut();
@@ -968,7 +914,6 @@ static OMX_ERRORTYPE Rkvpu_OMX_InputProcessThread(OMX_PTR threadData)
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_MESSAGE       *message = NULL;
 
     FunctionIn();
 
@@ -997,7 +942,6 @@ static OMX_ERRORTYPE Rkvpu_OMX_OutputProcessThread(OMX_PTR threadData)
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_MESSAGE       *message = NULL;
 
     FunctionIn();
 
@@ -1042,6 +986,7 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Create( OMX_COMPONENTTYPE *pOMXComponent)
                                          pOMXComponent,
                                          "omx_enc_input");
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1054,7 +999,6 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Terminate(OMX_COMPONENTTYPE *pOMXComponent
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_S32                countValue = 0;
-    unsigned int           i = 0;
 
     FunctionIn();
 
@@ -1082,6 +1026,7 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Terminate(OMX_COMPONENTTYPE *pOMXComponent
     pRockchipComponent->checkTimeStamp.needSetStartTimeStamp = OMX_FALSE;
     pRockchipComponent->checkTimeStamp.needCheckStartTimeStamp = OMX_FALSE;
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1252,10 +1197,10 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc    =  (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_RK_VIDEO_CODINGTYPE codecId = OMX_RK_VIDEO_CodingUnused;
     ROCKCHIP_OMX_BASEPORT           *pRockchipInputPort  = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-    ROCKCHIP_OMX_BASEPORT           *pRockchipOutPort  = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     VpuCodecContext_t               *p_vpu_ctx           = NULL;
     EncParameter_t *EncParam = NULL;
     RK_U32 new_width = 0, new_height = 0;
+
     if (omx_open_vpuenc_context(pVideoEnc) != OMX_ErrorNone) {
         ret = OMX_ErrorInsufficientResources;
         goto EXIT;
@@ -1273,7 +1218,7 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     }
 
     int i = 0;
-    for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
+    for (i = 0; i < (int)ARRAY_SIZE(kCodeMap); i++) {
         if (kCodeMap[i].omx_id == pVideoEnc->codecId) {
             codecId = kCodeMap[i].codec_id;
             break;
@@ -1554,10 +1499,7 @@ OMX_ERRORTYPE Rkvpu_Enc_Terminate(OMX_COMPONENTTYPE *pOMXComponent)
     OMX_ERRORTYPE                  ret               = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent  = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEOENC_COMPONENT    *pVideoEnc         = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    ROCKCHIP_OMX_BASEPORT           *pRockchipInputPort  = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-    ROCKCHIP_OMX_BASEPORT           *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
 
-    int i, plane;
     FunctionIn();
     if (pVideoEnc->vpu_ctx) {
         if (pVideoEnc->rkvpu_close_cxt) {
@@ -1590,6 +1532,7 @@ OMX_ERRORTYPE Rkvpu_Enc_Terminate(OMX_COMPONENTTYPE *pOMXComponent)
 
     Rkvpu_ResetAllPortConfig(pOMXComponent);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 

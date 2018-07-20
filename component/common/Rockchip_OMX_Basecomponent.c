@@ -173,10 +173,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentStateSet(OMX_COMPONENTTYPE *pOMXComponent, O
     OMX_STATETYPE             destState = messageParam;
     OMX_STATETYPE             currentState = pRockchipComponent->currentState;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-    OMX_S32                   countValue = 0;
     unsigned int              i = 0, j = 0;
     int                       k = 0;
-    int                       timeOutCnt = 200;
 
     FunctionIn();
 
@@ -721,7 +719,6 @@ static OMX_ERRORTYPE Rockchip_StateSet(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComp
 static OMX_ERRORTYPE Rockchip_SetPortFlush(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_U32 nParam)
 {
     OMX_ERRORTYPE        ret = OMX_ErrorNone;
-    ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
     OMX_S32              portIndex = nParam;
     OMX_U16              i = 0, cnt = 0, index = 0;
 
@@ -760,7 +757,7 @@ static OMX_ERRORTYPE Rockchip_SetPortEnable(ROCKCHIP_OMX_BASECOMPONENT *pRockchi
     OMX_ERRORTYPE        ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
     OMX_S32              portIndex = nParam;
-    OMX_U16              i = 0, cnt = 0;
+    OMX_U16              i = 0;
 
     FunctionIn();
 
@@ -803,7 +800,7 @@ static OMX_ERRORTYPE Rockchip_SetPortDisable(ROCKCHIP_OMX_BASECOMPONENT *pRockch
     OMX_ERRORTYPE        ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
     OMX_S32              portIndex = nParam;
-    OMX_U16              i = 0, cnt = 0;
+    OMX_U16              i = 0;
 
     FunctionIn();
 
@@ -839,10 +836,6 @@ EXIT:
 static OMX_ERRORTYPE Rockchip_SetMarkBuffer(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_U32 nParam)
 {
     OMX_ERRORTYPE        ret = OMX_ErrorNone;
-    ROCKCHIP_OMX_BASEPORT *pRockchipPort = NULL;
-    OMX_U32              portIndex = nParam;
-    OMX_U16              i = 0, cnt = 0;
-
 
     if (nParam >= pRockchipComponent->portParam.nPorts) {
         ret = OMX_ErrorBadPortIndex;
@@ -897,7 +890,6 @@ OMX_ERRORTYPE Rockchip_OMX_SendCommand(
     OMX_ERRORTYPE             ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE        *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_MESSAGE       *message = NULL;
 
     FunctionIn();
 

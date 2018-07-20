@@ -59,23 +59,7 @@ typedef struct {
     OMX_U32 mProfile;
     OMX_U32 mLevel;
 } CodecProfileLevel;
-static const CodecProfileLevel kM4VProfileLevels[] = {
-    { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level0 },
-    { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level0b},
-    { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level1 },
-    { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level2 },
-    { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level3 },
-};
-static const CodecProfileLevel kH263ProfileLevels[] = {
-    { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level10 },
-    { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level20 },
-    { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level30 },
-    { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level45 },
-    { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level10 },
-    { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level20 },
-    { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level30 },
-    { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level45 },
-};
+
 static const CodecProfileLevel kProfileLevels[] = {
     { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel1  },
     { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel1b },
@@ -348,8 +332,6 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeBuffer(
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-    OMX_BUFFERHEADERTYPE  *temp_bufferHeader = NULL;
-    OMX_U8                *temp_buffer = NULL;
     OMX_U32                i = 0;
 
     FunctionIn();
@@ -430,6 +412,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateTunnelBuffer(ROCKCHIP_OMX_BASEPORT *pOMXBasePort
     (void)pOMXBasePort;
     (void)nPortIndex;
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -440,6 +423,7 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeTunnelBuffer(ROCKCHIP_OMX_BASEPORT *pOMXBasePort, OM
     (void)pOMXBasePort;
     (void)nPortIndex;
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -457,6 +441,7 @@ OMX_ERRORTYPE Rkvpu_OMX_ComponentTunnelRequest(
     (void)nTunneledPort;
     (void)pTunnelSetup;
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -476,6 +461,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetFlushBuffer(ROCKCHIP_OMX_BASEPORT *pRockchipPort, ROC
         pDataBuffer[1] = &(pRockchipPort->way.port2WayDataBuffer.outputDataBuffer);
     }
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -486,12 +472,10 @@ OMX_ERRORTYPE Rkvpu_OMX_FlushPort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 port
 {
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
-    RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     OMX_BUFFERHEADERTYPE     *bufferHeader = NULL;
     ROCKCHIP_OMX_DATABUFFER    *pDataPortBuffer[2] = {NULL, NULL};
     ROCKCHIP_OMX_MESSAGE       *message = NULL;
-    OMX_U32                flushNum = 0;
     OMX_S32                semValue = 0;
     int i = 0, maxBufferNum = 0;
     FunctionIn();
@@ -592,7 +576,6 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferFlush(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 nP
     RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     ROCKCHIP_OMX_DATABUFFER    *flushPortBuffer[2] = {NULL, NULL};
-    OMX_U32                   i = 0, cnt = 0;
 
     FunctionIn();
 
@@ -676,7 +659,6 @@ OMX_ERRORTYPE Rkvpu_ResolutionUpdate(OMX_COMPONENTTYPE *pOMXComponent)
 {
     OMX_ERRORTYPE                  ret                = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent   = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
-    RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc          = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT           *pInputPort         = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT           *pOutputPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
 
@@ -737,6 +719,7 @@ OMX_ERRORTYPE Rkvpu_InputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHIP
     /* reset dataBuffer */
     Rockchip_ResetDataBuffer(dataBuffer);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -836,6 +819,7 @@ OMX_ERRORTYPE Rkvpu_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHI
     /* reset dataBuffer */
     Rockchip_ResetDataBuffer(dataBuffer);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -962,7 +946,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
 
     FunctionIn();
 
@@ -1216,8 +1199,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             goto EXIT;
         }
         if (pVideoEnc->codecId == OMX_VIDEO_CodingAVC) {
-            nProfileLevels =
-                sizeof(kProfileLevels) / sizeof(kProfileLevels[0]);
+            nProfileLevels = ARRAY_SIZE(kProfileLevels);
             if (index >= nProfileLevels) {
                 ret = OMX_ErrorNoMore;
                 goto EXIT;
@@ -1225,8 +1207,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             profileLevel->eProfile = kProfileLevels[index].mProfile;
             profileLevel->eLevel = kProfileLevels[index].mLevel;
         } else if (pVideoEnc->codecId == OMX_VIDEO_CodingHEVC) {
-            nProfileLevels =
-                sizeof(kH265ProfileLevels) / sizeof(kH265ProfileLevels[0]);
+            nProfileLevels = ARRAY_SIZE(kH265ProfileLevels);
             if (index >= nProfileLevels) {
                 ret = OMX_ErrorNoMore;
                 goto EXIT;
@@ -1270,7 +1251,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
 
     FunctionIn();
 
@@ -1304,10 +1284,8 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     case OMX_IndexParamVideoPortFormat: {
         OMX_VIDEO_PARAM_PORTFORMATTYPE *portFormat = (OMX_VIDEO_PARAM_PORTFORMATTYPE *)ComponentParameterStructure;
         OMX_U32                         portIndex = portFormat->nPortIndex;
-        OMX_U32                         index    = portFormat->nIndex;
         ROCKCHIP_OMX_BASEPORT            *pRockchipPort = NULL;
         OMX_PARAM_PORTDEFINITIONTYPE   *portDefinition = NULL;
-        OMX_U32                         supportFormatNum = 0;
 
         ret = Rockchip_OMX_Check_SizeVersion(portFormat, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
         if (ret != OMX_ErrorNone) {
@@ -1375,7 +1353,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition = (OMX_PARAM_PORTDEFINITIONTYPE *)ComponentParameterStructure;
         OMX_U32                       portIndex = pPortDefinition->nPortIndex;
         ROCKCHIP_OMX_BASEPORT          *pRockchipPort;
-        OMX_U32 width, height, size;
 
         if (portIndex >= pRockchipComponent->portParam.nPorts) {
             ret = OMX_ErrorBadPortIndex;
@@ -1639,10 +1616,9 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
 #ifdef AVS80
     case OMX_IndexParamRkDescribeColorAspects: {
         OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *pParam = (OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *)pComponentConfigStructure;
-        OMX_U32           portIndex = pParam->nPortIndex;
         if (pParam->bRequestingDataSpace) {
-            pParam->sAspects.mPrimaries = RangeUnspecified;
-            pParam->sAspects.mRange = PrimariesUnspecified;
+            pParam->sAspects.mPrimaries = PrimariesUnspecified;
+            pParam->sAspects.mRange = RangeUnspecified;
             pParam->sAspects.mTransfer = TransferUnspecified;
             pParam->sAspects.mMatrixCoeffs = MatrixUnspecified;
             return ret;//OMX_ErrorUnsupportedSetting;
@@ -1652,8 +1628,8 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             // since that is the destination colorspace that C2D or Venus will convert to.
             if (pParam->nPixelFormat == HAL_PIXEL_FORMAT_RGBA_8888) {
                 memcpy(pParam, &pVideoEnc->ConfigColorAspects, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
-                pParam->sAspects.mPrimaries = RangeUnspecified;
-                pParam->sAspects.mRange = PrimariesUnspecified;
+                pParam->sAspects.mPrimaries = PrimariesUnspecified;
+                pParam->sAspects.mRange = RangeUnspecified;
                 pParam->sAspects.mTransfer = TransferUnspecified;
                 pParam->sAspects.mMatrixCoeffs = MatrixUnspecified;
             } else {
@@ -1802,7 +1778,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetConfig(
     break;
 #ifdef AVS80
     case OMX_IndexParamRkDescribeColorAspects: {
-        OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *params = (OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *)pComponentConfigStructure;
         memcpy(&pVideoEnc->ConfigColorAspects, pComponentConfigStructure, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
     }
     break;
@@ -1824,8 +1799,6 @@ OMX_ERRORTYPE Rkvpu_OMX_ComponentRoleEnum(
     OMX_U32        nIndex)
 {
     OMX_ERRORTYPE             ret               = OMX_ErrorNone;
-    OMX_COMPONENTTYPE        *pOMXComponent     = NULL;
-    ROCKCHIP_OMX_BASECOMPONENT *pRockchioComponent  = NULL;
 
     FunctionIn();
 

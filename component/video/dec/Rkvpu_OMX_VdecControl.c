@@ -87,57 +87,6 @@ static const CodecProfileLevel kH263ProfileLevels[] = {
     { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level30 },
     { OMX_VIDEO_H263ProfileISWV2,    OMX_VIDEO_H263Level45 },
 };
-static const CodecProfileLevel kH264ProfileLevels[] = {
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel1  },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel1b },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel11 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel12 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel13 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel2  },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel21 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel22 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel3  },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel31 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel32 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel4  },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel41 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel42 },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel5  },
-    { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel51 },
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel1},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel1b},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel11},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel12},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel13},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel2},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel21},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel22},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel3},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel31},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel32},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel4},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel41},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel42},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel5},
-    { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel51},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel1},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel1b},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel11},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel12},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel13},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel2},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel21},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel22},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel3},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel31},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel32},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel4},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel41},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel42},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel5},
-    { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel51},
-    { OMX_VIDEO_AVCProfileHigh10, OMX_VIDEO_AVCLevel52},
-};
 
 //only report echo profile highest level, Reference soft avc dec
 static const CodecProfileLevel kH264ProfileLevelsMax[] = {
@@ -396,8 +345,6 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeBuffer(
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-    OMX_BUFFERHEADERTYPE  *temp_bufferHeader = NULL;
-    OMX_U8                *temp_buffer = NULL;
     OMX_U32                i = 0;
 
     FunctionIn();
@@ -480,6 +427,7 @@ OMX_ERRORTYPE Rkvpu_OMX_AllocateTunnelBuffer(ROCKCHIP_OMX_BASEPORT *pOMXBasePort
     (void) nPortIndex;
 
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -490,6 +438,7 @@ OMX_ERRORTYPE Rkvpu_OMX_FreeTunnelBuffer(ROCKCHIP_OMX_BASEPORT *pOMXBasePort, OM
     (void) pOMXBasePort;
     (void) nPortIndex;
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -508,6 +457,7 @@ OMX_ERRORTYPE Rkvpu_OMX_ComponentTunnelRequest(
     (void) nTunneledPort;
     (void) pTunnelSetup;
     ret = OMX_ErrorTunnelingUnsupported;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -527,6 +477,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetFlushBuffer(ROCKCHIP_OMX_BASEPORT *pRockchipPort, ROC
         pDataBuffer[1] = &(pRockchipPort->way.port2WayDataBuffer.outputDataBuffer);
     }
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -537,12 +488,10 @@ OMX_ERRORTYPE Rkvpu_OMX_FlushPort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 port
 {
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
-    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     OMX_BUFFERHEADERTYPE     *bufferHeader = NULL;
     ROCKCHIP_OMX_DATABUFFER    *pDataPortBuffer[2] = {NULL, NULL};
     ROCKCHIP_OMX_MESSAGE       *message = NULL;
-    OMX_U32                flushNum = 0;
     OMX_S32                semValue = 0;
     int i = 0, maxBufferNum = 0;
     FunctionIn();
@@ -650,7 +599,6 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferFlush(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 nP
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     ROCKCHIP_OMX_DATABUFFER    *flushPortBuffer[2] = {NULL, NULL};
-    OMX_U32                   i = 0, cnt = 0;
     ROCKCHIP_OMX_BASEPORT      *pInputPort  = NULL;
 
     FunctionIn();
@@ -759,7 +707,6 @@ OMX_ERRORTYPE Rkvpu_ResolutionUpdate(OMX_COMPONENTTYPE *pOMXComponent)
 {
     OMX_ERRORTYPE                  ret                = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent   = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
-    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec          = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT           *pInputPort         = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT           *pOutputPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
 
@@ -824,6 +771,7 @@ OMX_ERRORTYPE Rkvpu_InputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHIP
     /* reset dataBuffer */
     Rockchip_ResetDataBuffer(dataBuffer);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -846,7 +794,6 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         OMX_PTR pGrallocHandle;
         OMX_COLOR_FORMATTYPE omx_format = 0;
         OMX_U32 pixel_format = 0;
-        int res;
 
         if (Rockchip_OSAL_GetInfoFromMetaData(pOutputBuffer->pBuffer, &pGrallocHandle)) {
             return OMX_ErrorBadParameter;
@@ -897,10 +844,9 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
                 pOutputBuffer->nFilledLen = mWidth * mHeight * 3 / 2;
                 OMX_U32 uv_offset = mStride * mSliceHeight;
                 OMX_U32 y_size = mWidth * mHeight;
-                OMX_U32 uv_size = mWidth * mHeight / 2;
                 OMX_U8 *dst_uv = (OMX_U8 *)((OMX_U8 *)vplanes.addr + y_size);
                 OMX_U8 *src_uv =  (OMX_U8 *)(buff_vir + uv_offset);
-                OMX_U32 i = 0, j = 0;
+                OMX_U32 i = 0;
 
                 omx_trace("mWidth = %d mHeight = %d mStride = %d,mSlicHeight %d", mWidth, mHeight, mStride, mSliceHeight);
                 for (i = 0; i < mHeight; i++) {
@@ -919,7 +865,6 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         return ret;
     }
 #endif
-    ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort =  &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     OMX_U32 mStride = 0;
     OMX_U32 mSliceHeight =  0;
     OMX_U32 mWidth = (pOutputPort->portDefinition.format.video.nFrameWidth );
@@ -935,10 +880,9 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         OMX_U8 *buff_vir = (OMX_U8 *)pframe->vpumem.vir_addr;
         OMX_U32 uv_offset = mStride * mSliceHeight;
         OMX_U32 y_size = mWidth * mHeight;
-        OMX_U32 uv_size = mWidth * mHeight / 2;
         OMX_U8 *dst_uv = (OMX_U8 *)(pOutputBuffer->pBuffer + y_size);
         OMX_U8 *src_uv =  (OMX_U8 *)(buff_vir + uv_offset);
-        OMX_U32 i = 0, j = 0;
+        OMX_U32 i = 0;
         omx_err("mWidth = %d mHeight = %d mStride = %d,mSlicHeight %d", mWidth, mHeight, mStride, mSliceHeight);
         pOutputBuffer->nFilledLen = mWidth * mHeight * 3 / 2;
         for (i = 0; i < mHeight; i++) {
@@ -1022,7 +966,7 @@ OMX_ERRORTYPE Rkvpu_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHI
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT      *rockchipOMXOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     OMX_BUFFERHEADERTYPE     *bufferHeader = NULL;
-    OMX_S32 i = 0;
+    OMX_U32 i = 0;
 
     FunctionIn();
 
@@ -1093,6 +1037,7 @@ OMX_ERRORTYPE Rkvpu_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHI
     /* reset dataBuffer */
     Rockchip_ResetDataBuffer(dataBuffer);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1219,7 +1164,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
 
     FunctionIn();
 
@@ -1362,7 +1306,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         /* at this point, GetParameter has done all the verification, we
          * just dereference things directly here
          */
-        ROCKCHIP_OMX_BASEPORT *pRockchipOutputPort =  &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
         if ((pVideoDec->bIsANBEnabled == OMX_TRUE) ||
             (pVideoDec->bStoreMetaData == OMX_TRUE)) {
             portDefinition->format.video.eColorFormat = pRockchipPort->portDefinition.format.video.eColorFormat;
@@ -1524,7 +1467,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
 
     FunctionIn();
 
@@ -1558,10 +1500,8 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     case OMX_IndexParamVideoPortFormat: {
         OMX_VIDEO_PARAM_PORTFORMATTYPE *portFormat = (OMX_VIDEO_PARAM_PORTFORMATTYPE *)ComponentParameterStructure;
         OMX_U32                         portIndex = portFormat->nPortIndex;
-        OMX_U32                         index    = portFormat->nIndex;
         ROCKCHIP_OMX_BASEPORT               *pRockchipPort = NULL;
         OMX_PARAM_PORTDEFINITIONTYPE   *portDefinition = NULL;
-        OMX_U32                         supportFormatNum = 0;
 
         ret = Rockchip_OMX_Check_SizeVersion(portFormat, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
         if (ret != OMX_ErrorNone) {
@@ -1586,11 +1526,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     case OMX_IndexParamPortDefinition: {
         OMX_PARAM_PORTDEFINITIONTYPE *pPortDefinition = (OMX_PARAM_PORTDEFINITIONTYPE *)ComponentParameterStructure;
         OMX_U32                       portIndex = pPortDefinition->nPortIndex;
-        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
         ROCKCHIP_OMX_BASEPORT             *pRockchipPort;
-        OMX_U32 stride, strideheight, size;
-        OMX_U32 realWidth, realHeight;
-        OMX_U32 supWidth = 0;
 
         if (portIndex >= pRockchipComponent->portParam.nPorts) {
             ret = OMX_ErrorBadPortIndex;
@@ -1880,8 +1816,6 @@ OMX_ERRORTYPE Rkvpu_OMX_ComponentRoleEnum(
     OMX_U32        nIndex)
 {
     OMX_ERRORTYPE             ret               = OMX_ErrorNone;
-    OMX_COMPONENTTYPE        *pOMXComponent     = NULL;
-    ROCKCHIP_OMX_BASECOMPONENT *pRockchioComponent  = NULL;
 
     FunctionIn();
 
@@ -2051,7 +1985,6 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
     OMX_U32 nFrameHeight = 0;
     OMX_S32 nStride = 0;
     OMX_U32 nSliceHeight = 0;
-    OMX_U32 nBufferSize = 0;
 
     FunctionIn();
 
@@ -2097,7 +2030,7 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
         goto EXIT;
     }
 
-    Rockchip_OSAL_Memcpy(&pRockchipPort->portDefinition, pPortDefinition, pPortDefinition->nSize);
+    Rockchip_OSAL_Memcpy((OMX_PTR)&pRockchipPort->portDefinition, (OMX_PTR)pPortDefinition, pPortDefinition->nSize);
 
     nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
     nFrameHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
@@ -2112,7 +2045,6 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
         /*
          * Determining the compression ratio by coding type.
          */
-        OMX_U32 nCompressRatio = Rkvpu_GetCompressRatioByCodingtype(pRockchipPort->portDefinition.format.video.eCompressionFormat);
         pRockchipPort->portDefinition.nBufferSize = 4 * 1024 * 1024;
         {
             /*

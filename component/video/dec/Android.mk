@@ -39,8 +39,8 @@ LOCAL_SHARED_LIBRARIES := libc \
 	 libui \
 	 libRkOMX_Resourcemanager \
 	 libhardware \
-	 libvpu \
-	 libgralloc_priv_omx 
+	 libgralloc_priv_omx \
+	 libvpu
 
 ifeq ($(BOARD_WIDEVINE_OEMCRYPTO_LEVEL), 1)
 LOCAL_CFLAGS += -DHAVE_L1_SVP_MODE=ON

@@ -48,7 +48,6 @@ ifeq ($(BOARD_CONFIG_3GR),true)
 	
 endif
 
-
 ifeq ($(OMX_USE_DRM), true)
 LOCAL_SHARED_LIBRARIES += librga
 endif

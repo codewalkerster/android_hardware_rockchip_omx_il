@@ -295,8 +295,6 @@ OMX_ERRORTYPE Rkvpu_ResetAllPortConfig(OMX_COMPONENTTYPE *pOMXComponent)
 
 void Rkvpu_Wait_ProcessPause(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_U32 nPortIndex)
 {
-    ROCKCHIP_OMX_BASEPORT *rockchipOMXInputPort  = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-    ROCKCHIP_OMX_BASEPORT *rockchipOMXOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT *rockchipOMXPort = NULL;
 
     FunctionIn();
@@ -329,7 +327,6 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
     VpuCodecContext_t *p_vpu_ctx = pVideoDec->vpu_ctx;
     OMX_S32 i = 0;
     OMX_S32 numInOmxAl = 0;
-    OMX_S32 temp_size;
     OMX_S32 maxBufferNum = rockchipInputPort->portDefinition.nBufferCountActual;
     OMX_S32 dec_ret = 0;
     FunctionIn();
@@ -414,8 +411,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_IMMEDIATE_OUT, (void*)&flag);
             }
 
-            if (p_vpu_ctx->videoCoding == OMX_RK_VIDEO_CodingHEVC) {
-                p_vpu_ctx->control(p_vpu_ctx, VPU_API_PRIVATE_HEVC_NEED_PARSE, NULL);
+            if (p_vpu_ctx->videoCoding == OMX_RK_VIDEO_CodingHEVC && pVideoDec->bOld_api == OMX_TRUE) {
+                p_vpu_ctx->control(p_vpu_ctx, (VPU_API_CMD)VPU_API_PRIVATE_HEVC_NEED_PARSE, NULL);
             }
 
             pVideoDec->bFirstFrame = OMX_FALSE;
@@ -567,8 +564,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
         omx_info("out buffer position: in vpu unused buffer = %d", bufferUnusedInVpu);
     }
     if (pOutputPort->bufferProcessType == BUFFER_SHARE) {
-        OMX_U32 width = 0, height = 0;
-        int imageSize = 0;
         OMX_S32 dec_ret = 0;
         DecoderOut_t pOutput;
         VPU_FRAME *pframe = (VPU_FRAME *)Rockchip_OSAL_Malloc(sizeof(VPU_FRAME));;
@@ -759,8 +754,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
         }
     } else {
         if (outputUseBuffer->dataValid == OMX_TRUE) {
-            OMX_U32 width = 0, height = 0;
-            int imageSize = 0;
             int ret = 0;
             DecoderOut_t pOutput;
             VPU_FRAME pframe;
@@ -890,8 +883,6 @@ OMX_ERRORTYPE Rkvpu_OMX_InputBufferProcess(OMX_HANDLETYPE hComponent)
     ROCKCHIP_OMX_BASEPORT      *rockchipInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT      *rockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     ROCKCHIP_OMX_DATABUFFER    *srcInputUseBuffer = &rockchipInputPort->way.port2WayDataBuffer.inputDataBuffer;
-    OMX_BOOL               bCheckInputData = OMX_FALSE;
-    OMX_BOOL               bValidCodecData = OMX_FALSE;
 
     FunctionIn();
 
@@ -945,6 +936,7 @@ OMX_ERRORTYPE Rkvpu_OMX_InputBufferProcess(OMX_HANDLETYPE hComponent)
         }
     }
 
+    goto EXIT;
 EXIT:
 
     FunctionOut();
@@ -1002,6 +994,7 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
         }
     }
 
+    goto EXIT;
 EXIT:
 
     FunctionOut();
@@ -1014,7 +1007,6 @@ static OMX_ERRORTYPE Rkvpu_OMX_InputProcessThread(OMX_PTR threadData)
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_MESSAGE       *message = NULL;
 
     FunctionIn();
 
@@ -1043,7 +1035,6 @@ static OMX_ERRORTYPE Rkvpu_OMX_OutputProcessThread(OMX_PTR threadData)
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_MESSAGE       *message = NULL;
 
     FunctionIn();
 
@@ -1088,6 +1079,7 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Create(OMX_COMPONENTTYPE *pOMXComponent)
                                          pOMXComponent,
                                          "omx_dec_input");
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1100,7 +1092,6 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Terminate(OMX_COMPONENTTYPE *pOMXComponent
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_S32                countValue = 0;
-    unsigned int           i = 0;
 
     FunctionIn();
 
@@ -1128,6 +1119,7 @@ OMX_ERRORTYPE Rkvpu_OMX_BufferProcess_Terminate(OMX_COMPONENTTYPE *pOMXComponent
     pRockchipComponent->checkTimeStamp.needSetStartTimeStamp = OMX_FALSE;
     pRockchipComponent->checkTimeStamp.needCheckStartTimeStamp = OMX_FALSE;
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1186,7 +1178,7 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
         goto EXIT;
     }
     {
-        int i = 0;
+        OMX_U32 i = 0;
         for (i = 0; i < ARRAY_SIZE(kCodeMap); i++) {
             if (kCodeMap[i].omx_id == pVideoDec->codecId) {
                 codecId = kCodeMap[i].codec_id;
@@ -1280,10 +1272,7 @@ OMX_ERRORTYPE Rkvpu_Dec_Terminate(OMX_COMPONENTTYPE *pOMXComponent)
     OMX_ERRORTYPE                  ret               = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent  = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     RKVPU_OMX_VIDEODEC_COMPONENT    *pVideoDec         = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-    ROCKCHIP_OMX_BASEPORT           *pRockchipInputPort  = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-    ROCKCHIP_OMX_BASEPORT           *pRockchipOutputPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
 
-    int i, plane;
     FunctionIn();
     if (pVideoDec && pVideoDec->vpu_ctx) {
         if (pVideoDec->rkvpu_close_cxt) {
@@ -1305,6 +1294,7 @@ OMX_ERRORTYPE Rkvpu_Dec_Terminate(OMX_COMPONENTTYPE *pOMXComponent)
 #endif
     Rkvpu_ResetAllPortConfig(pOMXComponent);
 
+    goto EXIT;
 EXIT:
     FunctionOut();
 
@@ -1454,7 +1444,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pRockchipPort->processData.extInfo = (OMX_PTR)Rockchip_OSAL_Malloc(sizeof(DECODE_CODEC_EXTRA_BUFFERINFO));
     Rockchip_OSAL_Memset(((char *)pRockchipPort->processData.extInfo), 0, sizeof(DECODE_CODEC_EXTRA_BUFFERINFO));
     {
-        int i = 0;
         DECODE_CODEC_EXTRA_BUFFERINFO *pBufferInfo = NULL;
         pBufferInfo = (DECODE_CODEC_EXTRA_BUFFERINFO *)(pRockchipPort->processData.extInfo);
     }

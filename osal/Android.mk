@@ -29,7 +29,7 @@ LOCAL_SRC_FILES := \
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := libRkOMX_OSAL
 
-LOCAL_SHARED_LIBRARIES := libhardware liblog
+LOCAL_SHARED_LIBRARIES := libhardware liblog libvpu
 LOCAL_STATIC_LIBRARIES := liblog libcutils
 
 ifeq ($(BOARD_VERSION_LOW),true)
@@ -56,6 +56,7 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(TOP)/frameworks/native/libs/nativebase/include \
         $(TOP)/system/core/libion/include \
         $(TOP)/system/core/libion/kernel-headers \
+	$(TOP)/system/core/base/include/ \
 	$(TOP)/hardware/rockchip/libgralloc \
 	$(TOP)/hardware/rockchip/librkvpu \
 	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \

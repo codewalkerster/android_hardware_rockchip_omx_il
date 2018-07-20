@@ -9,8 +9,6 @@ LOCAL_SRC_FILES := \
 
 LOCAL_MODULE := libRkOMX_Basecomponent
 
-LOCAL_CFLAGS :=
-
 LOCAL_STATIC_LIBRARIES := libRkOMX_OSAL
 LOCAL_SHARED_LIBRARIES := libcutils libutils liblog
 
@@ -30,8 +28,6 @@ LOCAL_SRC_FILES := \
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := libRkOMX_Resourcemanager
 LOCAL_PROPRIETARY_MODULE := true
-
-LOCAL_CFLAGS :=
 
 LOCAL_STATIC_LIBRARIES := libRkOMX_OSAL
 LOCAL_SHARED_LIBRARIES := libcutils libutils liblog

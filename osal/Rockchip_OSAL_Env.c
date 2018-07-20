@@ -48,7 +48,6 @@ OMX_ERRORTYPE Rockchip_OSAL_GetEnvU32(const char *name, OMX_U32 *value, OMX_U32 
         *value = default_value;
     }
 
-EXIT:
     FunctionOut();
     return ret;
 }
@@ -62,6 +61,10 @@ OMX_ERRORTYPE Rockchip_OSAL_GetEnvStr(const char *name, char *value, char *defau
         if (len <= 0 && default_value != NULL) {
             strcpy(value, default_value);
         }
+    } else {
+        omx_err("get env string failed, value is null");
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
     }
 
 EXIT:
@@ -74,7 +77,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetEnvU32(const char *name, OMX_U32 value)
     FunctionIn();
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     char buf[PROP_VALUE_MAX + 1];
-    snprintf(buf, sizeof(buf), "%d", value);
+    snprintf(buf, sizeof(buf), "%lu", value);
     int len = __system_property_set(name, buf);
     if (len <= 0) {
         omx_err("property set failed!");

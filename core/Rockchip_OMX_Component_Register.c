@@ -53,7 +53,7 @@ static const ROCKCHIP_COMPONENT_INFO kCompInfo[] = {
 OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **compList, OMX_U32 *compNum)
 {
     OMX_ERRORTYPE  ret = OMX_ErrorNone;
-    int            componentNum = 0, roleNum = 0, totalCompNum = 0;
+    int            componentNum = 0, totalCompNum = 0;
     OMX_U32        i = 0;
     const char    *errorMsg;
 
@@ -107,7 +107,6 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
     *compList = componentList;
     *compNum = totalCompNum;
 
-EXIT:
     FunctionOut();
 
     return ret;
@@ -119,7 +118,6 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Unregister(ROCKCHIP_OMX_COMPONENT_REGLIST *
 
     Rockchip_OSAL_Free(componentList);
 
-EXIT:
     return ret;
 }
 

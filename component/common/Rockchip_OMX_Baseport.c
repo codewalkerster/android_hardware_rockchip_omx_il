@@ -83,6 +83,7 @@ OMX_ERRORTYPE Rockchip_OMX_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, 
     Rockchip_OSAL_MutexUnlock(pRockchipPort->hPortMutex);
     pRockchipComponent->pCallbacks->FillBufferDone(pOMXComponent, pRockchipComponent->callbackData, bufferHeader);
 
+    goto EXIT;
 EXIT:
     omx_trace("bufferHeader:0x%x", bufferHeader);
     return ret;
@@ -92,9 +93,7 @@ OMX_ERRORTYPE Rockchip_OMX_BufferFlushProcess(OMX_COMPONENTTYPE *pOMXComponent, 
 {
     OMX_ERRORTYPE             ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     OMX_S32                   portIndex = 0;
-    ROCKCHIP_OMX_DATABUFFER    *flushPortBuffer[2] = {NULL, NULL};
     OMX_U32                   i = 0, cnt = 0;
 
     FunctionIn();
@@ -144,7 +143,6 @@ OMX_ERRORTYPE Rockchip_OMX_EnablePort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32 
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-    OMX_U32                i = 0, cnt = 0;
 
     FunctionIn();
 
@@ -229,7 +227,6 @@ OMX_ERRORTYPE Rockchip_OMX_DisablePort(OMX_COMPONENTTYPE *pOMXComponent, OMX_S32
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-    OMX_U32                i = 0, elemNum = 0;
     ROCKCHIP_OMX_MESSAGE       *message;
 
     FunctionIn();
@@ -274,10 +271,8 @@ OMX_ERRORTYPE Rockchip_OMX_PortDisableProcess(OMX_COMPONENTTYPE *pOMXComponent, 
 {
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
-    ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     OMX_S32                portIndex = 0;
     OMX_U32                i = 0, cnt = 0;
-    ROCKCHIP_OMX_DATABUFFER    *flushPortBuffer[2] = {NULL, NULL};
 
     FunctionIn();
 
@@ -562,7 +557,6 @@ OMX_ERRORTYPE Rockchip_OMX_Port_Constructor(OMX_HANDLETYPE hComponent)
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipInputPort = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipOutputPort = NULL;
-    int i = 0;
 
     FunctionIn();
 
@@ -802,8 +796,6 @@ OMX_ERRORTYPE Rockchip_OMX_Port_Destructor(OMX_HANDLETYPE hComponent)
     OMX_COMPONENTTYPE        *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
     ROCKCHIP_OMX_BASEPORT      *pRockchipPort = NULL;
-
-    OMX_S32 countValue = 0;
     int i = 0;
 
     FunctionIn();

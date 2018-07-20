@@ -95,54 +95,6 @@ typedef struct _OMX_VIDEO_PARAMS_EXTENDED {
     OMX_U16 ui16CropBottom;// Number of rows to be cropped from the bottom edge
 } OMX_VIDEO_PARAMS_EXTENDED;
 
-typedef enum _ROCKCHIP_OMX_INDEXTYPE {
-#define ROCKCHIP_INDEX_PARAM_ENABLE_THUMBNAIL "OMX.SEC.index.enableThumbnailMode"
-    OMX_IndexParamEnableThumbnailMode       = 0x7F000001,
-#define ROCKCHIP_INDEX_CONFIG_VIDEO_INTRAPERIOD "OMX.SEC.index.VideoIntraPeriod"
-    OMX_IndexConfigVideoIntraPeriod         = 0x7F000002,
-
-    /* for Android Native Window */
-#define ROCKCHIP_INDEX_PARAM_ENABLE_ANB "OMX.google.android.index.enableAndroidNativeBuffers"
-    OMX_IndexParamEnableAndroidBuffers      = 0x7F000011,
-#define ROCKCHIP_INDEX_PARAM_GET_ANB_Usage "OMX.google.android.index.getAndroidNativeBufferUsage"
-    OMX_IndexParamGetAndroidNativeBufferUsage    = 0x7F000012,
-#define ROCKCHIP_INDEX_PARAM_USE_ANB "OMX.google.android.index.useAndroidNativeBuffer2"
-    OMX_IndexParamUseAndroidNativeBuffer    = 0x7F000013,
-    /* for Android Store Metadata Inbuffer */
-#define ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER "OMX.google.android.index.storeMetaDataInBuffers"
-    OMX_IndexParamStoreMetaDataBuffer       = 0x7F000014,
-    /* prepend SPS/PPS to I/IDR for H.264 Encoder */
-#define ROCKCHIP_INDEX_PARAM_PREPEND_SPSPPS_TO_IDR "OMX.google.android.index.prependSPSPPSToIDRFrames"
-    OMX_IndexParamPrependSPSPPSToIDR        = 0x7F000015,
-#define ROCKCHIP_INDEX_PARAM_RKWFD "OMX.rk.index.encoder.wifidisplay"
-    OMX_IndexRkEncExtendedWfdState = 0x7F000018,
-
-#define ROCKCHIP_INDEX_PREPARE_ADAPTIVE_PLAYBACK  "OMX.google.android.index.prepareForAdaptivePlayback"
-    OMX_IndexParamprepareForAdaptivePlayback       = 0x7F000016,
-
-#define ROCKCHIP_INDEX_DESCRIBE_COLORFORMAT   "OMX.google.android.index.describeColorFormat"
-    OMX_IndexParamdescribeColorFormat           = 0x7F000017,
-
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_DIV3 "OMX.rk.index.decoder.extension.div3"
-    OMX_IndexParamRkDecoderExtensionDiv3        = 0x7F050000,
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_USE_DTS "OMX.rk.index.decoder.extension.useDts"
-    OMX_IndexParamRkDecoderExtensionUseDts        = 0x7F050001,
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_THUMBNAIL "OMX.rk.index.decoder.extension.thumbNail"
-    OMX_IndexParamRkDecoderExtensionThumbNail        = 0x7F050002,
-
-#define ROCKCHIP_INDEX_PARAM_EXTENDED_VIDEO "OMX.Topaz.index.param.extended_video"
-    OMX_IndexParamRkEncExtendedVideo        = 0x7F050003,
-
-#define ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS "OMX.google.android.index.describeColorAspects"
-    OMX_IndexParamRkDescribeColorAspects    = 0x7F000062,
-
-#define ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE "OMX.google.android.index.allocateNativeHandle"
-    OMX_IndexParamAllocateNativeHandle          = 0x7F00005D,
-
-    /* for Android PV OpenCore*/
-    OMX_COMPONENT_CAPABILITY_TYPE_INDEX     = 0xFF7A347
-} ROCKCHIP_OMX_INDEXTYPE;
-
 typedef enum _ROCKCHIP_OMX_ERRORTYPE {
     OMX_ErrorNoEOF              = (OMX_S32) 0x90000001,
     OMX_ErrorInputDataDecodeYet = (OMX_S32) 0x90000002,
@@ -175,7 +127,6 @@ typedef enum _ROCKCHIP_OMX_COLOR_FORMATTYPE {
     /* to copy a encoded data for drm component using gsc or fimc */
     OMX_SEC_COLOR_FormatEncodedData                 = OMX_COLOR_FormatYCbYCr,
     /* for Android SurfaceMediaSource*/
-    OMX_COLOR_FormatAndroidOpaque                   = 0x7F000789,
     OMX_COLOR_FormatYUV420Flexible                  = 0x7F420888
 } ROCKCHIP_OMX_COLOR_FORMATTYPE;
 

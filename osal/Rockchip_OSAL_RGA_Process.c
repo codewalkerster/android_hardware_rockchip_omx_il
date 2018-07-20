@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include "vpu_type.h"
 #include "Rockchip_OMX_Def.h"
 #include "vpu_global.h"
@@ -407,6 +408,8 @@ void rga_rgb2nv12(RockchipVideoPlane *plane, VPUMemLinear_t *vpumem,
                   uint32_t Width, uint32_t Height, uint32_t dstWidth, uint32_t dstHeight,  void* rga_ctx)
 {
 
+    (void)dstWidth;
+    (void)dstHeight;
 #ifndef USE_DRM
     rga_info_t src;
     rga_info_t dst;
@@ -462,7 +465,6 @@ void rga_nv122rgb( RockchipVideoPlane *planes, VPUMemLinear_t *vpumem, uint32_t 
 #else
     rga_info_t src;
     rga_info_t dst;
-    int32_t format;
     (void) rga_ctx;
     memset((void*)&src, 0, sizeof(rga_info_t));
     memset((void*)&dst, 0, sizeof(rga_info_t));

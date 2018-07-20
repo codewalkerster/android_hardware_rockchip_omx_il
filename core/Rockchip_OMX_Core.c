@@ -281,6 +281,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY RKOMX_SetupTunnel(
     (void)nPortOutput;
     (void)hInput;
     (void)nPortInput;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -292,6 +293,7 @@ OMX_API OMX_ERRORTYPE RKOMX_GetContentPipe(
     OMX_ERRORTYPE ret = OMX_ErrorNotImplemented;
     (void)hPipe;
     (void)szURI;
+    goto EXIT;
 EXIT:
     return ret;
 }
@@ -303,7 +305,6 @@ OMX_API OMX_ERRORTYPE RKOMX_GetComponentsOfRole (
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     int           max_role_num = 0;
-    OMX_STRING    RoleString[MAX_OMX_COMPONENT_ROLE_SIZE];
     int i = 0, j = 0;
 
     FunctionIn();
