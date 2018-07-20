@@ -64,4 +64,6 @@ ifneq ($(filter %true, $(BOARD_SUPPORT_VP8_ENC)), )
 LOCAL_CFLAGS += -DSUPPORT_VP8_ENC=1
 endif
 
+LOCAL_CFLAGS += -Wall -Werror
+
 include $(BUILD_SHARED_LIBRARY)

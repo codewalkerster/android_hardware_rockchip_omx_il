@@ -82,4 +82,6 @@ ifeq ($(filter %false, $(BOARD_SUPPORT_VP9)), )
 LOCAL_CFLAGS += -DSUPPORT_VP9=1
 endif
 
+LOCAL_CFLAGS += -Wall -Werror
+
 include $(BUILD_SHARED_LIBRARY)
