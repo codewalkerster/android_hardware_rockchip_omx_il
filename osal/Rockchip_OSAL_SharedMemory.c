@@ -457,6 +457,7 @@ void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle, OMX_BOOL b_secure)
 #ifdef AVS80
             native_handle_t* pnative_handle_t = NULL;
             int map_fd = 0;
+            void *pTrueAddree = NULL;
             pnative_handle_t = (native_handle_t*)pDeleteElement->mapAddr;
             map_fd = pnative_handle_t->data[0];
             pTrueAddree = (void *)Rockchip_OSAL_SharedMemory_HandleToAddress(handle, pDeleteElement->mapAddr);
@@ -602,6 +603,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
         }
 
 #ifdef AVS80
+        native_handle_t* pnative_handle_t = NULL;
         pnative_handle_t = native_handle_create(1, 0);
         err = drm_handle_to_fd(pHandle->fd, ion_hdl, &map_fd, 0);
         if (err < 0) {

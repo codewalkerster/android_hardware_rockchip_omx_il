@@ -854,6 +854,7 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoRkWfdMetaData(OMX_IN OMX_BOOL bRkWFD,
     buffer_handle_t    pBufHandle;
     FunctionIn();
 
+    (void)bRkWFD;
     /*
      * meta data contains the following data format.
      * payload depends on the MetadataBufferType
