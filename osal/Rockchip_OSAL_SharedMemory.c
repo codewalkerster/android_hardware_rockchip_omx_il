@@ -30,6 +30,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <cutils/log.h>
 #include <cutils/atomic.h>
 #include <fcntl.h>

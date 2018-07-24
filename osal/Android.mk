@@ -28,9 +28,10 @@ LOCAL_SRC_FILES := \
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := libRkOMX_OSAL
+LOCAL_PROPRIETARY_MODULE := true
 
-LOCAL_SHARED_LIBRARIES := libhardware liblog libvpu
-LOCAL_STATIC_LIBRARIES := liblog libcutils
+LOCAL_SHARED_LIBRARIES := libhardware liblog libvpu libui
+LOCAL_STATIC_LIBRARIES := libutils libcutils
 
 ifeq ($(BOARD_VERSION_LOW),true)
 LOCAL_CFLAGS += -DLOW_VRESION
@@ -61,6 +62,11 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(TOP)/hardware/rockchip/librkvpu \
 	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \
 	$(TOP)/system/core/libcutils
+
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+LOCAL_C_INCLUDES += \
+	$(TOP)/frameworks/native/headers/media_plugin
+endif
 
 ifeq ($(OMX_USE_DRM), true)
 	LOCAL_CFLAGS += -DUSE_DRM

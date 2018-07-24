@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <poll.h>
 #include <dlfcn.h>
 #include <hardware/hardware.h>

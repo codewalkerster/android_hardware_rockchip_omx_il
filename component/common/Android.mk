@@ -8,6 +8,7 @@ LOCAL_SRC_FILES := \
 	Rockchip_OMX_Baseport.c
 
 LOCAL_MODULE := libRkOMX_Basecomponent
+LOCAL_PROPRIETARY_MODULE := true
 
 LOCAL_STATIC_LIBRARIES := libRkOMX_OSAL
 LOCAL_SHARED_LIBRARIES := libcutils libutils liblog
