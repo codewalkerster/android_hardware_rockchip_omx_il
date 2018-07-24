@@ -68,6 +68,6 @@ ifeq ($(OMX_USE_DRM), true)
 			     $(TOP)/external/libdrm/include/drm/ 
 endif
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS += -Werror
 
 include $(BUILD_STATIC_LIBRARY)

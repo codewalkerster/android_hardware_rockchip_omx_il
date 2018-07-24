@@ -44,6 +44,7 @@
 #include "Rockchip_OSAL_SharedMemory.h"
 #include "Rockchip_OSAL_RGA_Process.h"
 #include "Rockchip_OSAL_Env.h"
+#include "OMX_IVCommon.h"
 
 #include "hardware/rga.h"
 #include "vpu_type.h"
@@ -364,7 +365,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
     *len = 0;
     *aPhy_address = 0;
     if (!Rockchip_OSAL_GetInfoRkWfdMetaData(pVideoEnc->bRkWFD, pInputBuffer->pBuffer, &pGrallocHandle)) {
-        if (!((ROCKCHIP_OMX_COLOR_FORMATTYPE)pInPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque)) {
+        if (!(pInPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque)) {
             omx_info("Error colorformat != OMX_COLOR_FormatAndroidOpaque");
         }
         gralloc_private_handle_t priv_hnd_wfd;
@@ -510,7 +511,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
 
         if (pVideoEnc->bFirstFrame) {
             EncParameter_t vpug;
-            if ((ROCKCHIP_OMX_COLOR_FORMATTYPE)rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
+            if (rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
                 Rockchip_OSAL_GetInfoFromMetaData(inputUseBuffer->bufferHeader->pBuffer, &pGrallocHandle);
                 if (pGrallocHandle == NULL) {
                     omx_err("pGrallocHandle is NULL set omx_format default");
@@ -602,7 +603,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         }
 #endif
 
-        if ((ROCKCHIP_OMX_COLOR_FORMATTYPE)rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
+        if (rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
             if ((pVideoEnc->bRgb2yuvFlag == OMX_TRUE) || (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_YCrCb_NV12)) {
                 omx_trace("set as nv12 format");
                 H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
@@ -611,7 +612,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
         }
 
         if (pVideoEnc->codecId == OMX_VIDEO_CodingAVC) {
-            if ((ROCKCHIP_OMX_COLOR_FORMATTYPE)rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
+            if (rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
                 if (pVideoEnc->bFrame_num < 60 && (pVideoEnc->bFrame_num % 5 == 0)) {
                     EncParameter_t vpug;
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETIDRFRAME, NULL);
@@ -1419,16 +1420,21 @@ OMX_ERRORTYPE Rkvpu_Enc_GetEncParams(OMX_COMPONENTTYPE *pOMXComponent, EncParame
                     pRockchipInputPort->portDefinition.format.video.eColorFormat);
             break;
         }
-        ConvertOmxAvcLevelToAvcSpecLevel((int32_t)pVideoEnc->AVCComponent[OUTPUT_PORT_INDEX].eLevel, (AVCLevel *) & ((*encParams)->levelIdc));
+        void *levelTmp = &((*encParams)->levelIdc);
+        AVCLevel *encLevel = (AVCLevel *)levelTmp;
+        ConvertOmxAvcLevelToAvcSpecLevel((int32_t)pVideoEnc->AVCComponent[OUTPUT_PORT_INDEX].eLevel, encLevel);
     } else if (pVideoEnc->codecId == (OMX_VIDEO_CODINGTYPE)OMX_VIDEO_CodingHEVC) {
         (*encParams)->enableCabac   = 0;
         (*encParams)->cabacInitIdc  = 0;
         (*encParams)->intraPicRate  = pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].nKeyFrameInterval;
-
+        void *profileTmp = &((*encParams)->profileIdc);
+        HEVCEncProfile *encProfile = (HEVCEncProfile *)profileTmp;
+        void *levelTmp = &((*encParams)->levelIdc);
+        HEVCLevel *encLevel = (HEVCLevel *)levelTmp;
         ConvertOmxHevcProfile2HalHevcProfile(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eProfile,
-                                             (HEVCEncProfile *) & ((*encParams)->profileIdc));
+                                             encProfile);
         ConvertOmxHevcLevel2HalHevcLevel(pVideoEnc->HEVCComponent[OUTPUT_PORT_INDEX].eLevel,
-                                         (HEVCLevel *) & ((*encParams)->levelIdc));
+                                         encLevel);
         switch (pVideoEnc->eControlRate[OUTPUT_PORT_INDEX]) {
         case OMX_Video_ControlRateDisable:
             (*encParams)->rc_mode = Video_RC_Mode_Disable;

@@ -36,6 +36,6 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(ROCKCHIP_OMX_INC)/rockchip \
 	$(ROCKCHIP_OMX_TOP)/osal
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS += -Werror
 
 include $(BUILD_SHARED_LIBRARY)

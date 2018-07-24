@@ -375,7 +375,7 @@ OMX_U32 Rockchip_OSAL_SharedMemory_HandleToAddress(OMX_HANDLETYPE handle, OMX_HA
     native_handle_t* pnative_handle_t = NULL;
     RK_S32 err = 0;
     RK_S32 mClient = 0;
-    RK_U32 mHandle;
+    RK_U32 mHandle = 0;
     struct drm_rockchip_gem_phys phys_arg;
 
     (void)handle;
@@ -443,7 +443,6 @@ void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle, OMX_BOOL b_secure)
     ROCKCHIP_SHAREDMEM_LIST *pSMList = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pCurrentElement = NULL;
     ROCKCHIP_SHAREDMEM_LIST *pDeleteElement = NULL;
-    void                    *pTrueAddree    = NULL;
 
     if (pHandle == NULL)
         goto EXIT;
@@ -529,7 +528,6 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
     unsigned int flag;
     int err = 0;
     int map_fd = -1;
-    native_handle_t* pnative_handle_t = NULL;
 
     struct drm_rockchip_gem_phys phys_arg;
 
@@ -577,13 +575,13 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
 #ifdef AVS80
             pElement->mapAddr = (OMX_PTR)((__u64)phys_arg.phy_addr);
 #else
-            pElement->mapAddr = phys_arg.phy_addr;
+            pElement->mapAddr = (OMX_PTR)((long)phys_arg.phy_addr);
 #endif
         } else {
 #ifdef AVS80
             pElement->mapAddr = (OMX_PTR)((__u64)phys);
 #else
-            pElement->mapAddr = phys;
+            pElement->mapAddr = (OMX_PTR)((long)phys);
 #endif
         }
         pElement->allocSize = size;
@@ -593,13 +591,13 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
 #ifdef AVS80
             pBuffer = (OMX_PTR)((__u64)phys_arg.phy_addr);
 #else
-            pBuffer = phys_arg.phy_addr;
+            pBuffer = (OMX_PTR)((long)phys_arg.phy_addr);
 #endif
         } else {
 #ifdef AVS80
             pBuffer = (OMX_PTR)((__u64)phys);
 #else
-            pBuffer = phys;
+            pBuffer = (OMX_PTR)((long)phys);
 #endif
         }
 
