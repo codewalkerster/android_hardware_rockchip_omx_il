@@ -1344,14 +1344,17 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         nMaxBufferCount = pInputRockchipPort->portDefinition.nBufferCountActual;
         pVideoDec->nMinUnDequeBufferCount = 0;
     } else {
+        OMX_BOOL isSecure = pVideoDec->bDRMPlayerMode;
         nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
                                                              pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
-                                                             pOutputRockchipPort->portDefinition.format.video.nFrameHeight);
+                                                             pOutputRockchipPort->portDefinition.format.video.nFrameHeight,
+                                                             isSecure);
         if (pVideoDec->nDpbSize > 0) {
             nRefFrameNum = pVideoDec->nDpbSize;
         }
-        if (pOutputRockchipPort->portDefinition.format.video.nFrameWidth
-            * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088) {
+        if ((pOutputRockchipPort->portDefinition.format.video.nFrameWidth
+             * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088)
+            || isSecure) {
             nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1;
         } else {
             /* if width * height < 2304 * 1088, need consider IEP */
@@ -1400,7 +1403,8 @@ EXIT:
 OMX_U32 Rockchip_OSAL_CalculateTotalRefFrames(
     OMX_VIDEO_CODINGTYPE codecId,
     OMX_U32 width,
-    OMX_U32 height)
+    OMX_U32 height,
+    OMX_BOOL isSecure)
 {
     OMX_U32 nRefFramesNum = 0;
     switch (codecId) {
@@ -1436,6 +1440,14 @@ OMX_U32 Rockchip_OSAL_CalculateTotalRefFrames(
     default: {
         nRefFramesNum = 8;
     } break;
+    }
+
+    /*
+     * for SVP, Usually it is streaming video, and secure buffering
+     * is smaller, so buffer allocation is less.
+     */
+    if (isSecure) {
+        nRefFramesNum = nRefFramesNum > 12 ? 12 : nRefFramesNum;
     }
 
     return nRefFramesNum;

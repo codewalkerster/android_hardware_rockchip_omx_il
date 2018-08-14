@@ -139,7 +139,8 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
 OMX_U32 Rockchip_OSAL_CalculateTotalRefFrames(
     OMX_VIDEO_CODINGTYPE codecId,
     OMX_U32 width,
-    OMX_U32 height);
+    OMX_U32 height,
+    OMX_BOOL isSecure);
 
 #ifdef AVS80
 OMX_U32 Rockchip_OSAL_GetVideoNativeMetaSize();
