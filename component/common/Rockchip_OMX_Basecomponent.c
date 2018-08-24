@@ -360,16 +360,6 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentStateSet(OMX_COMPONENTTYPE *pOMXComponent, O
                 }
             }
 
-            omx_trace("rockchip_codec_componentInit");
-            ret = pRockchipComponent->rockchip_codec_componentInit(pOMXComponent);
-            if (ret != OMX_ErrorNone) {
-                /*
-                 * if (CHECK_PORT_TUNNELED == OMX_TRUE) thenTunnel Buffer Free
-                 */
-                Rockchip_OSAL_SignalSet(pRockchipComponent->abendStateEvent);
-                Rockchip_OMX_Release_Resource(pOMXComponent);
-                goto EXIT;
-            }
             if (pRockchipComponent->bMultiThreadProcess == OMX_FALSE) {
                 Rockchip_OSAL_SignalCreate(&pRockchipComponent->pauseEvent);
             } else {
@@ -489,6 +479,18 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentStateSet(OMX_COMPONENTTYPE *pOMXComponent, O
             ret = OMX_ErrorIncorrectStateTransition;
             break;
         case OMX_StateIdle:
+            omx_trace("rockchip_codec_componentInit");
+            ret = pRockchipComponent->rockchip_codec_componentInit(pOMXComponent);
+            if (ret != OMX_ErrorNone) {
+                /*
+                 * if (CHECK_PORT_TUNNELED == OMX_TRUE) thenTunnel Buffer Free
+                 */
+                omx_err_f("rockchip_codec_componentInit failed!");
+                Rockchip_OSAL_SignalSet(pRockchipComponent->abendStateEvent);
+                Rockchip_OMX_Release_Resource(pOMXComponent);
+                goto EXIT;
+            }
+
             for (i = 0; i < pRockchipComponent->portParam.nPorts; i++) {
                 pRockchipPort = &pRockchipComponent->pRockchipPort[i];
                 if (CHECK_PORT_TUNNELED(pRockchipPort) && CHECK_PORT_BUFFER_SUPPLIER(pRockchipPort) && CHECK_PORT_ENABLED(pRockchipPort)) {
