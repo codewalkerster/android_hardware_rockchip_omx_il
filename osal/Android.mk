@@ -45,7 +45,8 @@ LOCAL_SRC_FILES := \
 	Rockchip_OSAL_RGA_Process.c \
 	Rockchip_OSAL_Android.cpp \
 	Rockchip_OSAL_SharedMemory.c \
-	Rockchip_OSAL_Env.c
+	Rockchip_OSAL_Env.c \
+        Rockchip_OSAL_ColorUtils.cpp
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := libRkOMX_OSAL
@@ -92,7 +93,7 @@ endif
 ifeq ($(OMX_USE_DRM), true)
 	LOCAL_CFLAGS += -DUSE_DRM
 	LOCAL_C_INCLUDES +=  $(TOP)/hardware/rockchip/librga \
-			     $(TOP)/external/libdrm/include/drm/ 
+			     $(TOP)/external/libdrm/include/drm/
 endif
 
 LOCAL_CFLAGS += -Werror

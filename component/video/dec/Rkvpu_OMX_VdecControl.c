@@ -46,6 +46,8 @@
 #include "Rockchip_OSAL_ETC.h"
 #include "Rockchip_OSAL_Queue.h"
 #include "Rockchip_OSAL_SharedMemory.h"
+#include "Rockchip_OSAL_ColorUtils.h"
+
 
 #include <hardware/hardware.h>
 #include "hardware/rga.h"
@@ -1689,6 +1691,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
     OMX_ERRORTYPE          ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
 
     FunctionIn();
 
@@ -1712,6 +1715,12 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
     }
     if (pRockchipComponent->currentState == OMX_StateInvalid) {
         ret = OMX_ErrorInvalidState;
+        goto EXIT;
+    }
+
+    pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+    if (pVideoDec == NULL) {
+        ret = OMX_ErrorBadParameter;
         goto EXIT;
     }
 
@@ -1735,6 +1744,27 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
     }
     break;
 #endif
+    case OMX_IndexParamRkDescribeColorAspects: {
+        OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *colorAspectsParams = (OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *)pComponentConfigStructure;
+
+        ret = Rockchip_OMX_Check_SizeVersion((void *)colorAspectsParams, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
+        if (ret != OMX_ErrorNone) {
+            goto EXIT;
+        }
+        if (colorAspectsParams->nPortIndex != OUTPUT_PORT_INDEX) {
+            return OMX_ErrorBadParameter;
+        }
+
+        colorAspectsParams->sAspects.mRange = pVideoDec->mFinalColorAspects.mRange;
+        colorAspectsParams->sAspects.mPrimaries = pVideoDec->mFinalColorAspects.mPrimaries;
+        colorAspectsParams->sAspects.mTransfer = pVideoDec->mFinalColorAspects.mTransfer;
+        colorAspectsParams->sAspects.mMatrixCoeffs = pVideoDec->mFinalColorAspects.mMatrixCoeffs;
+
+        if (colorAspectsParams->bRequestingDataSpace || colorAspectsParams->bDataSpaceChanged) {
+            return OMX_ErrorUnsupportedSetting;
+        }
+    }
+    break;
 
     default:
         ret = Rockchip_OMX_GetConfig(hComponent, nIndex, pComponentConfigStructure);
@@ -1755,6 +1785,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetConfig(
     OMX_ERRORTYPE           ret = OMX_ErrorNone;
     OMX_COMPONENTTYPE     *pOMXComponent = NULL;
     ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent = NULL;
+    RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = NULL;
 
     FunctionIn();
 
@@ -1780,8 +1811,37 @@ OMX_ERRORTYPE Rkvpu_OMX_SetConfig(
         ret = OMX_ErrorInvalidState;
         goto EXIT;
     }
+    pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+    if (pVideoDec == NULL) {
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
 
     switch (nIndex) {
+    case OMX_IndexParamRkDescribeColorAspects: {
+        const OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS* colorAspectsParams = (const OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *)pComponentConfigStructure;
+
+        ret = Rockchip_OMX_Check_SizeVersion((void *)colorAspectsParams, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
+        if (ret != OMX_ErrorNone) {
+            goto EXIT;
+        }
+        if (colorAspectsParams->nPortIndex != OUTPUT_PORT_INDEX) {
+            return OMX_ErrorBadParameter;
+        }
+        // Update color aspects if necessary.
+        if (colorAspectsDiffer(&colorAspectsParams->sAspects, &pVideoDec->mDefaultColorAspects)) {
+            pVideoDec->mDefaultColorAspects.mRange = colorAspectsParams->sAspects.mRange;
+            pVideoDec->mDefaultColorAspects.mPrimaries = colorAspectsParams->sAspects.mPrimaries;
+            pVideoDec->mDefaultColorAspects.mTransfer = colorAspectsParams->sAspects.mTransfer;
+            pVideoDec->mDefaultColorAspects.mMatrixCoeffs = colorAspectsParams->sAspects.mMatrixCoeffs;
+
+            handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                     &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                     &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                     kPreferBitstream);
+        }
+    }
+    break;
     default:
         ret = Rockchip_OMX_SetConfig(hComponent, nIndex, pComponentConfigStructure);
         break;
@@ -1944,6 +2004,10 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
     }
 #endif
 #endif
+    if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS) == 0) {
+        *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamRkDescribeColorAspects;
+        goto EXIT;
+    }
 
     ret = Rockchip_OMX_GetExtensionIndex(hComponent, cParameterName, pIndexType);
 

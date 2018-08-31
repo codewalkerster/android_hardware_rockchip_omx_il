@@ -44,6 +44,8 @@
 #include "Rockchip_OSAL_SharedMemory.h"
 #include "Rockchip_OSAL_Log.h"
 #include "Rockchip_OSAL_Env.h"
+#include "Rockchip_OSAL_ColorUtils.h"
+
 
 #include "vpu_mem_pool.h"
 #include "vpu_api_private_cmd.h"
@@ -550,6 +552,13 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
     OMX_S32 maxBufferNum = 0;
     OMX_S32 i = 0, numInOmxAl = 0, limitNum = 8;
     OMX_S32 bufferUnusedInVpu = 0;
+    OMX_U32 fullRange = 0;
+    OMX_U32 primaries = 0;
+    OMX_U32 transfer  = 0;
+    OMX_U32 coeffs    = 0;
+    OMX_COLORASPECTS Aspects = { 0 };
+    OMX_COLORASPECTS *colorAspects = NULL;
+
     FunctionIn();
     if (p_vpu_ctx == NULL ||
         (pVideoDec->bFirstFrame == OMX_TRUE) ||
@@ -606,7 +615,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             }
             Rkvpu_OutputBufferReturn(pOMXComponent, outputUseBuffer);
         }
-
         if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
             int ret = 0;
             p_vpu_ctx->control(p_vpu_ctx, VPU_API_DEC_GET_STREAM_TOTAL, &ret);
@@ -703,7 +711,26 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 OMX_BOOL isInput = OMX_FALSE;
                 controlFPS(isInput);
             }
+            {
+                fullRange  = pframe->ColorRange;
+                primaries  = pframe->ColorPrimaries;
+                transfer   = pframe->ColorTransfer;
+                coeffs     = pframe->ColorCoeffs;
 
+                colorAspects = &Aspects;
+                convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
+
+                if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
+                    pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
+                    pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
+                    pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
+                    pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
+                    handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                             &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                             &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                             kPreferBitstream);
+                }
+            }
             if (pframe->ErrorInfo && (pVideoDec->bGtsMediaTest == OMX_FALSE) && (pVideoDec->bDRMPlayerMode == OMX_FALSE)) {   //drop frame when this frame mark error from dec
                 omx_err("this frame is Error frame!,pOutput.timeUs = %lld", pOutput.timeUs);
                 if (pframe->vpumem.phy_addr > 0) {
@@ -847,7 +874,26 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_INFO_CHANGE, NULL);
                     goto EXIT;
                 }
+                {
+                    fullRange  = pframe.ColorRange;
+                    primaries  = pframe.ColorPrimaries;
+                    transfer   = pframe.ColorTransfer;
+                    coeffs     = pframe.ColorCoeffs;
 
+                    colorAspects = &Aspects;
+                    convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
+
+                    if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
+                        pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
+                        pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
+                        pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
+                        pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
+                        handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                                 &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                                 &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                                 kPreferBitstream);
+                    }
+                }
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
                 outputUseBuffer->remainDataLen = pframe.DisplayHeight * pframe.DisplayWidth * 3 / 2;
                 outputUseBuffer->timeStamp = pOutput.timeUs;

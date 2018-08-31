@@ -984,7 +984,6 @@ typedef struct OMX_PARAM_MACROBLOCKSTYPE {
 } OMX_PARAM_MACROBLOCKSTYPE;
 
 
-#ifdef AVS80
 /**
  * Aspects of color.
  */
@@ -1058,7 +1057,6 @@ typedef struct OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS {
     OMX_U32  nDataSpace;           // OUT
     OMX_COLORASPECTS sAspects;  // IN/OUT
 } OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS;
-#endif
 
 /**
  * AVC Slice Mode modes

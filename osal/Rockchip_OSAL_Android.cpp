@@ -1446,7 +1446,7 @@ OMX_U32 Rockchip_OSAL_CalculateTotalRefFrames(
      * for SVP, Usually it is streaming video, and secure buffering
      * is smaller, so buffer allocation is less.
      */
-    if (isSecure && ((width * height) > 1280*768)) {
+    if (isSecure && ((width * height) > 1280 * 768)) {
         nRefFramesNum = nRefFramesNum > 9 ? 9 : nRefFramesNum;
     }
 
