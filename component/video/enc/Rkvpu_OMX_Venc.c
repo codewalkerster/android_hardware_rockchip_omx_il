@@ -1170,7 +1170,7 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
     RKVPU_OMX_VIDEOENC_COMPONENT  *pVideoEnc         = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     OMX_U32                        nValue = 0;
 
-    if (!Rockchip_OSAL_GetEnvU32("omx.venc.debug", &omx_venc_debug, 0)
+    if (!Rockchip_OSAL_GetEnvU32("vendor.omx.venc.debug", &omx_venc_debug, 0)
         && omx_venc_debug > 0) {
         omx_info("open video encoder debug, value: 0x%x", omx_venc_debug);
     }

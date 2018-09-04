@@ -227,7 +227,7 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
     char pValue[128 + 1];
     OMX_U32 nValue = 0;
 
-    if (!Rockchip_OSAL_GetEnvU32("omx.vdec.debug", &omx_vdec_debug, 0)
+    if (!Rockchip_OSAL_GetEnvU32("vendor.omx.vdec.debug", &omx_vdec_debug, 0)
         && omx_vdec_debug > 0) {
         omx_info("open video decoder debug, value: 0x%x", omx_vdec_debug);
     }
@@ -1234,7 +1234,7 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     }
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
         omx_info("drm player mode is true, force to mpp");
-        Rockchip_OSAL_SetEnvU32("use_mpp_mode", 1);
+        Rockchip_OSAL_SetEnvU32("vendor.use_mpp_mode", 1);
     }
     Rockchip_OSAL_Memset((void*)p_vpu_ctx, 0, sizeof(VpuCodecContext_t));
     if (omx_open_vpudec_context(pVideoDec)) {
@@ -1269,7 +1269,7 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
      * 2: use vpuapi first
      */
     OMX_U32 use_mpp = 0;
-    Rockchip_OSAL_GetEnvU32("omx.vpu.switch", &use_mpp, 0);
+    Rockchip_OSAL_GetEnvU32("vendor.omx.vpu.switch", &use_mpp, 0);
     if (use_mpp == VDEC_DBG_VPU_MPP_FIRST) {
         omx_info("switch vpu driver to mpp");
         /* reserved[1] = mpp_mode */
@@ -1758,7 +1758,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
 
     if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
         omx_info("drm player mode is true, force to mpp");
-        Rockchip_OSAL_SetEnvU32("use_mpp_mode", 0);
+        Rockchip_OSAL_SetEnvU32("vendor.use_mpp_mode", 0);
     }
 
     Rockchip_OSAL_Free(pVideoDec);
