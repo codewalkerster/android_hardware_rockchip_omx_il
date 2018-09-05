@@ -556,7 +556,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
     OMX_U32 primaries = 0;
     OMX_U32 transfer  = 0;
     OMX_U32 coeffs    = 0;
-    OMX_COLORASPECTS Aspects = { 0 };
+    OMX_COLORASPECTS Aspects = { 0, 0, 0, 0 };
     OMX_COLORASPECTS *colorAspects = NULL;
 
     FunctionIn();
