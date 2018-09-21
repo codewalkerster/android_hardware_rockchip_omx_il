@@ -235,11 +235,16 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
     }
 
     if (omx_vdec_debug & VDEC_DBG_RECORD_IN) {
-        omx_info("Start recording stream to /data/video/dec_in.bin");
+        char file_name[128];
+        int pid = getpid();
+        int tid = syscall(224);
+        memset(file_name, 0, 128);
+        sprintf(file_name, "/data/video/dec_in_%d_%d.bin", pid, tid);
+        omx_info("Start recording stream to %s", file_name);
         if (NULL != pVideoDec->fp_in) {
             fclose(pVideoDec->fp_in);
         }
-        pVideoDec->fp_in = fopen("data/video/dec_in.bin", "wb");
+        pVideoDec->fp_in = fopen(file_name, "wb");
         if (NULL == pVideoDec->fp_in) {
             omx_err("record in file fopen failed, err: %s", strerror(errno));
         }
