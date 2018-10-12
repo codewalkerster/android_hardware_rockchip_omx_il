@@ -1284,6 +1284,8 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
 
     FunctionIn();
 
+    char  pValue[128 + 1];
+
     if (hComponent == NULL) {
         omx_err("omx component is NULL");
         ret = OMX_ErrorBadParameter;
@@ -1345,16 +1347,23 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         pVideoDec->nMinUnDequeBufferCount = 0;
     } else {
         OMX_BOOL isSecure = pVideoDec->bDRMPlayerMode;
-        nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
-                                                             pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
-                                                             pOutputRockchipPort->portDefinition.format.video.nFrameHeight,
-                                                             isSecure);
+        // for gts exo test
+        memset(pValue, 0, sizeof(pValue));
+        if (!Rockchip_OSAL_GetEnvStr("vendor.cts_gts.exo.gts", pValue, NULL) && !strcasecmp(pValue, "true")) {
+            omx_info("This is gts exo test. pValue: %s", pValue);
+            nRefFrameNum = 7;
+        } else {
+            nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
+                                                                 pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
+                                                                 pOutputRockchipPort->portDefinition.format.video.nFrameHeight,
+                                                                 isSecure);
+        }
         if (pVideoDec->nDpbSize > 0) {
             nRefFrameNum = pVideoDec->nDpbSize;
         }
         if ((pOutputRockchipPort->portDefinition.format.video.nFrameWidth
              * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088)
-            || isSecure) {
+            || isSecure || access("/dev/iep", F_OK) == -1) {
             nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1;
         } else {
             /* if width * height < 2304 * 1088, need consider IEP */
