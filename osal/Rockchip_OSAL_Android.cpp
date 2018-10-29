@@ -1354,15 +1354,15 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
             nRefFrameNum = 7;
         } else {
             nRefFrameNum = Rockchip_OSAL_CalculateTotalRefFrames(pVideoDec->codecId,
-                                                                 pOutputRockchipPort->portDefinition.format.video.nFrameWidth,
-                                                                 pOutputRockchipPort->portDefinition.format.video.nFrameHeight,
+                                                                 pInputRockchipPort->portDefinition.format.video.nFrameWidth,
+                                                                 pInputRockchipPort->portDefinition.format.video.nFrameHeight,
                                                                  isSecure);
         }
         if (pVideoDec->nDpbSize > 0) {
             nRefFrameNum = pVideoDec->nDpbSize;
         }
-        if ((pOutputRockchipPort->portDefinition.format.video.nFrameWidth
-             * pOutputRockchipPort->portDefinition.format.video.nFrameHeight > 2304 * 1088)
+        if ((pInputRockchipPort->portDefinition.format.video.nFrameWidth
+             * pInputRockchipPort->portDefinition.format.video.nFrameHeight > 1920 * 1088)
             || isSecure || access("/dev/iep", F_OK) == -1) {
             nMaxBufferCount = nRefFrameNum + pVideoDec->nMinUnDequeBufferCount + 1;
         } else {
