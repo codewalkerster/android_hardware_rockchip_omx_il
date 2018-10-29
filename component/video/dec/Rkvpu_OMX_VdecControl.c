@@ -962,22 +962,29 @@ OMX_ERRORTYPE Rkvpu_OutputBufferReturn(OMX_COMPONENTTYPE *pOMXComponent, ROCKCHI
             omx_info("eos reach, but don't have buffer.");
             VPUMemLinear_t *handle = NULL;
             OMX_U32 nUnusedCount = 0;
+            OMX_U32 retry = 10;
             struct vpu_display_mem_pool *pMem_pool = (struct vpu_display_mem_pool *)pVideoDec->vpumem_handle;
-            nUnusedCount = pMem_pool->get_unused_num(pMem_pool);
-            if (nUnusedCount > 0) {
-                handle = pMem_pool->get_free(pMem_pool);
-                if (handle) {
-                    omx_trace("handle: 0x%x fd: 0x%x", handle, VPUMemGetFD(handle));
-                    for (i = 0; i < rockchipOMXOutputPort->portDefinition.nBufferCountActual; i++) {
-                        if (rockchipOMXOutputPort->extendBufferHeader[i].buf_fd[0] == VPUMemGetFD(handle)) {
-                            bufferHeader = rockchipOMXOutputPort->extendBufferHeader[i].OMXBufferHeader;
+            while (retry--) {
+                nUnusedCount = pMem_pool->get_unused_num(pMem_pool);
+                if (nUnusedCount > 0) {
+                    handle = pMem_pool->get_free(pMem_pool);
+                    if (handle) {
+                        omx_trace("handle: 0x%x fd: 0x%x", handle, VPUMemGetFD(handle));
+                        for (i = 0; i < rockchipOMXOutputPort->portDefinition.nBufferCountActual; i++) {
+                            if (rockchipOMXOutputPort->extendBufferHeader[i].buf_fd[0] == VPUMemGetFD(handle)) {
+                                bufferHeader = rockchipOMXOutputPort->extendBufferHeader[i].OMXBufferHeader;
+                                break;
+                            }
+                        }
+                        VPUMemLink(handle);
+                        VPUFreeLinear(handle);
+                        if (bufferHeader != NULL) {
                             break;
                         }
                     }
-                    VPUMemLink(handle);
-                    VPUFreeLinear(handle);
-                }
-            }
+                } /* if (nUnusedCount > 0) */
+                Rockchip_OSAL_SleepMillisec(20);
+            } /* while (retry--) */
 
             if (bufferHeader != NULL) {
                 omx_info("found matching buffer header");
