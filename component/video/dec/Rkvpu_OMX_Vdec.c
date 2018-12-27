@@ -1339,9 +1339,6 @@ OMX_ERRORTYPE Rkvpu_Dec_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
     }
 
     if (p_vpu_ctx->width > 1920 && p_vpu_ctx->height > 1080) {
-        //add for kodi
-        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_of_sectionKD", 4);
-        Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_to_skip_KD", 3);
         pVideoDec->b4K_flags = OMX_TRUE;
     }
 
