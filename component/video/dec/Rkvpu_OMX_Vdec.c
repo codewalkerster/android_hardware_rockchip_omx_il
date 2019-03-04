@@ -661,6 +661,26 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
         }
 
         if ((pOutput.size > 0) && (!CHECK_PORT_BEING_FLUSHED(pOutputPort))) {
+            {
+                fullRange  = pframe->ColorRange;
+                primaries  = pframe->ColorPrimaries;
+                transfer   = pframe->ColorTransfer;
+                coeffs     = pframe->ColorCoeffs;
+
+                colorAspects = &Aspects;
+                convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
+
+                if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
+                    pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
+                    pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
+                    pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
+                    pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
+                    handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                             &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                             &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                             kPreferBitstream);
+                }
+            }
             OMX_COLOR_FORMATTYPE eColorFormat = Rockchip_OSAL_CheckFormat(pRockchipComponent, pframe);
             if ((pInputPort->portDefinition.format.video.nFrameWidth != pframe->DisplayWidth)
                 || (pInputPort->portDefinition.format.video.nFrameHeight != pframe->DisplayHeight)
@@ -686,6 +706,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
 
                 pInputPort->newPortDefinition.format.video.nStride         = pframe->FrameWidth;
                 pInputPort->newPortDefinition.format.video.nSliceHeight    = pframe->FrameHeight;
+
                 Rkvpu_ResolutionUpdate(pOMXComponent);
                 pRockchipComponent->pCallbacks->EventHandler((OMX_HANDLETYPE)pOMXComponent,
                                                              pRockchipComponent->callbackData, OMX_EventPortSettingsChanged,
@@ -717,26 +738,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             if (pVideoDec->bPrintFps == OMX_TRUE) {
                 OMX_BOOL isInput = OMX_FALSE;
                 controlFPS(isInput);
-            }
-            {
-                fullRange  = pframe->ColorRange;
-                primaries  = pframe->ColorPrimaries;
-                transfer   = pframe->ColorTransfer;
-                coeffs     = pframe->ColorCoeffs;
-
-                colorAspects = &Aspects;
-                convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
-
-                if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
-                    pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
-                    pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
-                    pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
-                    pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
-                    handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
-                                             &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
-                                             &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
-                                             kPreferBitstream);
-                }
             }
             if (pframe->ErrorInfo && (pVideoDec->bGtsMediaTest == OMX_FALSE) && (pVideoDec->bDRMPlayerMode == OMX_FALSE)) {   //drop frame when this frame mark error from dec
                 omx_err("this frame is Error frame!,pOutput.timeUs = %lld", pOutput.timeUs);
@@ -851,6 +852,26 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
 
 
             if ((pOutput.size > 0) && (!CHECK_PORT_BEING_FLUSHED(pOutputPort))) {
+                {
+                    fullRange  = pframe.ColorRange;
+                    primaries  = pframe.ColorPrimaries;
+                    transfer   = pframe.ColorTransfer;
+                    coeffs     = pframe.ColorCoeffs;
+
+                    colorAspects = &Aspects;
+                    convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
+
+                    if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
+                        pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
+                        pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
+                        pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
+                        pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
+                        handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                                 &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                                 &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                                 kPreferBitstream);
+                    }
+                }
                 if (pInputPort->portDefinition.format.video.nFrameWidth != pframe.DisplayWidth ||
                     pInputPort->portDefinition.format.video.nFrameHeight != pframe.DisplayHeight) {
 
@@ -880,26 +901,6 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 if (!pframe.vpumem.phy_addr) { /*in mpp process may be notify a null frame for info change*/
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_INFO_CHANGE, NULL);
                     goto EXIT;
-                }
-                {
-                    fullRange  = pframe.ColorRange;
-                    primaries  = pframe.ColorPrimaries;
-                    transfer   = pframe.ColorTransfer;
-                    coeffs     = pframe.ColorCoeffs;
-
-                    colorAspects = &Aspects;
-                    convertIsoColorAspectsToCodecAspects(primaries, transfer, coeffs, fullRange, colorAspects);
-
-                    if (colorAspectsDiffer(colorAspects, &pVideoDec->mBitstreamColorAspects)) {
-                        pVideoDec->mBitstreamColorAspects.mRange = Aspects.mRange;
-                        pVideoDec->mBitstreamColorAspects.mPrimaries = Aspects.mPrimaries;
-                        pVideoDec->mBitstreamColorAspects.mTransfer = Aspects.mTransfer;
-                        pVideoDec->mBitstreamColorAspects.mMatrixCoeffs = Aspects.mMatrixCoeffs;
-                        handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
-                                                 &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
-                                                 &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
-                                                 kPreferBitstream);
-                    }
                 }
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
                 outputUseBuffer->remainDataLen = pframe.DisplayHeight * pframe.DisplayWidth * 3 / 2;
