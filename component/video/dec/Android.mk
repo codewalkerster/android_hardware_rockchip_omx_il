@@ -26,7 +26,7 @@ ifeq ($(PLATFORM_VERSION),4.4.4)
 BOARD_VERSION_LOW := true
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
@@ -87,7 +87,7 @@ ifeq ($(OMX_USE_DRM), true)
 LOCAL_SHARED_LIBRARIES += librga
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
@@ -104,5 +104,7 @@ LOCAL_CFLAGS += -DSUPPORT_VP9=1
 endif
 
 LOCAL_CFLAGS += -Werror
+
+LOCAL_LDFLAGS += -fuse-ld=gold
 
 include $(BUILD_SHARED_LIBRARY)

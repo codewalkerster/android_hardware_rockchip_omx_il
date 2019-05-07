@@ -56,6 +56,7 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
     int            componentNum = 0, totalCompNum = 0;
     OMX_U32        i = 0;
     const char    *errorMsg;
+    omx_err_f("in");
 
     int (*Rockchip_OMX_COMPONENT_Library_Register)(RockchipRegisterComponentType **rockchipComponents);
     RockchipRegisterComponentType **rockchipComponentsTemp;
@@ -69,12 +70,15 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
     for (i = 0; i < ARRAY_SIZE(kCompInfo); i++) {
         ROCKCHIP_COMPONENT_INFO com_inf = kCompInfo[i];
         OMX_PTR soHandle = NULL;
+        omx_err_f("in");
         if ((soHandle = Rockchip_OSAL_dlopen(com_inf.lib_name, RTLD_NOW)) != NULL) {
+            omx_err_f("in so name: %s", com_inf.lib_name);
             Rockchip_OSAL_dlerror();    /* clear error*/
             if ((Rockchip_OMX_COMPONENT_Library_Register = Rockchip_OSAL_dlsym(soHandle, "Rockchip_OMX_COMPONENT_Library_Register")) != NULL) {
                 int i = 0;
                 unsigned int j = 0;
                 componentNum = (*Rockchip_OMX_COMPONENT_Library_Register)(NULL);
+                omx_err_f("in num: %d", componentNum);
                 rockchipComponentsTemp = (RockchipRegisterComponentType **)Rockchip_OSAL_Malloc(sizeof(RockchipRegisterComponentType*) * componentNum);
                 for (i = 0; i < componentNum; i++) {
                     rockchipComponentsTemp[i] = Rockchip_OSAL_Malloc(sizeof(RockchipRegisterComponentType));
@@ -103,6 +107,7 @@ OMX_ERRORTYPE Rockchip_OMX_Component_Register(ROCKCHIP_OMX_COMPONENT_REGLIST **c
             }
             Rockchip_OSAL_dlclose(soHandle);
         }
+        omx_err_f("Rockchip_OSAL_dlerror: %s", Rockchip_OSAL_dlerror());
     }
     *compList = componentList;
     *compNum = totalCompNum;

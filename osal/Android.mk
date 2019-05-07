@@ -26,7 +26,7 @@ ifeq ($(PLATFORM_VERSION),4.4.4)
 BOARD_VERSION_LOW := true
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
@@ -63,8 +63,8 @@ ifeq ($(BOARD_CONFIG_3GR),true)
       LOCAL_CFLAGS += -DROCKCHIP_GPU_LIB_ENABLE
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 7.0)))
-     LOCAL_CFLAGS += -DUSE_ANW
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 24)))
+LOCAL_CFLAGS += -DUSE_ANW
 endif
 
 LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
@@ -85,7 +85,7 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \
 	$(TOP)/system/core/libcutils
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_C_INCLUDES += \
 	$(TOP)/frameworks/native/headers/media_plugin
 endif

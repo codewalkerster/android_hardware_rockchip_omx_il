@@ -73,7 +73,7 @@ ifeq ($(OMX_USE_DRM), true)
 LOCAL_SHARED_LIBRARIES += librga
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
@@ -86,5 +86,7 @@ LOCAL_CFLAGS += -DSUPPORT_VP8_ENC=1
 endif
 
 LOCAL_CFLAGS += -Werror
+
+LOCAL_LDFLAGS += -fuse-ld=gold
 
 include $(BUILD_SHARED_LIBRARY)

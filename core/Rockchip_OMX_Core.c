@@ -79,7 +79,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY RKOMX_Init(void)
         }
 
         gInitialized = 1;
-        omx_trace("Rockchip_OMX_Init : %s", "OMX_ErrorNone");
+        omx_trace("1Rockchip_OMX_Init : %s", "OMX_ErrorNone");
     }
 
 EXIT:
