@@ -220,6 +220,7 @@ func_mmap64 mpp_rt_get_mmap64()
         once = 0;
     }
 
+
     return mpp_rt_mmap64;
 }
 
@@ -241,7 +242,7 @@ static void* drm_mmap(int fd, size_t len, int prot, int flags, loff_t offset)
         return NULL;
     }
 
-    return fp_mmap64(NULL, len, prot, flags, fd, offset);
+    return mmap64(NULL, len, prot, flags, fd, offset);
 }
 
 
@@ -404,6 +405,64 @@ OMX_U32 Rockchip_OSAL_SharedMemory_HandleToAddress(OMX_HANDLETYPE handle, OMX_HA
 
 
 
+OMX_U32 Rockchip_OSAL_SharedMemory_HandleToSecureAddress(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr, RK_S32 size)
+{
+    int map_fd = -1;
+    native_handle_t* pnative_handle_t = NULL;
+    RK_S32 err = 0;
+    RK_S32 mClient = 0;
+    RK_U32 mHandle = 0;
+    RK_U8* pBuffer = NULL;
+    int ret;
+    struct drm_mode_map_dumb dmmd;
+    memset(&dmmd, 0, sizeof(dmmd));
+    (void)handle;
+
+    pnative_handle_t = (native_handle_t*)handle_ptr;
+    map_fd = pnative_handle_t->data[0];
+    //omx_err("Rockchip_OSAL_SharedMemory_HandleToSecureAddress map_fd = %d", map_fd);
+
+    mClient = open("/dev/dri/card0", O_RDWR);
+    if (mClient < 0) {
+        omx_err("Rockchip_OSAL_SharedMemory_HandleToAddress open drm fail");
+        return 0;
+    }
+    drm_fd_to_handle(mClient, (int32_t)map_fd, &mHandle, 0);
+    //omx_err("Rockchip_OSAL_SharedMemory_HandleToSecureAddress mHandle = %d", mHandle);
+    dmmd.handle = mHandle;
+
+
+    ret = drm_ioctl(mClient, DRM_IOCTL_MODE_MAP_DUMB, &dmmd);
+    if (ret < 0) {
+        close(mClient);
+        mClient = -1;
+        omx_err("drm_ioctl  DRM_IOCTL_MODE_MAP_DUMB failed: %s\n", strerror(errno));
+        return ret;
+    }
+
+    pBuffer = (uint8_t*)drm_mmap(mClient, size, PROT_READ | PROT_WRITE, MAP_SHARED, dmmd.offset);
+    if (pBuffer == MAP_FAILED) {
+        close(mClient);
+        mClient = -1;
+        omx_err("mmap failed:fd = %d,length = %d, %s\n", mClient, size, strerror(errno));
+        return -errno;
+    }
+
+
+    close(mClient);
+    mClient = -1;
+    //omx_err("Rockchip_OSAL_SharedMemory_HandleToSecureAddress pBuffer = %p", pBuffer);
+    return (OMX_U32)pBuffer;
+}
+
+void    Rockchip_OSAL_SharedMemory_SecureUnmap(OMX_HANDLETYPE handle, OMX_HANDLETYPE handle_ptr, RK_S32 size)
+{
+    (void)handle;
+    if (munmap(handle_ptr, size)) {
+        omx_err("ion_unmap fail");
+    }
+}
+
 OMX_HANDLETYPE Rockchip_OSAL_SharedMemory_Open()
 {
     ROCKCHIP_SHARED_MEMORY *pHandle = NULL;
@@ -459,7 +518,7 @@ void Rockchip_OSAL_SharedMemory_Close(OMX_HANDLETYPE handle, OMX_BOOL b_secure)
             void *pTrueAddree = NULL;
             pnative_handle_t = (native_handle_t*)pDeleteElement->mapAddr;
             map_fd = pnative_handle_t->data[0];
-            pTrueAddree = (void *)Rockchip_OSAL_SharedMemory_HandleToAddress(handle, pDeleteElement->mapAddr);
+            pTrueAddree = (void *)Rockchip_OSAL_SharedMemory_HandleToSecureAddress(handle, pDeleteElement->mapAddr, pDeleteElement->allocSize);
             pDeleteElement->mapAddr = pTrueAddree;
             close(map_fd);
             map_fd = -1;
@@ -529,7 +588,6 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
     int err = 0;
     int map_fd = -1;
 
-    struct drm_rockchip_gem_phys phys_arg;
 
     if (pHandle == NULL)
         goto EXIT;
@@ -545,7 +603,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
         flag = 0;
         omx_info("pHandle->fd = %d,size = %d, mem_type = %d", pHandle->fd, size, mem_type);
         if (mem_type == MEMORY_TYPE_DRM) {
-            err = drm_alloc(pHandle->fd, size, 4096, (RK_U32 *)&ion_hdl, ROCKCHIP_BO_SECURE);
+            err = drm_alloc(pHandle->fd, size, 4096, (RK_U32 *)&ion_hdl, 0);
         } else {
             err = ion_alloc(pHandle->fd, size, 4096, mask, 0, (ion_user_handle_t *)&ion_hdl);
         }
@@ -553,53 +611,15 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
             omx_err("ion_alloc failed with err (%d)", err);
             goto EXIT;
         }
-        if (mem_type == MEMORY_TYPE_DRM) {
-            phys_arg.handle = ion_hdl;
-            err = drm_ioctl(pHandle->fd, DRM_IOCTL_ROCKCHIP_GEM_GET_PHYS, &phys_arg);
-        } else {
-            err = ion_get_phys(pHandle->fd, ion_hdl, &phys);
-        }
         if (err) {
             omx_err("failed to get phy address: %s\n", strerror(errno));
             goto EXIT;
         }
 
         secure_flag = 1;
-        if (mem_type == MEMORY_TYPE_DRM && phys_arg.phy_addr == 0) {
-            omx_err("security alloc NULL");
-            goto EXIT;
-        }
-
-        if (mem_type == MEMORY_TYPE_DRM) {
-            omx_err("security alloc buff 0x%x", phys_arg.phy_addr);
-#ifdef AVS80
-            pElement->mapAddr = (OMX_PTR)((__u64)phys_arg.phy_addr);
-#else
-            pElement->mapAddr = (OMX_PTR)((long)phys_arg.phy_addr);
-#endif
-        } else {
-#ifdef AVS80
-            pElement->mapAddr = (OMX_PTR)((__u64)phys);
-#else
-            pElement->mapAddr = (OMX_PTR)((long)phys);
-#endif
-        }
         pElement->allocSize = size;
         pElement->ion_hdl = ion_hdl;
         pElement->pNextMemory = NULL;
-        if (mem_type == MEMORY_TYPE_DRM) {
-#ifdef AVS80
-            pBuffer = (OMX_PTR)((__u64)phys_arg.phy_addr);
-#else
-            pBuffer = (OMX_PTR)((long)phys_arg.phy_addr);
-#endif
-        } else {
-#ifdef AVS80
-            pBuffer = (OMX_PTR)((__u64)phys);
-#else
-            pBuffer = (OMX_PTR)((long)phys);
-#endif
-        }
 
 #ifdef AVS80
         native_handle_t* pnative_handle_t = NULL;
@@ -609,7 +629,7 @@ OMX_PTR Rockchip_OSAL_SharedMemory_Alloc(OMX_HANDLETYPE handle, OMX_U32 size, ME
             omx_err("failed to trans handle to fd: %s\n", strerror(errno));
             goto EXIT;
         }
-        omx_trace("pnative_handle_t = %p, map_fd = %d", pnative_handle_t, map_fd);
+        omx_trace("pnative_handle_t = %p, map_fd = %d, handle = %d", pnative_handle_t, map_fd, ion_hdl);
         pnative_handle_t->data[0] = map_fd;
         pBuffer = (void *)pnative_handle_t;
         if (mem_type == MEMORY_TYPE_DRM) {

@@ -1054,9 +1054,6 @@ OMX_ERRORTYPE Rockchip_OSAL_CommitBuffer(
                 if (priv_hnd.size) {
                     nBytesize = priv_hnd.size;
                 }
-                if (pVideoDec->bDRMPlayerMode == OMX_TRUE) {
-                    priv_hnd.share_fd |= 1 << 10;
-                }
                 dupshared_fd = pMem_pool->commit_hdl(pMem_pool, priv_hnd.share_fd , nBytesize);
                 if (dupshared_fd > 0) {
                     pRockchipPort->extendBufferHeader[index].buf_fd[0] = dupshared_fd;
@@ -1366,7 +1363,7 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         nMaxBufferCount = pInputRockchipPort->portDefinition.nBufferCountActual;
         pVideoDec->nMinUnDequeBufferCount = 0;
     } else {
-        OMX_BOOL isSecure = pVideoDec->bDRMPlayerMode;
+        OMX_BOOL isSecure = OMX_FALSE;
         // for gts exo test
         memset(pValue, 0, sizeof(pValue));
         if (!Rockchip_OSAL_GetEnvStr("cts_gts.exo.gts", pValue, NULL) && !strcasecmp(pValue, "true")) {

@@ -2143,7 +2143,7 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
         /*
          * Determining the compression ratio by coding type.
          */
-        pRockchipPort->portDefinition.nBufferSize = 4 * 1024 * 1024;
+        pRockchipPort->portDefinition.nBufferSize = DEFAULT_VIDEO_INPUT_BUFFER_SIZE;
         {
             /*
              * update output port info from input port.
