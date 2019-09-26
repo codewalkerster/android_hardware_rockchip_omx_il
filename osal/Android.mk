@@ -80,7 +80,6 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
         $(TOP)/system/core/libion/include \
         $(TOP)/system/core/libion/kernel-headers \
 	$(TOP)/system/core/base/include/ \
-	$(TOP)/hardware/rockchip/libgralloc \
 	$(TOP)/hardware/rockchip/librkvpu \
 	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \
 	$(TOP)/system/core/libcutils
