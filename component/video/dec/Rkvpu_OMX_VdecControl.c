@@ -66,6 +66,12 @@ typedef struct {
     OMX_U32 mProfile;
     OMX_U32 mLevel;
 } CodecProfileLevel;
+
+static const CodecProfileLevel kM2VProfileLevels[] = {
+    { OMX_VIDEO_MPEG2ProfileSimple, OMX_VIDEO_MPEG2LevelHL },
+    { OMX_VIDEO_MPEG2ProfileMain,   OMX_VIDEO_MPEG2LevelHL},
+};
+
 static const CodecProfileLevel kM4VProfileLevels[] = {
     { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level0 },
     { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level0b},
@@ -73,6 +79,7 @@ static const CodecProfileLevel kM4VProfileLevels[] = {
     { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level2 },
     { OMX_VIDEO_MPEG4ProfileSimple, OMX_VIDEO_MPEG4Level3 },
 };
+
 static const CodecProfileLevel kH263ProfileLevels[] = {
     { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level10 },
     { OMX_VIDEO_H263ProfileBaseline, OMX_VIDEO_H263Level20 },
@@ -1419,6 +1426,14 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             }
             profileLevel->eProfile = kH263ProfileLevels[index].mProfile;
             profileLevel->eLevel = kH263ProfileLevels[index].mLevel;
+        } else if (pVideoDec->codecId == OMX_VIDEO_CodingMPEG2) {
+            nProfileLevels =
+                sizeof(kM2VProfileLevels) / sizeof(kM2VProfileLevels[0]);
+            if (index >= nProfileLevels) {
+                return OMX_ErrorNoMore;
+            }
+            profileLevel->eProfile = kM2VProfileLevels[index].mProfile;
+            profileLevel->eLevel = kM2VProfileLevels[index].mLevel;
         } else {
             return OMX_ErrorNoMore;
         }
