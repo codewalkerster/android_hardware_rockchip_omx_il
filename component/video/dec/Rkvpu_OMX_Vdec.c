@@ -276,7 +276,7 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
     }
 
     memset(pValue, 0, 128 + 1);
-    if (!Rockchip_OSAL_GetEnvStr("vendor.cts_gts.media.gts", pValue, NULL) && !strcasecmp(pValue, "true")) {
+    if (!Rockchip_OSAL_GetEnvStr("cts_gts.status", pValue, NULL) && !strcasecmp(pValue, "true")) {
         omx_info("This is gts media test. pValue: %s", pValue);
         pVideoDec->bGtsMediaTest = OMX_TRUE;
     }

@@ -1349,7 +1349,7 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         OMX_BOOL isSecure = pVideoDec->bDRMPlayerMode;
         // for gts exo test
         memset(pValue, 0, sizeof(pValue));
-        if (!Rockchip_OSAL_GetEnvStr("vendor.cts_gts.exo.gts", pValue, NULL) && !strcasecmp(pValue, "true")) {
+        if (!Rockchip_OSAL_GetEnvStr("cts_gts.status", pValue, NULL) && !strcasecmp(pValue, "true")) {
             omx_info("This is gts exo test. pValue: %s", pValue);
             nRefFrameNum = 7;
         } else {
