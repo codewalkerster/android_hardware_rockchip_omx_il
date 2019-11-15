@@ -235,21 +235,36 @@ OMX_ERRORTYPE Rkvpu_OMX_DebugSwitchfromPropget(
     }
 
     if (omx_vdec_debug & VDEC_DBG_RECORD_IN) {
-        char file_name[128];
-        int pid = getpid();
-        int tid = syscall(224);
-        memset(file_name, 0, 128);
-        sprintf(file_name, "/data/video/dec_in_%d_%d.bin", pid, tid);
-        omx_info("Start recording stream to %s", file_name);
+        char file_name_in[128];
+        int pid_in = getpid();
+        int tid_in = syscall(224);
+        memset(file_name_in, 0, 128);
+        sprintf(file_name_in, "/data/video/dec_in_%d_%d.bin", pid_in, tid_in);
+        omx_info("Start recording stream to %s", file_name_in);
         if (NULL != pVideoDec->fp_in) {
             fclose(pVideoDec->fp_in);
         }
-        pVideoDec->fp_in = fopen(file_name, "wb");
+        pVideoDec->fp_in = fopen(file_name_in, "wb");
         if (NULL == pVideoDec->fp_in) {
             omx_err("record in file fopen failed, err: %s", strerror(errno));
         }
     }
 
+    if (omx_vdec_debug & VDEC_DBG_RECORD_OUT) {
+        char file_name_out[128];
+        int pid_out = getpid();
+        int tid_out = syscall(224);
+        memset(file_name_out, 0, 128);
+        sprintf(file_name_out, "/data/video/dec_out_%d_%d.bin", pid_out, tid_out);
+        omx_info("Start recording stream to %s", file_name_out);
+        if (NULL != pVideoDec->fp_out) {
+            fclose(pVideoDec->fp_out);
+        }
+        pVideoDec->fp_out = fopen(file_name_out, "wb");
+        if (NULL == pVideoDec->fp_out) {
+            omx_err("record in file fopen failed, err: %s", strerror(errno));
+        }
+    }
     if (omx_vdec_debug & VIDEO_DBG_LOG_FPS) {
         omx_info("Start print framerate when frameCount = 32");
         pVideoDec->bPrintFps = OMX_TRUE;
@@ -749,6 +764,10 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
             }
 
             bufferHeader = Rockchip_OSAL_Fd2OmxBufferHeader(pOutputPort, VPUMemGetFD(&pframe->vpumem), pframe);
+            if (pVideoDec->fp_out != NULL) {
+                fwrite(pframe->vpumem.vir_addr, 1, pframe->FrameHeight * pframe->FrameWidth * 3 / 2, pVideoDec->fp_out);
+                fflush(pVideoDec->fp_out);
+            }
             if (bufferHeader != NULL) {
                 if (pVideoDec->bStoreMetaData == OMX_TRUE) {
                     bufferHeader->nFilledLen = bufferHeader->nAllocLen;
@@ -905,6 +924,10 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
                 outputUseBuffer->remainDataLen = pframe.DisplayHeight * pframe.DisplayWidth * 3 / 2;
                 outputUseBuffer->timeStamp = pOutput.timeUs;
+                if (pVideoDec->fp_out != NULL) {
+                    fwrite(outputUseBuffer->bufferHeader->pBuffer, 1, outputUseBuffer->remainDataLen, pVideoDec->fp_out);
+                    fflush(pVideoDec->fp_out);
+                }
                 if (VPU_API_EOS_STREAM_REACHED == (VPU_API_ERR)pOutput.nFlags) {
                     outputUseBuffer->nFlags |= OMX_BUFFERFLAG_EOS;
                     pVideoDec->bDecSendEOS = OMX_TRUE;
@@ -1454,6 +1477,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->bFastMode = OMX_FALSE;
 
     pVideoDec->fp_in = NULL;
+    pVideoDec->fp_out = NULL;
     pVideoDec->b4K_flags = OMX_FALSE;
     pVideoDec->power_fd = -1;
     pVideoDec->bIsPowerControl = OMX_FALSE;
@@ -1745,6 +1769,9 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
 
     if (pVideoDec->fp_in != NULL) {
         fclose(pVideoDec->fp_in);
+    }
+    if (pVideoDec->fp_out != NULL) {
+        fclose(pVideoDec->fp_out);
     }
     if (pVideoDec->b4K_flags == OMX_TRUE) {
         //add for kodi

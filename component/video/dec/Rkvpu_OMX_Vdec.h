@@ -91,6 +91,7 @@ typedef struct _RKVPU_OMX_VIDEODEC_COMPONENT {
 
     /* For debug */
     FILE *fp_in;
+    FILE *fp_out;
     OMX_BOOL bPrintFps;
     OMX_BOOL bPrintBufferPosition;
     OMX_BOOL bGtsMediaTest;
