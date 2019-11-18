@@ -465,6 +465,10 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_GETCFG, (void*)&EncParam);
             EncParam.rc_mode = 1 << 16; //set intraDeltaqp as 4 to fix encoder cts issue
+            if (Width <= 176 && Height <= 144) {
+                EncParam.rc_mode = 0;
+                EncParam.qp = 2;
+            }
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETCFG, (void*)&EncParam);
             if (Width != vplanes.stride || (Height & 0xf)) {
                 rga_nv12_copy(&vplanes, pVideoEnc->enc_vpumem, Width, Height, pVideoEnc->rga_ctx);
