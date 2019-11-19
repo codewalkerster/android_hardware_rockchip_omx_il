@@ -522,7 +522,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 } else {
                     omx_format = Rockchip_OSAL_GetANBColorFormat(pGrallocHandle);
                 }
-                if (Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCbCr_420_888) {
+                if (Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCbCr_420_888 ||
+                    Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  == HAL_PIXEL_FORMAT_YCrCb_NV12) {
                     H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
                 } else {
