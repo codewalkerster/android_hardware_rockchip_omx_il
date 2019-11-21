@@ -1180,7 +1180,7 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
         omx_info("open video encoder debug, value: 0x%x", omx_venc_debug);
     }
 
-    if (omx_venc_debug & VDEC_DBG_RECORD_IN) {
+    if (omx_venc_debug & VDEC_DBG_RECORD_OUT) {
         omx_info("Start recording stream to /data/video/enc_out.bin");
         if (pVideoEnc->fp_enc_out != NULL) {
             fclose(pVideoEnc->fp_enc_out);
@@ -1188,7 +1188,7 @@ OMX_ERRORTYPE Rkvpu_Enc_DebugSwitchfromPropget(
         pVideoEnc->fp_enc_out = fopen("data/video/enc_out.bin", "wb");
     }
 
-    if (omx_venc_debug & VDEC_DBG_RECORD_OUT) {
+    if (omx_venc_debug & VDEC_DBG_RECORD_IN) {
         omx_info("Start recording stream to /data/video/enc_in.bin");
         if (pVideoEnc->fp_enc_in != NULL) {
             fclose(pVideoEnc->fp_enc_in);
