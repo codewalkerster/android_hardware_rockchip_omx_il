@@ -765,7 +765,7 @@ OMX_ERRORTYPE Rkvpu_InputBufferGetQueue(ROCKCHIP_OMX_BASECOMPONENT *pRockchipCom
             Rockchip_OSAL_Free(message);
 
             if (inputUseBuffer->allocSize <= inputUseBuffer->dataLen)
-                omx_warn("Input Buffer Full, Check input buffer size! allocSize:%d, dataLen:%d", inputUseBuffer->allocSize, inputUseBuffer->dataLen);
+                omx_trace("Input Buffer Full, Check input buffer size! allocSize:%d, dataLen:%d", inputUseBuffer->allocSize, inputUseBuffer->dataLen);
         }
         ret = OMX_ErrorNone;
     }
