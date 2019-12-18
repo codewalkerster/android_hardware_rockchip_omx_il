@@ -413,12 +413,12 @@ OMX_HANDLETYPE Rockchip_OSAL_SharedMemory_Open()
     Rockchip_OSAL_Memset(pHandle, 0, sizeof(ROCKCHIP_SHARED_MEMORY));
     if (pHandle == NULL)
         goto EXIT;
-    if (!access("/dev/ion", F_OK)) {
-        IONClient = open("/dev/ion", O_RDWR);
-        mem_type = MEMORY_TYPE_ION;
-    } else {
+    if (!access("/dev/dri/card0", F_OK)) {
         IONClient = open("/dev/dri/card0", O_RDWR);
         mem_type = MEMORY_TYPE_DRM;
+    } else {
+        IONClient = open("/dev/ion", O_RDWR);
+        mem_type = MEMORY_TYPE_ION;
     }
 
     if (IONClient <= 0) {
