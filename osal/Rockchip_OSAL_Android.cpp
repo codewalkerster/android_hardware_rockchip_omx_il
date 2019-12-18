@@ -204,7 +204,11 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
     if (codecId == OMX_VIDEO_CodingHEVC) {
         stride = ((width + 255) & (~255)) | (256);
     } else if (codecId == OMX_VIDEO_CodingVP9) {
+#ifdef AVS100
+        stride = ((width + 255) & (~255)) | (256);
+#else
         stride = (width + 127) & (~127);
+#endif
     } else {
         stride = ((width + 15) & (~15));
     }

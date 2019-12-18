@@ -30,6 +30,10 @@ ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
+LOCAL_CFLAGS += -DAVS100
+endif
+
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := \
