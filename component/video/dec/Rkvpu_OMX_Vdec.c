@@ -1775,8 +1775,13 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     }
     if (pVideoDec->b4K_flags == OMX_TRUE) {
         //add for kodi
+#ifdef AVS80
+        Rockchip_OSAL_SetEnvU32("vendor.gpu.frames_num_of_sectionKD", 0);
+        Rockchip_OSAL_SetEnvU32("vendor.gpu.frames_num_to_skip_KD", 0);
+#else
         Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_of_sectionKD", 0);
         Rockchip_OSAL_SetEnvU32("sys.gpu.frames_num_to_skip_KD", 0);
+#endif
         pVideoDec->b4K_flags = OMX_FALSE;
     }
     pInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
