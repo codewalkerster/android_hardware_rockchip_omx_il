@@ -784,6 +784,9 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                     bufferHeader->nFlags     = 0;
                 }
                 bufferHeader->nTimeStamp = pOutput.timeUs;
+                if (pframe->FrameType > 0) {
+                    bufferHeader->nFlags = OMX_BUFFERFLAG_SYNCFRAME;
+                }
             } else {
                 if (pframe->vpumem.phy_addr > 0) {
                     VPUMemLink(&pframe->vpumem);
