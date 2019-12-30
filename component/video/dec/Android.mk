@@ -30,6 +30,10 @@ ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CFLAGS += -DAVS80
 endif
 
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
+LOCAL_CFLAGS += -DAVS100
+endif
+
 LOCAL_SRC_FILES := \
 	Rkvpu_OMX_VdecControl.c \
 	Rkvpu_OMX_Vdec.c \
@@ -47,7 +51,8 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(ROCKCHIP_OMX_COMPONENT)/common \
 	$(ROCKCHIP_OMX_COMPONENT)/video/dec \
         $(TOP)/hardware/rockchip/librkvpu \
-	$(TOP)/hardware/rockchip/librkvpu/common/include
+	$(TOP)/hardware/rockchip/librkvpu/common/include \
+	$(TOP)/hardware/rockchip/librga \
 
 LOCAL_STATIC_LIBRARIES := libRkOMX_OSAL \
 	  	libRkOMX_Basecomponent 
@@ -61,7 +66,8 @@ LOCAL_SHARED_LIBRARIES := libc \
 	 libRkOMX_Resourcemanager \
 	 libhardware \
 	 libgralloc_priv_omx \
-	 libvpu
+	 libvpu \
+	 librga
 
 ifeq ($(BOARD_WIDEVINE_OEMCRYPTO_LEVEL), 1)
 LOCAL_CFLAGS += -DHAVE_L1_SVP_MODE=ON

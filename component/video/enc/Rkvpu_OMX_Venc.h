@@ -38,7 +38,7 @@
 #include "vpu_api.h"
 
 #define MAX_VIDEOENC_INPUTBUFFER_NUM           2
-#define MAX_VIDEOENC_OUTPUTBUFFER_NUM          2
+#define MAX_VIDEOENC_OUTPUTBUFFER_NUM          4
 
 #define DEFAULT_ENC_FRAME_WIDTH                 1920
 #define DEFAULT_ENC_FRAME_HEIGHT                1080
