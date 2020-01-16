@@ -247,44 +247,45 @@ typedef enum OMX_INDEXTYPE {
        to 0x7FFFFFFE.  This range is not broken out by vendor, so
        private indexes are not guaranteed unique and therefore should
        only be sent to the appropriate component. */
-    OMX_IndexParamEnableThumbnailMode            = 0x7F000001,
-    OMX_IndexConfigVideoIntraPeriod              = 0x7F000002,
+    OMX_IndexParamEnableThumbnailMode                        = 0x7F000001,
+    OMX_IndexConfigVideoIntraPeriod                          = 0x7F000002,
     /* for Android Native Window */
-    OMX_IndexParamEnableAndroidBuffers           = 0x7F000011,
-    OMX_IndexParamGetAndroidNativeBufferUsage    = 0x7F000012,
-    OMX_IndexParamUseAndroidNativeBuffer         = 0x7F000013,
+    OMX_IndexParamEnableAndroidBuffers                       = 0x7F000011,
+    OMX_IndexParamGetAndroidNativeBufferUsage                = 0x7F000012,
+    OMX_IndexParamUseAndroidNativeBuffer                     = 0x7F000013,
     /* for Android Store Metadata Inbuffer */
-    OMX_IndexParamStoreMetaDataBuffer            = 0x7F000014,
+    OMX_IndexParamStoreMetaDataBuffer                        = 0x7F000014,
     /* prepend SPS/PPS to I/IDR for H.264 Encoder */
-    OMX_IndexParamPrependSPSPPSToIDR             = 0x7F000015,
-    OMX_IndexRkEncExtendedWfdState               = 0x7F000018,
-    OMX_IndexParamprepareForAdaptivePlayback     = 0x7F000016,
-    OMX_IndexParamdescribeColorFormat            = 0x7F000017,
-    OMX_IndexParamRkDecoderExtensionDiv3         = 0x7F050000,
-    OMX_IndexParamRkDecoderExtensionUseDts       = 0x7F050001,
-    OMX_IndexParamRkDecoderExtensionThumbNail    = 0x7F050002,
-    OMX_IndexParamRkEncExtendedVideo             = 0x7F050003,
-    OMX_IndexParamRkDescribeColorAspects         = 0x7F000062,
-    OMX_IndexParamAllocateNativeHandle           = 0x7F00005D,
+    OMX_IndexParamPrependSPSPPSToIDR                         = 0x7F000015,
+    OMX_IndexRkEncExtendedWfdState                           = 0x7F000018,
+    OMX_IndexParamprepareForAdaptivePlayback                 = 0x7F000016,
+    OMX_IndexParamdescribeColorFormat                        = 0x7F000017,
+    OMX_IndexParamRkDecoderExtensionDiv3                     = 0x7F050000,
+    OMX_IndexParamRkDecoderExtensionUseDts                   = 0x7F050001,
+    OMX_IndexParamRkDecoderExtensionThumbNailCodecProfile    = 0x7F050002,
+    OMX_IndexParamRkEncExtendedVideo                         = 0x7F050003,
+    OMX_IndexParamRkDescribeColorAspects                     = 0x7F000062,
+    OMX_IndexParamAllocateNativeHandle                       = 0x7F00005D,
     OMX_IndexMax = 0x7FFFFFFF
 } OMX_INDEXTYPE;
 
-#define ROCKCHIP_INDEX_PARAM_ENABLE_THUMBNAIL                 "OMX.SEC.index.enableThumbnailMode"
-#define ROCKCHIP_INDEX_CONFIG_VIDEO_INTRAPERIOD               "OMX.SEC.index.VideoIntraPeriod"
-#define ROCKCHIP_INDEX_PARAM_ENABLE_ANB                       "OMX.google.android.index.enableAndroidNativeBuffers"
-#define ROCKCHIP_INDEX_PARAM_GET_ANB_Usage                    "OMX.google.android.index.getAndroidNativeBufferUsage"
-#define ROCKCHIP_INDEX_PARAM_USE_ANB                          "OMX.google.android.index.useAndroidNativeBuffer2"
-#define ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER            "OMX.google.android.index.storeMetaDataInBuffers"
-#define ROCKCHIP_INDEX_PARAM_PREPEND_SPSPPS_TO_IDR            "OMX.google.android.index.prependSPSPPSToIDRFrames"
-#define ROCKCHIP_INDEX_PARAM_RKWFD                            "OMX.rk.index.encoder.wifidisplay"
-#define ROCKCHIP_INDEX_PREPARE_ADAPTIVE_PLAYBACK              "OMX.google.android.index.prepareForAdaptivePlayback"
-#define ROCKCHIP_INDEX_DESCRIBE_COLORFORMAT                   "OMX.google.android.index.describeColorFormat"
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_DIV3      "OMX.rk.index.decoder.extension.div3"
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_USE_DTS   "OMX.rk.index.decoder.extension.useDts"
-#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_THUMBNAIL "OMX.rk.index.decoder.extension.thumbNail"
-#define ROCKCHIP_INDEX_PARAM_EXTENDED_VIDEO                   "OMX.Topaz.index.param.extended_video"
-#define ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS             "OMX.google.android.index.describeColorAspects"
-#define ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE             "OMX.google.android.index.allocateNativeHandle"
+#define ROCKCHIP_INDEX_PARAM_ENABLE_THUMBNAIL                               "OMX.SEC.index.enableThumbnailMode"
+#define ROCKCHIP_INDEX_CONFIG_VIDEO_INTRAPERIOD                             "OMX.SEC.index.VideoIntraPeriod"
+#define ROCKCHIP_INDEX_PARAM_ENABLE_ANB                                     "OMX.google.android.index.enableAndroidNativeBuffers"
+#define ROCKCHIP_INDEX_PARAM_GET_ANB_Usage                                  "OMX.google.android.index.getAndroidNativeBufferUsage"
+#define ROCKCHIP_INDEX_PARAM_USE_ANB                                        "OMX.google.android.index.useAndroidNativeBuffer2"
+#define ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER                          "OMX.google.android.index.storeMetaDataInBuffers"
+#define ROCKCHIP_INDEX_PARAM_PREPEND_SPSPPS_TO_IDR                          "OMX.google.android.index.prependSPSPPSToIDRFrames"
+#define ROCKCHIP_INDEX_PARAM_RKWFD                                          "OMX.rk.index.encoder.wifidisplay"
+#define ROCKCHIP_INDEX_PARAM_THUMBNAIL_CODECPROFILE                         "OMX.rk.index.decoder.thumbnail.codecprofile"
+#define ROCKCHIP_INDEX_PREPARE_ADAPTIVE_PLAYBACK                            "OMX.google.android.index.prepareForAdaptivePlayback"
+#define ROCKCHIP_INDEX_DESCRIBE_COLORFORMAT                                 "OMX.google.android.index.describeColorFormat"
+#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_DIV3                    "OMX.rk.index.decoder.extension.div3"
+#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_USE_DTS                 "OMX.rk.index.decoder.extension.useDts"
+#define ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_THUMBNAILCODECPROFILE   "OMX.rk.index.decoder.extension.thumbNailcodecProfile"
+#define ROCKCHIP_INDEX_PARAM_EXTENDED_VIDEO                                 "OMX.Topaz.index.param.extended_video"
+#define ROCKCHIP_INDEX_PARAM_DSECRIBECOLORASPECTS                           "OMX.google.android.index.describeColorAspects"
+#define ROCKCHIP_INDEX_PARAM_ALLOCATENATIVEHANDLE                           "OMX.google.android.index.allocateNativeHandle"
 
 #ifdef __cplusplus
 }

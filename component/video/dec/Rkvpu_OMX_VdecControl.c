@@ -781,7 +781,7 @@ EXIT:
     return ret;
 }
 
-OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHEADERTYPE* pOutputBuffer, VPU_FRAME *pframe)
+OMX_ERRORTYPE Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHEADERTYPE *pOutputBuffer, VPU_FRAME *pframe)
 {
     OMX_ERRORTYPE                  ret                = OMX_ErrorNone;
     ROCKCHIP_OMX_BASECOMPONENT      *pRockchipComponent   = (ROCKCHIP_OMX_BASECOMPONENT *)pOMXComponent->pComponentPrivate;
@@ -833,8 +833,8 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         OMX_U32 mSliceHeight =  0;
         OMX_COLOR_FORMATTYPE omx_format = 0;
         OMX_U32 pixel_format = 0;
-        mStride = Get_Video_HorAlign(pVideoDec->codecId, mWidth, mHeight);
-        mSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, mHeight);
+        mStride = Get_Video_HorAlign(pVideoDec->codecId, mWidth, mHeight, pVideoDec->codecProfile);
+        mSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, mHeight, pVideoDec->codecProfile);
         omx_format = Rockchip_OSAL_GetANBColorFormat(pOutputBuffer->pBuffer);
         pixel_format = Rockchip_OSAL_OMX2HalPixelFormat(omx_format);
         Rockchip_OSAL_LockANB(pOutputBuffer->pBuffer, mWidth, mHeight, omx_format, &vplanes);
@@ -875,8 +875,8 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
     VPUMemInvalidate(&pframe->vpumem);
 
     omx_trace("width:%d,height:%d ", mWidth, mHeight);
-    mStride = Get_Video_HorAlign(pVideoDec->codecId, mWidth, mHeight);
-    mSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, mHeight);
+    mStride = Get_Video_HorAlign(pVideoDec->codecId, mWidth, mHeight, pVideoDec->codecProfile);
+    mSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, mHeight, pVideoDec->codecProfile);
     {
         //csy@rock-chips.com
         OMX_U8 *buff_vir = (OMX_U8 *)pframe->vpumem.vir_addr;
@@ -884,7 +884,7 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         OMX_U32 y_size = mWidth * mHeight;
         OMX_U8 *dst_uv = (OMX_U8 *)(pOutputBuffer->pBuffer + y_size);
         OMX_U8 *src_uv =  (OMX_U8 *)(buff_vir + uv_offset);
-        OMX_U32 i = 0;
+        OMX_U32 i = 0, j = 0;
 #if AVS100
         OMX_U32 srcFormat, dstFormat;
         srcFormat = dstFormat = HAL_PIXEL_FORMAT_YCrCb_NV12;
@@ -892,21 +892,31 @@ OMX_ERRORTYPE  Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHE
         omx_trace("mWidth = %d mHeight = %d mStride = %d,mSlicHeight %d", mWidth, mHeight, mStride, mSliceHeight);
         pOutputBuffer->nFilledLen = mWidth * mHeight * 3 / 2;
 #if AVS100
-        rga_info_t rgasrc;
-        rga_info_t rgadst;
-        memset(&rgasrc, 0, sizeof(rga_info_t));
-        rgasrc.fd = -1;
-        rgasrc.mmuFlag = 1;
-        rgasrc.virAddr = buff_vir;
+        if ((pVideoDec->codecProfile == OMX_VIDEO_AVCProfileHigh10 && pVideoDec->codecId == OMX_VIDEO_CodingAVC)
+            || ((pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10 || pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10)
+                && pVideoDec->codecId == pVideoDec->codecId == OMX_VIDEO_CodingHEVC)) {
+            OMX_U32 horStride = Get_Video_HorAlign(pVideoDec->codecId, pframe->DisplayWidth, pframe->DisplayHeight, pVideoDec->codecProfile);
+            OMX_U32 verStride = Get_Video_VerAlign(pVideoDec->codecId, pframe->DisplayHeight, pVideoDec->codecProfile);
+            pOutputBuffer->nFilledLen = horStride * verStride * 3 / 2;
+            Rockchip_OSAL_Memcpy((char *)pOutputBuffer->pBuffer, buff_vir, pOutputBuffer->nFilledLen);
+            omx_trace("debug 10bit mWidth = %d mHeight = %d horStride = %d,verStride %d", mWidth, mHeight, horStride, verStride);
+        } else {
+            rga_info_t rgasrc;
+            rga_info_t rgadst;
+            memset(&rgasrc, 0, sizeof(rga_info_t));
+            rgasrc.fd = -1;
+            rgasrc.mmuFlag = 1;
+            rgasrc.virAddr = buff_vir;
 
-        memset(&rgadst, 0, sizeof(rga_info_t));
-        rgadst.fd = -1;
-        rgadst.mmuFlag = 1;
-        rgadst.virAddr = pOutputBuffer->pBuffer;
+            memset(&rgadst, 0, sizeof(rga_info_t));
+            rgadst.fd = -1;
+            rgadst.mmuFlag = 1;
+            rgadst.virAddr = pOutputBuffer->pBuffer;
 
-        rga_set_rect(&rgasrc.rect, 0, 0, mWidth, mHeight, mStride, mSliceHeight, srcFormat);
-        rga_set_rect(&rgadst.rect, 0, 0, mWidth, mHeight, mWidth, mHeight, dstFormat);
-        RgaBlit(&rgasrc, &rgadst, NULL);
+            rga_set_rect(&rgasrc.rect, 0, 0, mWidth, mHeight, mStride, mSliceHeight, srcFormat);
+            rga_set_rect(&rgadst.rect, 0, 0, mWidth, mHeight, mWidth, mHeight, dstFormat);
+            RgaBlit(&rgasrc, &rgadst, NULL);
+        }
 #else
         for (i = 0; i < mHeight; i++) {
             Rockchip_OSAL_Memcpy((char*)pOutputBuffer->pBuffer + i * mWidth, buff_vir + i * mStride, mWidth);
@@ -1386,7 +1396,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         } else if (pVideoDec->codecId == OMX_VIDEO_CodingVP9) {
             Rockchip_OSAL_Strcpy((char *)pComponentRole->cRole, RK_OMX_COMPONENT_VP9_DEC_ROLE);
         }
-
     }
     break;
     case OMX_IndexParamVideoAvc: {
@@ -1640,20 +1649,15 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     }
     break;
 
-    case OMX_IndexParamRkDecoderExtensionThumbNail: {
+    case OMX_IndexParamRkDecoderExtensionThumbNailCodecProfile: {
         OMX_PARAM_U32TYPE *tmp = (OMX_PARAM_U32TYPE *)ComponentParameterStructure;
         RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-        OMX_U32 thumbFlag = tmp->nU32;
-        if (thumbFlag) {
-            pVideoDec->flags |= RKVPU_OMX_VDEC_THUMBNAIL;
-        }
+        pVideoDec->codecProfile = tmp->nU32;
+
+        omx_trace("debug omx codecProfile %d", pVideoDec->codecProfile);
 
         ret = OMX_ErrorNone;
-    }
-    break;
-
-
-
+    } break;
     case OMX_IndexParamStandardComponentRole: {
         OMX_PARAM_COMPONENTROLETYPE *pComponentRole = (OMX_PARAM_COMPONENTROLETYPE*)ComponentParameterStructure;
 
@@ -1716,7 +1720,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
 
         Rockchip_OSAL_Memcpy(pDstAVCComponent, pSrcAVCComponent, sizeof(OMX_VIDEO_PARAM_AVCTYPE));
     }
-
     break;
     default: {
         ret = Rockchip_OMX_SetParameter(hComponent, nIndex, ComponentParameterStructure);
@@ -2028,8 +2031,8 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
         *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamRkDecoderExtensionDiv3;
         goto EXIT;
     }
-    if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_THUMBNAIL) == 0) {
-        *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamRkDecoderExtensionThumbNail;
+    if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_THUMBNAILCODECPROFILE) == 0) {
+        *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamRkDecoderExtensionThumbNailCodecProfile;
         goto EXIT;
     }
     if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_ROCKCHIP_DEC_EXTENSION_USE_DTS) == 0) {
@@ -2128,8 +2131,10 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
     nFrameWidth = pRockchipPort->portDefinition.format.video.nFrameWidth;
     nFrameHeight = pRockchipPort->portDefinition.format.video.nFrameHeight;
 
-    nStride = Get_Video_HorAlign(pVideoDec->codecId, nFrameWidth, nFrameHeight);
-    nSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, nFrameHeight);
+    nStride = Get_Video_HorAlign(pVideoDec->codecId, nFrameWidth, nFrameHeight, pVideoDec->codecProfile);
+    nSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, nFrameHeight, pVideoDec->codecProfile);
+
+    omx_trace("[%s:%d] nStride = %d,nSliceHeight = %d", __func__, __LINE__, nStride, nSliceHeight);
 
     pRockchipPort->portDefinition.format.video.nStride = nStride;
     pRockchipPort->portDefinition.format.video.nSliceHeight = nSliceHeight;
@@ -2163,7 +2168,8 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
             switch ((OMX_U32)pRockchipOutputPort->portDefinition.format.video.eColorFormat) {
             case OMX_COLOR_FormatYUV420Planar:
             case OMX_COLOR_FormatYUV420SemiPlanar:
-                pRockchipOutputPort->portDefinition.nBufferSize = (nStride * nSliceHeight * 3) / 2;
+                pRockchipOutputPort->portDefinition.nBufferSize = nStride * nSliceHeight * 3 / 2;
+                omx_trace("%s nStride = %d,nSliceHeight = %d", __func__, nStride, nSliceHeight);
                 break;
 #ifdef USE_STOREMETADATA
                 /*

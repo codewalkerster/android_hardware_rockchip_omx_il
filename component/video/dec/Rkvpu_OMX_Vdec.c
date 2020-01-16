@@ -925,8 +925,16 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                     goto EXIT;
                 }
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
-                outputUseBuffer->remainDataLen = pframe.DisplayHeight * pframe.DisplayWidth * 3 / 2;
+                if ((pVideoDec->codecProfile == OMX_VIDEO_AVCProfileHigh10 && pVideoDec->codecId == OMX_VIDEO_CodingAVC)
+                    || ((pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10 || pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10)
+                        && pVideoDec->codecId == pVideoDec->codecId == OMX_VIDEO_CodingHEVC)) {
+                    OMX_U32 horStride = Get_Video_HorAlign(pVideoDec->codecId, pframe.DisplayWidth, pframe.DisplayHeight, pVideoDec->codecProfile);
+                    OMX_U32 verStride = Get_Video_VerAlign(pVideoDec->codecId, pframe.DisplayHeight, pVideoDec->codecProfile);
+                    outputUseBuffer->remainDataLen = horStride * verStride * 3 / 2;
+                } else
+                    outputUseBuffer->remainDataLen = pframe.DisplayHeight * pframe.DisplayWidth * 3 / 2;
                 outputUseBuffer->timeStamp = pOutput.timeUs;
+                omx_trace("outputUseBuffer->remainDataLen = %d", outputUseBuffer->remainDataLen);
                 if (pVideoDec->fp_out != NULL) {
                     fwrite(outputUseBuffer->bufferHeader->pBuffer, 1, outputUseBuffer->remainDataLen, pVideoDec->fp_out);
                     fflush(pVideoDec->fp_out);
@@ -1482,6 +1490,7 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     pVideoDec->fp_in = NULL;
     pVideoDec->fp_out = NULL;
     pVideoDec->b4K_flags = OMX_FALSE;
+    pVideoDec->codecProfile = 0;
     pVideoDec->power_fd = -1;
     pVideoDec->bIsPowerControl = OMX_FALSE;
     pVideoDec->bIsHevc = 0;

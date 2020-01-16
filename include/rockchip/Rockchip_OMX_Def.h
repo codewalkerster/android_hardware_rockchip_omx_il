@@ -80,7 +80,6 @@ typedef struct _ROCKCHIP_OMX_WFD {
     OMX_BOOL bEnable;
 } ROCKCHIP_OMX_WFD;
 
-
 typedef struct _OMX_VIDEO_PARAMS_EXTENDED {
     OMX_U32 nSize;
     OMX_VERSIONTYPE nVersion;

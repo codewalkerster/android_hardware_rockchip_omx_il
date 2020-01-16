@@ -66,6 +66,8 @@ typedef struct _RKVPU_OMX_VIDEODEC_COMPONENT {
     VpuCodecContext_t *vpu_ctx;
     OMX_U32 flags;
 
+    OMX_U32 codecProfile;
+
     OMX_BOOL bIsANBEnabled;
 
     void *rga_ctx;

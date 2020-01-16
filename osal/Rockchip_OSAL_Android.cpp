@@ -198,11 +198,14 @@ OMX_U32 Rockchip_OSAL_GetANBStride(OMX_IN OMX_PTR handle)
     return nStride;
 }
 
-OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 height)
+OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 height, OMX_U32 codecProfile)
 {
     OMX_U32 stride = 0;;
     if (codecId == OMX_VIDEO_CodingHEVC) {
-        stride = ((width + 255) & (~255)) | (256);
+        if (codecProfile == OMX_VIDEO_HEVCProfileMain10 || codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10) {
+            stride = (((width * 10 / 8 + 255 ) & ~(255)) | (256));
+        } else
+            stride = ((width + 255) & (~255)) | (256);
     } else if (codecId == OMX_VIDEO_CodingVP9) {
 #ifdef AVS100
         stride = ((width + 255) & (~255)) | (256);
@@ -210,7 +213,10 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
         stride = (width + 127) & (~127);
 #endif
     } else {
-        stride = ((width + 15) & (~15));
+        if (codecProfile == OMX_VIDEO_AVCProfileHigh10 && codecId == OMX_VIDEO_CodingAVC) {
+            stride = ((width * 10 / 8 + 15) & (~15));
+        } else
+            stride = ((width + 15) & (~15));
     }
 #ifdef AVS100
     if (access("/d/mpp_service/rkvdec/aclk", F_OK) == 0) {
@@ -219,18 +225,24 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
 #endif
         if (width > 1920 || height > 1088) {
             if (codecId == OMX_VIDEO_CodingAVC) {
-                stride = ((width + 255) & (~255)) | (256);
+                if (codecProfile == OMX_VIDEO_AVCProfileHigh10) {
+                    stride = (((width * 10 / 8 + 255 ) & ~(255)) | (256));
+                } else
+                    stride = ((width + 255) & (~255)) | (256);
             }
         }
     }
     return stride;
 }
 
-OMX_U32 Get_Video_VerAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 height)
+OMX_U32 Get_Video_VerAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 height, OMX_U32 codecProfile)
 {
     OMX_U32 stride = 0;;
     if (codecId == OMX_VIDEO_CodingHEVC) {
-        stride = (height + 7) & (~7);
+        if (codecProfile == OMX_VIDEO_HEVCProfileMain10 || codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10)
+            stride = (height + 15) & (~15);
+        else
+            stride = (height + 7) & (~7);
     } else if (codecId == OMX_VIDEO_CodingVP9) {
         stride = (height + 63) & (~63);
     } else {
@@ -1137,9 +1149,9 @@ OMX_ERRORTYPE  Rockchip_OSAL_Openvpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *p
         }
     } else {
         vpu_display_mem_pool   *pool = NULL;
-        OMX_U32 hor_stride = Get_Video_HorAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameWidth, pRockchipPort->portDefinition.format.video.nFrameHeight);
+        OMX_U32 hor_stride = Get_Video_HorAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameWidth, pRockchipPort->portDefinition.format.video.nFrameHeight, pVideoDec->codecProfile);
 
-        OMX_U32 ver_stride = Get_Video_VerAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameHeight);
+        OMX_U32 ver_stride = Get_Video_VerAlign(pVideoDec->codecId, pRockchipPort->portDefinition.format.video.nFrameHeight, pVideoDec->codecProfile);
         omx_err("hor_stride %d ver_stride %d", hor_stride, ver_stride);
         if (0 != create_vpu_memory_pool_allocator(&pool, 8, (hor_stride * ver_stride * 2))) {
             omx_err("create_vpu_memory_pool_allocator fail");
