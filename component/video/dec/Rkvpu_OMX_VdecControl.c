@@ -901,21 +901,34 @@ OMX_ERRORTYPE Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHEA
             Rockchip_OSAL_Memcpy((char *)pOutputBuffer->pBuffer, buff_vir, pOutputBuffer->nFilledLen);
             omx_trace("debug 10bit mWidth = %d mHeight = %d horStride = %d,verStride %d", mWidth, mHeight, horStride, verStride);
         } else {
-            rga_info_t rgasrc;
-            rga_info_t rgadst;
-            memset(&rgasrc, 0, sizeof(rga_info_t));
-            rgasrc.fd = -1;
-            rgasrc.mmuFlag = 1;
-            rgasrc.virAddr = buff_vir;
+            OMX_BOOL useRga = (mWidth * mHeight >= 1280 * 720) ? OMX_TRUE : OMX_FALSE;
+            if (useRga) {
+                rga_info_t rgasrc;
+                rga_info_t rgadst;
+                memset(&rgasrc, 0, sizeof(rga_info_t));
+                rgasrc.fd = -1;
+                rgasrc.mmuFlag = 1;
+                rgasrc.virAddr = buff_vir;
 
-            memset(&rgadst, 0, sizeof(rga_info_t));
-            rgadst.fd = -1;
-            rgadst.mmuFlag = 1;
-            rgadst.virAddr = pOutputBuffer->pBuffer;
+                memset(&rgadst, 0, sizeof(rga_info_t));
+                rgadst.fd = -1;
+                rgadst.mmuFlag = 1;
+                rgadst.virAddr = pOutputBuffer->pBuffer;
 
-            rga_set_rect(&rgasrc.rect, 0, 0, mWidth, mHeight, mStride, mSliceHeight, srcFormat);
-            rga_set_rect(&rgadst.rect, 0, 0, mWidth, mHeight, mWidth, mHeight, dstFormat);
-            RgaBlit(&rgasrc, &rgadst, NULL);
+                rga_set_rect(&rgasrc.rect, 0, 0, mWidth, mHeight, mStride, mSliceHeight, srcFormat);
+                rga_set_rect(&rgadst.rect, 0, 0, mWidth, mHeight, mWidth, mHeight, dstFormat);
+                RgaBlit(&rgasrc, &rgadst, NULL);
+            } else {
+                for (i = 0; i < mHeight; i++) {
+                    Rockchip_OSAL_Memcpy((char*)pOutputBuffer->pBuffer + i * mWidth, buff_vir + i * mStride, mWidth);
+                }
+
+                for (i = 0; i < mHeight / 2; i++) {
+                    Rockchip_OSAL_Memcpy((OMX_U8*)dst_uv, (OMX_U8*)src_uv, mWidth);
+                    dst_uv += mWidth;
+                    src_uv += mStride;
+                }
+            }
         }
 #else
         for (i = 0; i < mHeight; i++) {
