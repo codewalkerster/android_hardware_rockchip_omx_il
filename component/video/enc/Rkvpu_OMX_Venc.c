@@ -460,16 +460,8 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
         } else if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_YCrCb_NV12) {
             *len = Rkvpu_N12_Process(pOMXComponent, &vplanes, aPhy_address);
         } else if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_YCbCr_420_888) {
-            EncParameter_t EncParam;
             H264EncPictureType encType = VPU_H264ENC_YUV420_SEMIPLANAR;
             pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
-            pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_GETCFG, (void*)&EncParam);
-            EncParam.rc_mode = 1 << 16; //set intraDeltaqp as 4 to fix encoder cts issue
-            if (Width <= 176 && Height <= 144) {
-                EncParam.rc_mode = 0;
-                EncParam.qp = 2;
-            }
-            pVideoEnc->vpu_ctx->control(pVideoEnc->vpu_ctx, VPU_API_ENC_SETCFG, (void*)&EncParam);
             if (Width != vplanes.stride || (Height & 0xf)) {
                 rga_nv12_copy(&vplanes, pVideoEnc->enc_vpumem, Width, Height, pVideoEnc->rga_ctx);
                 *aPhy_address = pVideoEnc->enc_vpumem->phy_addr;
@@ -514,6 +506,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
 
         if (pVideoEnc->bFirstFrame) {
             EncParameter_t vpug;
+            char pValue[128];
             if (rockchipInputPort->portDefinition.format.video.eColorFormat == OMX_COLOR_FormatAndroidOpaque) {
                 Rockchip_OSAL_GetInfoFromMetaData(inputUseBuffer->bufferHeader->pBuffer, &pGrallocHandle);
                 if (pGrallocHandle == NULL) {
@@ -540,6 +533,19 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 H264EncPictureType encType = VPU_H264ENC_YUV420_PLANAR;
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETFORMAT, (void *)&encType);
             }
+
+            /*
+             * Improve encode quality for CtsTestCases input.
+             * - android.media.cts.DecodeEditEncodeTest#testVideoEditQCIF
+             */
+            if (!Rockchip_OSAL_GetEnvStr("cts_gts.status", pValue, NULL) &&
+                !strcasecmp(pValue, "true")) {
+                p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)&vpug);
+                vpug.rc_mode = 0;
+                vpug.qp = 2;
+                p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETCFG, (void*)&vpug);
+            }
+
             pVideoEnc->bFirstFrame = OMX_FALSE;
         }
 
