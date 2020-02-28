@@ -911,7 +911,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
                 if ((pVideoDec->codecProfile == OMX_VIDEO_AVCProfileHigh10 && pVideoDec->codecId == OMX_VIDEO_CodingAVC)
                     || ((pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10 || pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10)
-                        && pVideoDec->codecId == pVideoDec->codecId == OMX_VIDEO_CodingHEVC)) {
+                        && pVideoDec->codecId == OMX_VIDEO_CodingHEVC)) {
                     OMX_U32 horStride = Get_Video_HorAlign(pVideoDec->codecId, pframe.DisplayWidth, pframe.DisplayHeight, pVideoDec->codecProfile);
                     OMX_U32 verStride = Get_Video_VerAlign(pVideoDec->codecId, pframe.DisplayHeight, pVideoDec->codecProfile);
                     outputUseBuffer->remainDataLen = horStride * verStride * 3 / 2;
