@@ -538,8 +538,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
              * Improve encode quality for CtsTestCases input.
              * - android.media.cts.DecodeEditEncodeTest#testVideoEditQCIF
              */
-            if (!Rockchip_OSAL_GetEnvStr("cts_gts.status", pValue, NULL) &&
-                !strcasecmp(pValue, "true")) {
+            if (!Rockchip_OSAL_GetEnvStr("cts_gts.status", pValue, NULL) && !strcasecmp(pValue, "true")
+                && (Rockchip_OSAL_OMX2HalPixelFormat(omx_format)  != HAL_PIXEL_FORMAT_RGBA_8888)) {
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)&vpug);
                 vpug.rc_mode = 0;
                 vpug.qp = 2;
