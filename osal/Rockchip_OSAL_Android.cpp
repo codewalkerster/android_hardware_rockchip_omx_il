@@ -873,7 +873,11 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoRkWfdMetaData(OMX_IN OMX_BOOL bRkWFD,
     buffer_handle_t    pBufHandle;
     FunctionIn();
 
-    (void)bRkWFD;
+    if (!bRkWFD) {
+        ret = OMX_ErrorBadParameter;
+        goto EXIT;
+    }
+
     /*
      * meta data contains the following data format.
      * payload depends on the MetadataBufferType
@@ -894,28 +898,13 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoRkWfdMetaData(OMX_IN OMX_BOOL bRkWFD,
 
     /* MetadataBufferType */
     Rockchip_OSAL_Memcpy(&type, pBuffer + 4, 4);
-#ifdef USE_ANW
-    if (type != 0x1234) {
-        Rockchip_OSAL_Memcpy(&type, pBuffer + sizeof(VideoNativeMetadata), 4);
-        VideoGrallocMetadata *metadata = (VideoGrallocMetadata *)pBuffer;
-        omx_trace("###type=0x%x, bufftype=%d bRkWFD:%d", type, metadata->eType, bRkWFD);
-        if (type != 0x1234 && !bRkWFD) {
-            ret = OMX_ErrorBadParameter;
-            goto EXIT;
-        }
-        pBufHandle = metadata->pHandle;
+    if (type == 0x1234) {
+        /* buffer_handle_t */
+        Rockchip_OSAL_Memcpy(&pBufHandle, pBuffer + 16, sizeof(buffer_handle_t));
         ppBuf[0] = (OMX_PTR)pBufHandle;
-        goto EXIT;
+    } else {
+        ret = OMX_ErrorBadParameter;
     }
-#else
-    if (type != 0x1234) {
-        return OMX_ErrorBadParameter;
-    }
-#endif
-
-    /* buffer_handle_t */
-    Rockchip_OSAL_Memcpy(&pBufHandle, pBuffer + 16, sizeof(buffer_handle_t));
-    ppBuf[0] = (OMX_PTR)pBufHandle;
 
 EXIT:
     FunctionOut();
