@@ -81,8 +81,6 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 	$(TOP)/frameworks/native/include/media/openmax \
 	$(TOP)/frameworks/native/libs/arect/include \
 	$(TOP)/frameworks/native/libs/nativebase/include \
-        $(TOP)/system/core/libion/include \
-        $(TOP)/system/core/libion/kernel-headers \
 	$(TOP)/system/core/base/include/ \
 	$(TOP)/hardware/rockchip/librkvpu \
 	$(TOP)/hardware/rockchip/librkvpu/omx_get_gralloc_private \
@@ -91,6 +89,12 @@ LOCAL_C_INCLUDES := $(ROCKCHIP_OMX_INC)/khronos \
 ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_C_INCLUDES += \
 	$(TOP)/frameworks/native/headers/media_plugin
+endif
+
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 30)))
+LOCAL_C_INCLUDES += \
+    $(TOP)/system/memory/libion/kernel-headers \
+    $(TOP)/system/memory/libion/include
 endif
 
 ifeq ($(OMX_USE_DRM), true)

@@ -64,9 +64,8 @@ LOCAL_CFLAGS += -DUSE_STOREMETADATA
 endif
 
 ifeq ($(BOARD_CONFIG_3GR),true)
-	LOCAL_CFLAGS += -DSOFIA_3GR \
-			-DROCKCHIP_GPU_LIB_ENABLE              
-	
+LOCAL_CFLAGS += -DSOFIA_3GR \
+    -DROCKCHIP_GPU_LIB_ENABLE
 endif
 
 ifeq ($(OMX_USE_DRM), true)
@@ -86,7 +85,5 @@ LOCAL_CFLAGS += -DSUPPORT_VP8_ENC=1
 endif
 
 LOCAL_CFLAGS += -Werror
-
-LOCAL_LDFLAGS += -fuse-ld=gold
 
 include $(BUILD_SHARED_LIBRARY)

@@ -111,6 +111,4 @@ endif
 
 LOCAL_CFLAGS += -Werror
 
-LOCAL_LDFLAGS += -fuse-ld=gold
-
 include $(BUILD_SHARED_LIBRARY)
