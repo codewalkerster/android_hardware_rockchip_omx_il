@@ -313,8 +313,10 @@ OMX_ERRORTYPE Rkvpu_ResetAllPortConfig(OMX_COMPONENTTYPE *pOMXComponent)
     pRockchipOutputPort->portDefinition.format.video.nSliceHeight = 0;
     pRockchipOutputPort->portDefinition.nBufferSize = DEFAULT_VIDEO_OUTPUT_BUFFER_SIZE;
     pRockchipOutputPort->portDefinition.format.video.eCompressionFormat = OMX_VIDEO_CodingUnused;
-    Rockchip_OSAL_Memset(pRockchipOutputPort->portDefinition.format.video.cMIMEType, 0, MAX_OMX_MIMETYPE_SIZE);
-    Rockchip_OSAL_Strcpy(pRockchipOutputPort->portDefinition.format.video.cMIMEType, "raw/video");
+    if (pRockchipOutputPort->portDefinition.format.video.cMIMEType != NULL) {
+        Rockchip_OSAL_Memset(pRockchipOutputPort->portDefinition.format.video.cMIMEType, 0, MAX_OMX_MIMETYPE_SIZE);
+        Rockchip_OSAL_Strcpy(pRockchipOutputPort->portDefinition.format.video.cMIMEType, "raw/video");
+    }
     pRockchipOutputPort->portDefinition.format.video.pNativeRender = 0;
     pRockchipOutputPort->portDefinition.format.video.bFlagErrorConcealment = OMX_FALSE;
     pRockchipOutputPort->portDefinition.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
@@ -1823,7 +1825,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     for (i = 0; i < ALL_PORT_NUM; i++) {
         pRockchipPort = &pRockchipComponent->pRockchipPort[i];
         Rockchip_OSAL_Free(pRockchipPort->portDefinition.format.video.cMIMEType);
-        pRockchipPort->portDefinition.format.video.cMIMEType = NULL;
+        if (pRockchipPort->portDefinition.format.video.cMIMEType != NULL)
+            pRockchipPort->portDefinition.format.video.cMIMEType = NULL;
     }
 
     ret = Rockchip_OMX_Port_Destructor(pOMXComponent);
