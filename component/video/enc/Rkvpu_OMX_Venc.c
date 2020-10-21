@@ -446,17 +446,17 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
                     Rkvpu_Enc_ReConfig(pOMXComponent, new_width, new_height);
                 }
             } else {
-                new_width = Width;
-                new_height = Height;
+                new_width = (Width + 15) & ~15;
+                new_height = (Height + 7) & ~7;
             }
             memset(&tmp_vpumem, 0, sizeof(VPUMemLinear_t));
             rga_rgb2nv12(&vplanes, pVideoEnc->enc_vpumem, Width, Height, new_width, new_height, pVideoEnc->rga_ctx);
             VPUMemClean(pVideoEnc->enc_vpumem);
             *aPhy_address = pVideoEnc->enc_vpumem->phy_addr;
-            *len = new_width * new_width * 3 / 2;
+            *len = new_width * new_height * 3 / 2;
             if (pVideoEnc->fp_enc_in) {
                 VPUMemInvalidate(pVideoEnc->enc_vpumem);
-                fwrite(pVideoEnc->enc_vpumem->vir_addr, 1, new_width * new_width * 3 / 2, pVideoEnc->fp_enc_in);
+                fwrite(pVideoEnc->enc_vpumem->vir_addr, 1, (*len), pVideoEnc->fp_enc_in);
                 fflush(pVideoEnc->fp_enc_in);
             }
         } else if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_YCrCb_NV12) {

@@ -456,7 +456,7 @@ void rga_rgb2nv12(RockchipVideoPlane *plane, VPUMemLinear_t *vpumem,
     memset((void*)&dst, 0, sizeof(rga_info_t));
     omx_trace(" plane->stride %d", plane->stride);
     rga_set_rect(&src.rect, 0, 0, Width, Height, plane->stride, Height, HAL_PIXEL_FORMAT_RGBA_8888);
-    rga_set_rect(&dst.rect, 0, 0, Width, Height, Width, Height, HAL_PIXEL_FORMAT_YCrCb_NV12);
+    rga_set_rect(&dst.rect, 0, 0, Width, Height, dstWidth, dstHeight, HAL_PIXEL_FORMAT_YCrCb_NV12);
     src.fd = plane->fd;
     dst.fd = vpumem->phy_addr;
     omx_trace("RgaBlit in src.fd = 0x%x, dst.fd = 0x%x", src.fd, dst.fd);
