@@ -99,7 +99,7 @@ endif
 
 ifeq ($(OMX_USE_DRM), true)
 	LOCAL_CFLAGS += -DUSE_DRM
-	LOCAL_C_INCLUDES +=  $(TOP)/hardware/rockchip/librga \
+	LOCAL_C_INCLUDES +=  $(TOP)/hardware/rockchip/librga/include \
 			     $(TOP)/external/libdrm/include/drm/
 endif
 
