@@ -958,6 +958,9 @@ OMX_COLOR_FORMATTYPE Rockchip_OSAL_Hal2OMXPixelFormat(
     case HAL_PIXEL_FORMAT_YCrCb_NV12:
         omx_format = OMX_COLOR_FormatYUV420SemiPlanar;
         break;
+    case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
+        omx_format = OMX_COLOR_FormatYUV420SemiPlanar;
+        break;
     case HAL_PIXEL_FORMAT_YCbCr_420_888:
         omx_format = (OMX_COLOR_FORMATTYPE)OMX_COLOR_FormatYUV420Flexible;
         break;
