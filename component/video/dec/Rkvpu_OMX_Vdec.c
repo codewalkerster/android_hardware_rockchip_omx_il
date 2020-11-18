@@ -60,6 +60,8 @@
 
 #define ANDROID_OREO 27
 
+static int64_t lastPts = 0;
+
 typedef struct {
     OMX_RK_VIDEO_CODINGTYPE codec_id;
     OMX_VIDEO_CODINGTYPE    omx_id;
@@ -910,6 +912,18 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_INFO_CHANGE, NULL);
                     goto EXIT;
                 }
+                if (pVideoDec->codecId == OMX_VIDEO_CodingMPEG2) { /*repeat frame should not return for VtsHalMediaOmxV1_0TargetVideoDecTest*/
+                    if (lastPts != 0 && lastPts == pOutput.timeUs && VPU_API_EOS_STREAM_REACHED != (VPU_API_ERR)pOutput.nFlags) {
+                        if (pframe.vpumem.phy_addr > 0) {
+                            VPUMemLink(&pframe.vpumem);
+                            VPUFreeLinear(&pframe.vpumem);
+                        }
+                        omx_err("repeat frame should not return, delete!");
+                        goto EXIT;
+                    }
+                    if (lastPts != pOutput.timeUs)
+                        lastPts = pOutput.timeUs;
+                }
                 Rkvpu_Frame2Outbuf(pOMXComponent, outputUseBuffer->bufferHeader, &pframe);
                 if ((pVideoDec->codecProfile == OMX_VIDEO_AVCProfileHigh10 && pVideoDec->codecId == OMX_VIDEO_CodingAVC)
                     || ((pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10 || pVideoDec->codecProfile == OMX_VIDEO_HEVCProfileMain10HDR10)
@@ -1391,9 +1405,7 @@ OMX_ERRORTYPE Rkvpu_Dec_Terminate(OMX_COMPONENTTYPE *pOMXComponent)
         rga_dev_close(pVideoDec->rga_ctx);
         pVideoDec->rga_ctx = NULL;
     }
-#if 1
-    Rockchip_OSAL_Closevpumempool(pRockchipComponent);
-#endif
+
     Rkvpu_ResetAllPortConfig(pOMXComponent);
 
     goto EXIT;
@@ -1764,6 +1776,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
         Rockchip_OSAL_SharedMemory_Close(pVideoDec->hSharedMemory, pVideoDec->bDRMPlayerMode);
         pVideoDec->hSharedMemory = NULL;
     }
+
+    Rockchip_OSAL_Closevpumempool(pRockchipComponent);
 
     if (pVideoDec->fp_in != NULL) {
         fclose(pVideoDec->fp_in);
