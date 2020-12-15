@@ -219,7 +219,8 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
             stride = ((width + 15) & (~15));
     }
 #ifdef AVS100
-    if (access("/d/mpp_service/rkvdec/aclk", F_OK) == 0) {
+    if (access("/d/mpp_service/rkvdec/aclk", F_OK) == 0 ||
+        access("/proc/mpp_service/rkvdec/aclk", F_OK) == 0) {
 #else
     if (access("/dev/rkvdec", 06) == 0) {
 #endif
