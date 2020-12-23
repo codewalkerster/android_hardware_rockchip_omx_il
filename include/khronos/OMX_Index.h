@@ -266,6 +266,7 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexParamRkEncExtendedVideo                         = 0x7F050003,
     OMX_IndexParamRkDescribeColorAspects                     = 0x7F000062,
     OMX_IndexParamAllocateNativeHandle                       = 0x7F00005D,
+    OMX_IndexParamStoreANWBuffer                             = 0x7F00006D,
     OMX_IndexMax = 0x7FFFFFFF
 } OMX_INDEXTYPE;
 
@@ -275,6 +276,7 @@ typedef enum OMX_INDEXTYPE {
 #define ROCKCHIP_INDEX_PARAM_GET_ANB_Usage                                  "OMX.google.android.index.getAndroidNativeBufferUsage"
 #define ROCKCHIP_INDEX_PARAM_USE_ANB                                        "OMX.google.android.index.useAndroidNativeBuffer2"
 #define ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER                          "OMX.google.android.index.storeMetaDataInBuffers"
+#define ROCKCHIP_INDEX_PARAM_STORE_ANW_BUFFER                               "OMX.google.android.index.storeANWBufferInMetadata"
 #define ROCKCHIP_INDEX_PARAM_PREPEND_SPSPPS_TO_IDR                          "OMX.google.android.index.prependSPSPPSToIDRFrames"
 #define ROCKCHIP_INDEX_PARAM_RKWFD                                          "OMX.rk.index.encoder.wifidisplay"
 #define ROCKCHIP_INDEX_PARAM_THUMBNAIL_CODECPROFILE                         "OMX.rk.index.decoder.thumbnail.codecprofile"

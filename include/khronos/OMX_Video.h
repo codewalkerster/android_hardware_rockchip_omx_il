@@ -1047,6 +1047,13 @@ typedef struct OMX_COLORASPECTS {
     OMX_MATRIXCOEFFS mMatrixCoeffs;  // IN/OUT
 } OMX_COLORASPECTS;
 
+typedef struct ISO_COLORASPECTS {
+    OMX_U32 mRange;                 // IN/OUT
+    OMX_U32 mPrimaries;             // IN/OUT
+    OMX_U32 mTransfer;              // IN/OUT
+    OMX_U32 mMatrixCoeffs;          // IN/OUT
+} ISO_COLORASPECTS;
+
 typedef struct OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS {
     OMX_U32  nSize;                // IN
     OMX_VERSIONTYPE nVersion;      // IN

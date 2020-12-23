@@ -49,6 +49,8 @@ void     convertIsoColorAspectsToCodecAspects(OMX_U32 primaries,
                                               OMX_U32 fullRange,
                                               OMX_COLORASPECTS *aspects);
 
+void    convertCodecAspectsToIsoColorAspects(OMX_COLORASPECTS *codecAspect, ISO_COLORASPECTS *colorAspect);
+
 OMX_U32  handleColorAspectsChange(const OMX_COLORASPECTS *a/*mDefaultColorAspects*/,
                                   const OMX_COLORASPECTS *b/*mBitstreamColorAspects*/,
                                   OMX_COLORASPECTS *c/*mFinalColorAspects*/,

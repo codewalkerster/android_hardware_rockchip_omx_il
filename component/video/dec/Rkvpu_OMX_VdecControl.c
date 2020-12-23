@@ -1297,13 +1297,13 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
                     portFormat->eColorFormat       = OMX_COLOR_FormatYUV420SemiPlanar;
                     portFormat->xFramerate         = portDefinition->format.video.xFramerate;
                     break;
-                case supportFormat_1:
-                    if (pVideoDec->codecId != OMX_VIDEO_CodingVP8) {
-                        portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
-                        portFormat->eColorFormat       = OMX_COLOR_FormatYUV420Planar;
-                        portFormat->xFramerate         = portDefinition->format.video.xFramerate;
-                    }
-                    break;
+                    /*case supportFormat_1:
+                        if (pVideoDec->codecId != OMX_VIDEO_CodingVP8) {
+                            portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
+                            portFormat->eColorFormat       = OMX_COLOR_FormatYUV420Planar;
+                            portFormat->xFramerate         = portDefinition->format.video.xFramerate;
+                        }
+                        break;*/
                 default:
                     if (index > supportFormat_0) {
                         ret = OMX_ErrorNoMore;
@@ -1898,10 +1898,17 @@ OMX_ERRORTYPE Rkvpu_OMX_SetConfig(
             pVideoDec->mDefaultColorAspects.mTransfer = colorAspectsParams->sAspects.mTransfer;
             pVideoDec->mDefaultColorAspects.mMatrixCoeffs = colorAspectsParams->sAspects.mMatrixCoeffs;
 
-            handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
-                                     &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
-                                     &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
-                                     kPreferBitstream);
+            if (pVideoDec->codecId != OMX_VIDEO_CodingVP8) {
+                handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                         &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                         &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                         kPreferBitstream);
+            } else {
+                handleColorAspectsChange(&pVideoDec->mDefaultColorAspects/*mDefaultColorAspects*/,
+                                         &pVideoDec->mBitstreamColorAspects/*mBitstreamColorAspects*/,
+                                         &pVideoDec->mFinalColorAspects/*mFinalColorAspects*/,
+                                         kPreferContainer);
+            }
         }
     }
     break;
@@ -2135,8 +2142,9 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
      */
     ret = Rkvpu_CheckPortDefinition(pPortDefinition, &pRockchipPort->portDefinition, nPortIndex);
     if (OMX_ErrorNone != ret) {
-        omx_err("check portdefinition param failed , ret: 0x%x", ret);
-        goto EXIT;
+        pRockchipPort->portDefinition.nBufferCountActual = pPortDefinition->nBufferCountActual;
+        //omx_err("check portdefinition param failed , ret: 0x%x", ret);
+        //goto EXIT;
     }
 
     Rockchip_OSAL_Memcpy((OMX_PTR)&pRockchipPort->portDefinition, (OMX_PTR)pPortDefinition, pPortDefinition->nSize);

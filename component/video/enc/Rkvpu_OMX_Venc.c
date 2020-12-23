@@ -49,6 +49,7 @@
 #include "Rockchip_OSAL_Env.h"
 #include "OMX_IVCommon.h"
 #include "Rockchip_OSAL_Log.h"
+#include "Rockchip_OSAL_ColorUtils.h"
 
 #include "hardware/rga.h"
 #include "vpu_type.h"
@@ -544,7 +545,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 if (p_vpu_ctx->width <= 176 && p_vpu_ctx->height <= 144) {
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)&vpug);
                     vpug.rc_mode = 2;
-                    vpug.qp = 2;
+                    vpug.qp = 20;
                     p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETCFG, (void*)&vpug);
                 }
             }
@@ -1311,6 +1312,18 @@ OMX_ERRORTYPE Rkvpu_Enc_ComponentInit(OMX_COMPONENTTYPE *pOMXComponent)
             EncParam->rc_mode = 1;
             p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETCFG, (void*)EncParam);
         }
+        if (pVideoEnc->bIsCfgColorAsp) {
+            OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS *colorAspectsParams = &pVideoEnc->ConfigColorAspects;
+            OMX_COLORASPECTS * colorAspect = &(colorAspectsParams->sAspects);
+            convertCodecAspectsToIsoColorAspects(colorAspect, pVideoEnc->colorAspects);
+            if (p_vpu_ctx !=  NULL) {
+                EncParameter_t vpug;
+                p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_GETCFG, (void*)&vpug);
+                vpug.reserved[0] = 1;
+                vpug.reserved[1] = (int)pVideoEnc->colorAspects;
+                p_vpu_ctx->control(p_vpu_ctx, VPU_API_ENC_SETCFG, (void*)&vpug);
+            }
+        }
         pVideoEnc->bFrame_num = 0;
         pVideoEnc->bLast_config_frame = 0;
         pVideoEnc->bSpsPpsHeaderFlag = OMX_FALSE;
@@ -1654,6 +1667,8 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentConstructor(OMX_HANDLETYPE hComponent, OMX_S
     //add by xlm for use mpp or vpuapi
     pVideoEnc->bIsUseMpp = OMX_FALSE;
     pVideoEnc->bIsNewVpu = OMX_TRUE;
+    pVideoEnc->bIsCfgColorAsp = OMX_FALSE;
+    pVideoEnc->colorAspects = Rockchip_OSAL_Malloc(sizeof(OMX_COLORASPECTS));
 
     Rockchip_OSAL_MutexCreate(&pVideoEnc->bScale_Mutex);
     Rockchip_OSAL_MutexCreate(&pVideoEnc->bRecofig_Mutex);
@@ -1803,6 +1818,9 @@ OMX_ERRORTYPE Rockchip_OMX_ComponentDeInit(OMX_HANDLETYPE hComponent)
     pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;
     if (pVideoEnc->fp_enc_out != NULL) {
         fclose(pVideoEnc->fp_enc_out);
+    }
+    if (pVideoEnc->colorAspects != NULL) {
+        Rockchip_OSAL_Free(pVideoEnc->colorAspects);
     }
     Rockchip_OSAL_MutexTerminate(pVideoEnc->bScale_Mutex);
     Rockchip_OSAL_MutexTerminate(pVideoEnc->bRecofig_Mutex);

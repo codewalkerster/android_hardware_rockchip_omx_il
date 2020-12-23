@@ -114,6 +114,22 @@ OMX_BOOL findCodecAspects(OMX_U32 colorAspects, OMX_U32 *codecAspects, MapAspect
     return ret;
 }
 
+OMX_BOOL findColorAspects(OMX_U32 codecAspects, OMX_U32 *colorAspects, MapAspects *mapAspects, OMX_U32 size)
+{
+    OMX_BOOL ret = OMX_FALSE;
+    OMX_U32 i    = 0;
+
+    for (i = 0; i < size; i++) {
+        if (codecAspects == mapAspects[i].mCodecAspects) {
+            *colorAspects = mapAspects[i].mColorAspects;
+            ret = OMX_TRUE;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 // static
 void convertIsoColorAspectsToCodecAspects(OMX_U32 primaries,
                                           OMX_U32 transfer,
@@ -131,6 +147,21 @@ void convertIsoColorAspectsToCodecAspects(OMX_U32 primaries,
         aspects->mMatrixCoeffs = MatrixUnspecified;
     }
     (aspects->mRange) = fullRange ? RangeFull : RangeLimited;
+}
+
+// static
+void convertCodecAspectsToIsoColorAspects(OMX_COLORASPECTS *codecAspect, ISO_COLORASPECTS *colorAspect)
+{
+    if (!findColorAspects((OMX_U32)codecAspect->mPrimaries, &colorAspect->mPrimaries, sIsoPrimaries, ARRAY_SIZE(sIsoPrimaries))) {
+        colorAspect->mPrimaries = 2;
+    }
+    if (!findColorAspects((OMX_U32)codecAspect->mTransfer, &colorAspect->mTransfer, sIsoTransfers, ARRAY_SIZE(sIsoTransfers))) {
+        colorAspect->mTransfer = 2;
+    }
+    if (!findColorAspects((OMX_U32)codecAspect->mMatrixCoeffs, &colorAspect->mMatrixCoeffs, sIsoMatrixCoeffs, ARRAY_SIZE(sIsoMatrixCoeffs))) {
+        colorAspect->mMatrixCoeffs = 2;
+    }
+    (colorAspect->mRange) = codecAspect->mRange == RangeFull ? 2 : 0;
 }
 
 OMX_BOOL colorAspectsDiffer(const OMX_COLORASPECTS *a, const OMX_COLORASPECTS *b)

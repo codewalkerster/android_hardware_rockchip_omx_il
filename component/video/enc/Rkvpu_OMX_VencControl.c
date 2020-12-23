@@ -1012,15 +1012,10 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
             switch (index) {
             case supportFormat_0:
                 portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
-                portFormat->eColorFormat       = OMX_COLOR_FormatYUV420Planar;
-                portFormat->xFramerate           = portDefinition->format.video.xFramerate;
-                break;
-            case supportFormat_1:
-                portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
                 portFormat->eColorFormat       = OMX_COLOR_FormatYUV420SemiPlanar;
                 portFormat->xFramerate         = portDefinition->format.video.xFramerate;
                 break;
-            case supportFormat_2:
+            case supportFormat_1:
                 portFormat->eCompressionFormat = OMX_VIDEO_CodingUnused;
                 portFormat->eColorFormat       = (OMX_COLOR_FORMATTYPE)OMX_COLOR_FormatAndroidOpaque;
                 portFormat->xFramerate         = portDefinition->format.video.xFramerate;
@@ -1108,7 +1103,6 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
 
         pRockchipPort = &pRockchipComponent->pRockchipPort[portIndex];
         Rockchip_OSAL_Memcpy(portDefinition, &pRockchipPort->portDefinition, portDefinition->nSize);
-
     }
     break;
     case OMX_IndexParamVideoIntraRefresh: {
@@ -1296,7 +1290,6 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         } else {
             pRockchipPort = &pRockchipComponent->pRockchipPort[portIndex];
             portDefinition = &pRockchipPort->portDefinition;
-
             portDefinition->format.video.eColorFormat       = portFormat->eColorFormat;
             portDefinition->format.video.eCompressionFormat = portFormat->eCompressionFormat;
             portDefinition->format.video.xFramerate         = portFormat->xFramerate;
@@ -1409,6 +1402,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
     break;
 
 #ifdef USE_STOREMETADATA
+    case OMX_IndexParamStoreANWBuffer:
     case OMX_IndexParamStoreMetaDataBuffer: {
         ret = Rockchip_OSAL_SetANBParameter(hComponent, nIndex, ComponentParameterStructure);
 
@@ -1777,6 +1771,7 @@ OMX_ERRORTYPE Rkvpu_OMX_SetConfig(
 #ifdef AVS80
     case OMX_IndexParamRkDescribeColorAspects: {
         memcpy(&pVideoEnc->ConfigColorAspects, pComponentConfigStructure, sizeof(OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS));
+        pVideoEnc->bIsCfgColorAsp = OMX_TRUE;
     }
     break;
 #endif
@@ -1882,7 +1877,10 @@ OMX_ERRORTYPE Rkvpu_OMX_GetExtensionIndex(
     }
 #endif
 #ifdef USE_STOREMETADATA
-    else if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER) == 0) {
+    else if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_STORE_ANW_BUFFER) == 0) {
+        *pIndexType = (OMX_INDEXTYPE)OMX_IndexParamStoreANWBuffer;
+        ret = OMX_ErrorNone;
+    } else if (Rockchip_OSAL_Strcmp(cParameterName, ROCKCHIP_INDEX_PARAM_STORE_METADATA_BUFFER) == 0) {
         *pIndexType = (OMX_INDEXTYPE) OMX_IndexParamStoreMetaDataBuffer;
         goto EXIT;
     } else {

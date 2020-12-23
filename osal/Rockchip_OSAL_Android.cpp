@@ -403,6 +403,8 @@ EXIT:
     return ret;
 }
 
+#define GRALLOC_USAGE_PRIVATE_2 1ULL << 30 //rk_implicit_alloc_semantic
+
 OMX_ERRORTYPE Rockchip_OSAL_GetANBParameter(
     OMX_IN OMX_HANDLETYPE hComponent,
     OMX_IN OMX_INDEXTYPE  nIndex,
@@ -462,7 +464,7 @@ OMX_ERRORTYPE Rockchip_OSAL_GetANBParameter(
         /* NOTE: OMX_IndexParamGetAndroidNativeBuffer returns original 'nUsage' without any
          * modifications since currently not defined what the 'nUsage' is for.
          */
-        pANBParams->nUsage |= (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_EXTERNAL_DISP);
+        pANBParams->nUsage |= (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_EXTERNAL_DISP | GRALLOC_USAGE_PRIVATE_2);
     }
     break;
     case OMX_IndexParamdescribeColorFormat: {
@@ -711,6 +713,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
     }
     break;
 
+    case OMX_IndexParamStoreANWBuffer:
     case OMX_IndexParamStoreMetaDataBuffer: {
         StoreMetaDataInBuffersParams *pANBParams = (StoreMetaDataInBuffersParams *) ComponentParameterStructure;
         OMX_U32 portIndex = pANBParams->nPortIndex;
@@ -735,6 +738,12 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
             goto EXIT;
         }
 
+        if (pANBParams->bStoreMetaData == OMX_TRUE) {
+            pRockchipPort->portDefinition.format.video.eColorFormat = (OMX_COLOR_FORMATTYPE)OMX_COLOR_FormatAndroidOpaque;
+        } else if (pRockchipPort->portDefinition.format.video.eColorFormat == (OMX_COLOR_FORMATTYPE)OMX_COLOR_FormatAndroidOpaque) {
+            pRockchipPort->portDefinition.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
+        }
+
         pRockchipPort->bStoreMetaData = pANBParams->bStoreMetaData;
         if (pRockchipComponent->codecType == HW_VIDEO_ENC_CODEC) {
             RKVPU_OMX_VIDEOENC_COMPONENT *pVideoEnc = (RKVPU_OMX_VIDEOENC_COMPONENT *)pRockchipComponent->hComponentHandle;;
@@ -751,6 +760,7 @@ OMX_ERRORTYPE Rockchip_OSAL_SetANBParameter(
         }
     }
     break;
+
     case OMX_IndexParamprepareForAdaptivePlayback: {
         omx_trace("%s: OMX_IndexParamprepareForAdaptivePlayback", __func__);
         goto EXIT;
@@ -843,7 +853,8 @@ OMX_ERRORTYPE Rockchip_OSAL_GetInfoFromMetaData(OMX_IN OMX_BYTE pBuffer,
     else if (type == kMetadataBufferTypeANWBuffer) {
         VideoNativeMetadata &nativeMeta = *(VideoNativeMetadata *)pBuffer;
         ANativeWindowBuffer *buffer = nativeMeta.pBuffer;
-        ppBuf[0] = (OMX_PTR)buffer->handle;
+        if (buffer != NULL)
+            ppBuf[0] = (OMX_PTR)buffer->handle;
         if (nativeMeta.nFenceFd >= 0) {
             sp<Fence> fence = new Fence(nativeMeta.nFenceFd);
             nativeMeta.nFenceFd = -1;
@@ -1157,7 +1168,7 @@ OMX_ERRORTYPE  Rockchip_OSAL_Closevpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *
 
     RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
     ROCKCHIP_OMX_BASEPORT *pRockchipPort = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
-    if (pRockchipPort->bufferProcessType == BUFFER_SHARE) {
+    if (pRockchipPort->bufferProcessType == BUFFER_SHARE && pVideoDec->vpumem_handle != NULL) {
         close_vpu_memory_pool((vpu_display_mem_pool *)pVideoDec->vpumem_handle);
         pVideoDec->vpumem_handle = NULL;
     } else if (pVideoDec->vpumem_handle != NULL) {
@@ -1389,7 +1400,8 @@ OMX_ERRORTYPE Rkvpu_ComputeDecBufferCount(
         }
     }
 
-    pOutputRockchipPort->portDefinition.nBufferCountActual = nMaxBufferCount;
+    if (pOutputRockchipPort->portDefinition.nBufferCountActual < nMaxBufferCount)
+        pOutputRockchipPort->portDefinition.nBufferCountActual = nMaxBufferCount;
     /*
      * in android 8.0 and higher, nBufferCountMin can be set at will.
      * in addition, the number of other versions is limited to 4.

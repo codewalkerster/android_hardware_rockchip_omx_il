@@ -128,6 +128,8 @@ typedef struct _RKVPU_OMX_VIDEOENC_COMPONENT {
     OMX_BOOL bIsNewVpu;
 #ifdef AVS80
     OMX_CONFIG_DESCRIBECOLORASPECTSPARAMS ConfigColorAspects;
+    OMX_BOOL bIsCfgColorAsp;
+    ISO_COLORASPECTS *colorAspects;
 #endif
     OMX_S32 (*rkvpu_open_cxt)(VpuCodecContext_t **ctx);
     OMX_S32 (*rkvpu_close_cxt)(VpuCodecContext_t **ctx);
