@@ -713,6 +713,7 @@ OMX_ERRORTYPE Rkvpu_ResolutionUpdate(OMX_COMPONENTTYPE *pOMXComponent)
     ROCKCHIP_OMX_BASEPORT           *pInputPort         = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
     ROCKCHIP_OMX_BASEPORT           *pOutputPort        = &pRockchipComponent->pRockchipPort[OUTPUT_PORT_INDEX];
     RKVPU_OMX_VIDEODEC_COMPONENT    *pVideoDec          = NULL;
+    OMX_U32                         width, height;
 
     pOutputPort->cropRectangle.nTop     = pOutputPort->newCropRectangle.nTop;
     pOutputPort->cropRectangle.nLeft    = pOutputPort->newCropRectangle.nLeft;
@@ -720,15 +721,6 @@ OMX_ERRORTYPE Rkvpu_ResolutionUpdate(OMX_COMPONENTTYPE *pOMXComponent)
     pOutputPort->cropRectangle.nHeight  = pOutputPort->newCropRectangle.nHeight;
 
     pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
-
-    if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId)) {
-        // fbc output buffer offset X/Y
-        if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC
-            || pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
-            pOutputPort->cropRectangle.nTop = 4;
-            pOutputPort->cropRectangle.nHeight -= 4;
-        }
-    }
 
     pInputPort->portDefinition.format.video.nFrameWidth     = pInputPort->newPortDefinition.format.video.nFrameWidth;
     pInputPort->portDefinition.format.video.nFrameHeight    = pInputPort->newPortDefinition.format.video.nFrameHeight;
@@ -740,6 +732,17 @@ OMX_ERRORTYPE Rkvpu_ResolutionUpdate(OMX_COMPONENTTYPE *pOMXComponent)
 
     pOutputPort->portDefinition.nBufferCountActual  = pOutputPort->newPortDefinition.nBufferCountActual;
     pOutputPort->portDefinition.nBufferCountMin     = pOutputPort->newPortDefinition.nBufferCountMin;
+
+    width = pInputPort->portDefinition.format.video.nFrameWidth;
+    height = pInputPort->portDefinition.format.video.nFrameHeight;
+    if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height)) {
+        // fbc output buffer offset X/Y
+        if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC
+            || pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
+            pOutputPort->cropRectangle.nTop = 4;
+            pOutputPort->cropRectangle.nHeight -= 4;
+        }
+    }
 
     UpdateFrameSize(pOMXComponent);
 
@@ -1379,7 +1382,9 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
 #ifdef AVS80
         if (portIndex == OUTPUT_PORT_INDEX &&
             pRockchipPort->bufferProcessType == BUFFER_SHARE) {
-            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId);
+            OMX_U32 width = pRockchipPort->portDefinition.format.video.nFrameWidth;
+            OMX_U32 height = pRockchipPort->portDefinition.format.video.nFrameHeight;
+            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
             /*
              * We use byte_stride instead of pixel_stride to setup nativeWindow surface
              * for 10bit source at fbcMode
@@ -2233,7 +2238,9 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
     }
 
     if (OUTPUT_PORT_INDEX == nPortIndex) {
-        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId);
+        OMX_U32 width = pRockchipPort->portDefinition.format.video.nFrameWidth;
+        OMX_U32 height = pRockchipPort->portDefinition.format.video.nFrameHeight;
+        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
         OMX_COLOR_FORMATTYPE format = pRockchipPort->portDefinition.format.video.eColorFormat;
 
         if (fbcMode) {

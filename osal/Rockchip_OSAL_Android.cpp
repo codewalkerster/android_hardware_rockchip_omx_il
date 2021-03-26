@@ -235,7 +235,7 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
     }
 
     /* fbc stride default 64 align */
-    if (Rockchip_OSAL_Check_Use_FBCMode(codecId)) {
+    if (Rockchip_OSAL_Check_Use_FBCMode(codecId, width, height)) {
         stride = (width + 63) & (~63);
     }
 
@@ -258,7 +258,8 @@ OMX_U32 Get_Video_VerAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 height, OMX_U32
     return stride;
 }
 
-OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId)
+OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId,
+                                         OMX_U32 width, OMX_U32 height)
 {
     OMX_BOOL fbcMode = OMX_FALSE;
     OMX_U32 pValue;
@@ -269,13 +270,16 @@ OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId)
     }
 
 #ifdef SUPPORT_AFBC
-    if (codecId == OMX_VIDEO_CodingAVC
-        || codecId == OMX_VIDEO_CodingHEVC
-        || codecId == OMX_VIDEO_CodingVP9) {
+    if (width * height > 1920 * 1088
+        && (codecId == OMX_VIDEO_CodingAVC
+            || codecId == OMX_VIDEO_CodingHEVC
+            || codecId == OMX_VIDEO_CodingVP9)) {
         fbcMode = OMX_TRUE;
     }
 #else
     (void)codecId;
+    (void)width;
+    (void)height;
 #endif
 
     return fbcMode;
@@ -1269,7 +1273,9 @@ OMX_COLOR_FORMATTYPE Rockchip_OSAL_CheckFormat(
 
     if ((pVideoDec->codecId == OMX_VIDEO_CodingHEVC && (pframe->OutputWidth != 0x20))
         || (pframe->ColorType & VPU_OUTPUT_FORMAT_BIT_MASK) == VPU_OUTPUT_FORMAT_BIT_10) { // 10bit
-        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId);
+        OMX_U32 width = pOutputPort->portDefinition.format.video.nFrameWidth;
+        OMX_U32 height = pOutputPort->portDefinition.format.video.nFrameHeight;
+        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
 
         if ((pframe->ColorType & 0xf) == VPU_OUTPUT_FORMAT_YUV422) {
             if (fbcMode) {
