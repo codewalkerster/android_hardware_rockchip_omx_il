@@ -890,8 +890,8 @@ OMX_ERRORTYPE Rkvpu_Frame2Outbuf(OMX_COMPONENTTYPE *pOMXComponent, OMX_BUFFERHEA
     VPUMemInvalidate(&pframe->vpumem);
 
     omx_trace("width:%d,height:%d ", mWidth, mHeight);
-    mStride = Get_Video_HorAlign(pVideoDec->codecId, mWidth, mHeight, pVideoDec->codecProfile);
-    mSliceHeight = Get_Video_VerAlign(pVideoDec->codecId, mHeight, pVideoDec->codecProfile);
+    mStride = pframe->FrameWidth;
+    mSliceHeight = pframe->FrameHeight;
     {
         //csy@rock-chips.com
         OMX_U8 *buff_vir = (OMX_U8 *)pframe->vpumem.vir_addr;
