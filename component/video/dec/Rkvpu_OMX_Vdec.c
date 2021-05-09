@@ -390,7 +390,6 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
             OMX_U32 extraFlag = 0;
             OMX_U32 enableDinterlace = 1;
             OMX_BOOL fbcMode = OMX_FALSE;
-            OMX_U32 width, height;
             OMX_U32 fbcOutFmt = 0;
             if (((inputUseBuffer->nFlags & OMX_BUFFERFLAG_EXTRADATA) == OMX_BUFFERFLAG_EXTRADATA)
                 || ((inputUseBuffer->nFlags & OMX_BUFFERFLAG_CODECCONFIG) == OMX_BUFFERFLAG_CODECCONFIG)) {
@@ -436,9 +435,7 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_SECURE_CONTEXT, &coding);
             }
 #endif
-            width = rockchipOutputPort->portDefinition.format.video.nFrameWidth;
-            height = rockchipOutputPort->portDefinition.format.video.nFrameHeight;
-            fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
+            fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, rockchipOutputPort);
             if (fbcMode) {
                 /* fbc_Output_format: FBC_AFBC_V2 */
                 fbcOutFmt = 0x00200000;

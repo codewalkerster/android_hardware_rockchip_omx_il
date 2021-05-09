@@ -122,7 +122,7 @@ OMX_ERRORTYPE  Rockchip_OSAL_Closevpumempool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *
 
 OMX_ERRORTYPE Rockchip_OSAL_resetVpumemPool(OMX_IN ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent);
 
-OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 height);
+OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId, ROCKCHIP_OMX_BASEPORT *pPort);
 OMX_COLOR_FORMATTYPE Rockchip_OSAL_CheckFormat(ROCKCHIP_OMX_BASECOMPONENT *pRockchipComponent, OMX_IN OMX_PTR pVpuframe);
 OMX_ERRORTYPE Rockchip_OSAL_getANBHandle(OMX_IN OMX_PTR handle, OMX_OUT OMX_PTR planes);
 OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 height, OMX_U32 codecprofile);

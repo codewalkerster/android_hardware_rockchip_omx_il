@@ -234,11 +234,6 @@ OMX_U32 Get_Video_HorAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 width, OMX_U32 
         }
     }
 
-    /* fbc stride default 64 align */
-    if (Rockchip_OSAL_Check_Use_FBCMode(codecId, width, height)) {
-        stride = (width + 63) & (~63);
-    }
-
     return stride;
 }
 
@@ -259,15 +254,23 @@ OMX_U32 Get_Video_VerAlign(OMX_VIDEO_CODINGTYPE codecId, OMX_U32 height, OMX_U32
 }
 
 OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId,
-                                         OMX_U32 width, OMX_U32 height)
+                                         ROCKCHIP_OMX_BASEPORT *pPort)
 {
     OMX_BOOL fbcMode = OMX_FALSE;
     OMX_U32 pValue;
+    OMX_U32 width, height;
 
     Rockchip_OSAL_GetEnvU32("omx_fbc_disable", &pValue, 0);
     if (pValue == 1) {
         return OMX_FALSE;
     }
+
+    if (pPort->bufferProcessType != BUFFER_SHARE) {
+        return OMX_FALSE;
+    }
+
+    width = pPort->portDefinition.format.video.nFrameWidth;
+    height = pPort->portDefinition.format.video.nFrameHeight;
 
 #ifdef SUPPORT_AFBC
     if (width * height > 1920 * 1088
@@ -1273,9 +1276,7 @@ OMX_COLOR_FORMATTYPE Rockchip_OSAL_CheckFormat(
 
     if ((pVideoDec->codecId == OMX_VIDEO_CodingHEVC && (pframe->OutputWidth != 0x20))
         || (pframe->ColorType & VPU_OUTPUT_FORMAT_BIT_MASK) == VPU_OUTPUT_FORMAT_BIT_10) { // 10bit
-        OMX_U32 width = pOutputPort->portDefinition.format.video.nFrameWidth;
-        OMX_U32 height = pOutputPort->portDefinition.format.video.nFrameHeight;
-        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
+        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pOutputPort);
 
         if ((pframe->ColorType & 0xf) == VPU_OUTPUT_FORMAT_YUV422) {
             if (fbcMode) {

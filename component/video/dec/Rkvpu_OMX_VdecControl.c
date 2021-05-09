@@ -1371,9 +1371,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         if (portIndex == OUTPUT_PORT_INDEX &&
             pRockchipPort->bufferProcessType == BUFFER_SHARE) {
             ROCKCHIP_OMX_BASEPORT *pInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-            OMX_U32 width = pInputPort->portDefinition.format.video.nFrameWidth;
-            OMX_U32 height = pInputPort->portDefinition.format.video.nFrameHeight;
-            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
+            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort);
 
             /*
              * We use pixel_stride instead of byte_stride to setup nativeWindow surface
@@ -1385,6 +1383,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
 
             if (fbcMode && (pVideoDec->codecId == OMX_VIDEO_CodingHEVC
                             || pVideoDec->codecId == OMX_VIDEO_CodingAVC)) {
+                OMX_U32 height = pInputPort->portDefinition.format.video.nFrameHeight;
                 // On FBC case H.264/H.265 decoder will add 4 lines blank on top.
                 portDefinition->format.video.nFrameHeight
                     = Get_Video_VerAlign(pVideoDec->codecId, height + 4, pVideoDec->codecProfile);
@@ -1827,9 +1826,7 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             rectParams->nWidth = rectParams->nHeight = 1;
 
         // fbc output buffer offset X/Y
-        OMX_U32 width = pRockchipPort->portDefinition.format.video.nFrameWidth;
-        OMX_U32 height = pRockchipPort->portDefinition.format.video.nFrameHeight;
-        if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height)) {
+        if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort)) {
             if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC
                 || pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
                 rectParams->nTop = 4;
@@ -2246,12 +2243,14 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
     }
 
     if (OUTPUT_PORT_INDEX == nPortIndex) {
-        OMX_U32 width = pRockchipPort->portDefinition.format.video.nFrameWidth;
-        OMX_U32 height = pRockchipPort->portDefinition.format.video.nFrameHeight;
-        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, width, height);
+        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort);
         OMX_COLOR_FORMATTYPE format = pRockchipPort->portDefinition.format.video.eColorFormat;
 
         if (fbcMode) {
+            // fbc stride default 64 align
+            nStride = (nFrameWidth + 63) & (~63);
+            pRockchipPort->portDefinition.format.video.nStride = nStride;
+
             if (format == OMX_COLOR_FormatYUV420Planar || format == OMX_COLOR_FormatYUV420SemiPlanar) {
                 pRockchipPort->portDefinition.format.video.eColorFormat
                     = (OMX_COLOR_FORMATTYPE)HAL_PIXEL_FORMAT_YUV420_8BIT_I;
