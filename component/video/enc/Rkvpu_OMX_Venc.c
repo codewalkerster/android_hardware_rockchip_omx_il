@@ -420,9 +420,11 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
                 pVideoEnc->bRgb2yuvFlag = OMX_TRUE;
                 close(gpu_fd);
             } else {
+#ifndef PLATFORM_RK356X
                 if (pVideoEnc->bPixel_format == HAL_PIXEL_FORMAT_RGBA_8888) {
                     pVideoEnc->bRgb2yuvFlag = OMX_TRUE;
                 }
+#endif
             }
         }
         res = Rockchip_OSAL_getANBHandle(pGrallocHandle, &vplanes);
@@ -478,8 +480,7 @@ OMX_ERRORTYPE Rkvpu_ProcessStoreMetaData(OMX_COMPONENTTYPE *pOMXComponent, OMX_B
             omx_err("aPhy_address = 0x%08x", *aPhy_address);
             *len = Width * Height * 3 / 2;
         } else {
-            rga_rgb_copy(&vplanes, pVideoEnc->enc_vpumem, Width, Height, pVideoEnc->rga_ctx);
-            *aPhy_address = pVideoEnc->enc_vpumem->phy_addr;
+            Rockchip_OSAL_SharedMemory_getPhyAddress(pVideoEnc->hSharedMemory, vplanes.fd, aPhy_address);
             *len = Width * Height * 4;
         }
 

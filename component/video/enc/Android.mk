@@ -84,6 +84,10 @@ ifneq ($(filter %true, $(BOARD_SUPPORT_VP8_ENC)), )
 LOCAL_CFLAGS += -DSUPPORT_VP8_ENC=1
 endif
 
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)), rk356x)
+LOCAL_CFLAGS += -DPLATFORM_RK356X=1
+endif
+
 LOCAL_CFLAGS += -Werror
 
 include $(BUILD_SHARED_LIBRARY)
