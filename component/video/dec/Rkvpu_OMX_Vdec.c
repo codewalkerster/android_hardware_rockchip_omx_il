@@ -435,7 +435,8 @@ OMX_BOOL Rkvpu_SendInputData(OMX_COMPONENTTYPE *pOMXComponent)
                 p_vpu_ctx->control(p_vpu_ctx, VPU_API_SET_SECURE_CONTEXT, &coding);
             }
 #endif
-            fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, rockchipOutputPort);
+            int32_t depth = (pVideoDec->bIs10bit) ? OMX_DEPTH_BIT_10 : OMX_DEPTH_BIT_8;
+            fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, depth, rockchipOutputPort);
             if (fbcMode) {
                 /* fbc_Output_format: FBC_AFBC_V2 */
                 fbcOutFmt = 0x00200000;

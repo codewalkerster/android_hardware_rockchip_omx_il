@@ -1371,7 +1371,8 @@ OMX_ERRORTYPE Rkvpu_OMX_GetParameter(
         if (portIndex == OUTPUT_PORT_INDEX &&
             pRockchipPort->bufferProcessType == BUFFER_SHARE) {
             ROCKCHIP_OMX_BASEPORT *pInputPort = &pRockchipComponent->pRockchipPort[INPUT_PORT_INDEX];
-            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort);
+            int32_t depth = (pVideoDec->bIs10bit) ? OMX_DEPTH_BIT_10 : OMX_DEPTH_BIT_8;
+            OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, depth, pRockchipPort);
 
             /*
              * We use pixel_stride instead of byte_stride to setup nativeWindow surface
@@ -1755,6 +1756,23 @@ OMX_ERRORTYPE Rkvpu_OMX_SetParameter(
         Rockchip_OSAL_Memcpy(pDstAVCComponent, pSrcAVCComponent, sizeof(OMX_VIDEO_PARAM_AVCTYPE));
     }
     break;
+    case OMX_IndexParamVideoProfileLevelCurrent: {
+        OMX_VIDEO_PARAM_PROFILELEVELTYPE *params = (OMX_VIDEO_PARAM_PROFILELEVELTYPE *)ComponentParameterStructure;
+        RKVPU_OMX_VIDEODEC_COMPONENT *pVideoDec = (RKVPU_OMX_VIDEODEC_COMPONENT *)pRockchipComponent->hComponentHandle;
+        if (pVideoDec != NULL) {
+            if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC) {
+                if (params->eProfile >= OMX_VIDEO_HEVCProfileMain10) {
+                    pVideoDec->bIs10bit = OMX_TRUE;
+                }
+            } else if (pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
+                if (params->eProfile == OMX_VIDEO_AVCProfileHigh10) {
+                    pVideoDec->bIs10bit = OMX_TRUE;
+                }
+            } else if (pVideoDec->codecId == OMX_VIDEO_CodingVP9) {
+            }
+        }
+    }
+    break;
     default: {
         ret = Rockchip_OMX_SetParameter(hComponent, nIndex, ComponentParameterStructure);
     }
@@ -1826,7 +1844,8 @@ OMX_ERRORTYPE Rkvpu_OMX_GetConfig(
             rectParams->nWidth = rectParams->nHeight = 1;
 
         // fbc output buffer offset X/Y
-        if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort)) {
+        int32_t depth = (pVideoDec->bIs10bit) ? OMX_DEPTH_BIT_10 : OMX_DEPTH_BIT_8;
+        if (Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, depth, pRockchipPort)) {
             if (pVideoDec->codecId == OMX_VIDEO_CodingHEVC
                 || pVideoDec->codecId == OMX_VIDEO_CodingAVC) {
                 rectParams->nTop = 4;
@@ -2243,7 +2262,8 @@ OMX_ERRORTYPE Rkvpu_UpdatePortDefinition(
     }
 
     if (OUTPUT_PORT_INDEX == nPortIndex) {
-        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, pRockchipPort);
+        int32_t depth = (pVideoDec->bIs10bit) ? OMX_DEPTH_BIT_10 : OMX_DEPTH_BIT_8;
+        OMX_BOOL fbcMode = Rockchip_OSAL_Check_Use_FBCMode(pVideoDec->codecId, depth, pRockchipPort);
         OMX_COLOR_FORMATTYPE format = pRockchipPort->portDefinition.format.video.eColorFormat;
 
         if (fbcMode) {
