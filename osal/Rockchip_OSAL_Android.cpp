@@ -285,6 +285,7 @@ OMX_BOOL Rockchip_OSAL_Check_Use_FBCMode(OMX_VIDEO_CODINGTYPE codecId, int32_t d
     (void)codecId;
     (void)width;
     (void)height;
+    (void)depth;
 #endif
 
     return fbcMode;
