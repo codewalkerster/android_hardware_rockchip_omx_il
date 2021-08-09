@@ -578,7 +578,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
     VpuCodecContext_t           *p_vpu_ctx = pVideoDec->vpu_ctx;
     OMX_U32         pOWnBycomponetNum = Rockchip_OSAL_GetElemNum(&pOutputPort->bufferQ);
     OMX_S32 maxBufferNum = 0;
-    OMX_S32 i = 0, numInOmxAl = 0, limitNum = 8;
+    OMX_S32 i = 0, numInOmxAl = 0;
     OMX_S32 bufferUnusedInVpu = 0;
     OMX_U32 fullRange = 0;
     OMX_U32 primaries = 0;
@@ -615,15 +615,7 @@ OMX_BOOL Rkvpu_Post_OutputFrame(OMX_COMPONENTTYPE *pOMXComponent)
         Rockchip_OSAL_Memset(&pOutput, 0, sizeof(DecoderOut_t));
         Rockchip_OSAL_Memset(pframe, 0, sizeof(VPU_FRAME));
         pOutput.data = (unsigned char *)pframe;
-        if ((numInOmxAl < limitNum) ||
-            (pVideoDec->maxCount > 20)) {
-            dec_ret =  p_vpu_ctx->decode_getframe(p_vpu_ctx, &pOutput);
-            omx_trace("pOutput.size %d", pOutput.size);
-            pVideoDec->maxCount = 0;
-        } else {
-            pVideoDec->maxCount++;
-            omx_trace("pVideoDec 0x%x numInOmxAl %d", pVideoDec, numInOmxAl);
-        }
+        dec_ret = p_vpu_ctx->decode_getframe(p_vpu_ctx, &pOutput);
         if (dec_ret < 0) {
             if (dec_ret == VPU_API_EOS_STREAM_REACHED && !pframe->ErrorInfo) {
                 outputUseBuffer->dataLen = 0;
@@ -1097,12 +1089,24 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
             if (CHECK_PORT_BEING_FLUSHED(rockchipOutputPort))
                 break;
 
-            Rockchip_OSAL_MutexLock(dstOutputUseBuffer->bufferMutex);
+            OMX_U32 numInOmxAl = 0;
+            for (int i = 0; i < rockchipOutputPort->portDefinition.nBufferCountActual; i++) {
+                if (rockchipOutputPort->extendBufferHeader[i].bBufferInOMX == OMX_TRUE) {
+                    numInOmxAl++;
+                }
+            }
+            if (numInOmxAl == 0) {
+                /* wait output buffer avaliable */
+                Rockchip_OSAL_SemaphoreWait(rockchipOutputPort->bufferSemID);
+                Rockchip_OSAL_SleepMillisec(3);
+            }
+
             if (rockchipOutputPort->bufferProcessType == BUFFER_SHARE) {
                 if (Rkvpu_Post_OutputFrame(pOMXComponent) != OMX_TRUE) {
-                    Rockchip_OSAL_SleepMillisec(3);
+                    Rockchip_OSAL_SleepMillisec(10);
                 }
             } else {
+                Rockchip_OSAL_MutexLock(dstOutputUseBuffer->bufferMutex);
                 if ((dstOutputUseBuffer->dataValid != OMX_TRUE) &&
                     (!CHECK_PORT_BEING_FLUSHED(rockchipOutputPort))) {
                     ret = Rkvpu_OutputBufferGetQueue(pRockchipComponent);
@@ -1114,14 +1118,11 @@ OMX_ERRORTYPE Rkvpu_OMX_OutputBufferProcess(OMX_HANDLETYPE hComponent)
 
                 if (dstOutputUseBuffer->dataValid == OMX_TRUE) {
                     if (Rkvpu_Post_OutputFrame(pOMXComponent) != OMX_TRUE) {
-                        Rockchip_OSAL_SleepMillisec(3);
+                        Rockchip_OSAL_SleepMillisec(10);
                     }
                 }
+                Rockchip_OSAL_MutexUnlock(dstOutputUseBuffer->bufferMutex);
             }
-
-            /* reset outputData */
-            Rockchip_OSAL_MutexUnlock(dstOutputUseBuffer->bufferMutex);
-
         }
     }
 
