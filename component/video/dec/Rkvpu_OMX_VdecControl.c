@@ -100,6 +100,7 @@ static const CodecProfileLevel kH264ProfileLevelsMax[] = {
     { OMX_VIDEO_AVCProfileBaseline, OMX_VIDEO_AVCLevel51 },
     { OMX_VIDEO_AVCProfileMain, OMX_VIDEO_AVCLevel51},
     { OMX_VIDEO_AVCProfileHigh, OMX_VIDEO_AVCLevel51},
+    { OMX_VIDEO_AVCProfileHigh10, OMX_VIDEO_AVCLevel52},
 };
 
 static const CodecProfileLevel kH265ProfileLevels[] = {
