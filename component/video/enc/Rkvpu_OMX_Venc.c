@@ -51,7 +51,6 @@
 #include "Rockchip_OSAL_Log.h"
 #include "Rockchip_OSAL_ColorUtils.h"
 
-#include "hardware/rga.h"
 #include "vpu_type.h"
 #include "gralloc_priv_omx.h"
 #include "omx_video_global.h"

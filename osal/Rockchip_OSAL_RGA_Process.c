@@ -34,7 +34,6 @@
 #include "Rockchip_OSAL_Log.h"
 #include "Rockchip_OSAL_Memory.h"
 #include "Rockchip_OSAL_RGA_Process.h"
-#include "hardware/rga.h"
 
 #ifdef USE_DRM
 #include "drmrga.h"
